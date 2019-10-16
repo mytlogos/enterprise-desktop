@@ -1,6 +1,8 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
-public class ClientSimpleUser {
+import com.mytlogos.enterprisedesktop.model.User;
+
+public class ClientSimpleUser implements User {
     private final String uuid;
     private final String session;
     private final String name;
@@ -11,16 +13,12 @@ public class ClientSimpleUser {
         this.name = name;
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public String getSession() {
-        return session;
-    }
-
-    public String getName() {
-        return name;
+    @Override
+    public int hashCode() {
+        int result = getUuid() != null ? getUuid().hashCode() : 0;
+        result = 31 * result + (getSession() != null ? getSession().hashCode() : 0);
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        return result;
     }
 
     @Override
@@ -37,12 +35,16 @@ public class ClientSimpleUser {
         return getName() != null ? getName().equals(that.getName()) : that.getName() == null;
     }
 
-    @Override
-    public int hashCode() {
-        int result = getUuid() != null ? getUuid().hashCode() : 0;
-        result = 31 * result + (getSession() != null ? getSession().hashCode() : 0);
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        return result;
+    public String getUuid() {
+        return uuid;
+    }
+
+    public String getSession() {
+        return session;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

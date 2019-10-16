@@ -2,50 +2,23 @@ package com.mytlogos.enterprisedesktop.model;
 
 import java.time.LocalDateTime;
 
-public class Episode  {
-    private final int episodeId;
-    private final float progress;
-    private final int partId;
-    private final int partialIndex;
-    private final int totalIndex;
-    private final LocalDateTime readDate;
-    private final boolean saved;
+/**
+ *
+ */
+public interface Episode {
+    double getCombiIndex();
 
-    public Episode(int episodeId, float progress, int partId, int partialIndex, int totalIndex, LocalDateTime readDate, boolean saved) {
-        this.episodeId = episodeId;
-        this.progress = progress;
-        this.partId = partId;
-        this.partialIndex = partialIndex;
-        this.totalIndex = totalIndex;
-        this.readDate = readDate;
-        this.saved = saved;
-    }
+    int getEpisodeId();
 
-    public int getEpisodeId() {
-        return episodeId;
-    }
+    float getProgress();
 
-    public float getProgress() {
-        return progress;
-    }
+    int getPartId();
 
-    public int getPartId() {
-        return partId;
-    }
+    int getPartialIndex();
 
-    public int getPartialIndex() {
-        return partialIndex;
-    }
+    int getTotalIndex();
 
-    public int getTotalIndex() {
-        return totalIndex;
-    }
+    LocalDateTime getReadDate();
 
-    public LocalDateTime getReadDate() {
-        return readDate;
-    }
-
-    public boolean isSaved() {
-        return saved;
-    }
+    boolean isSaved();
 }

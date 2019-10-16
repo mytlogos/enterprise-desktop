@@ -12,6 +12,7 @@ import javafx.util.Duration;
 public class SynchronizeService extends ScheduledService<Void> {
     public SynchronizeService() {
         this.setPeriod(Duration.minutes(15));
+        this.setBackoffStrategy(param -> Duration.seconds(5));
     }
 
     @Override
@@ -20,6 +21,11 @@ public class SynchronizeService extends ScheduledService<Void> {
             @Override
             protected Void call() throws Exception {
                 final Repository repository = new RepositoryProvider().provide();
+
+                if (!repository.isClientAuthenticated()) {
+                    throw new IllegalStateException("Not Authenticated");
+                }
+
                 repository.syncUser();
                 return null;
             }

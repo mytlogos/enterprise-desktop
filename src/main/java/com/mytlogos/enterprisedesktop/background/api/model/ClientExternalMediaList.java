@@ -1,8 +1,10 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
+import com.mytlogos.enterprisedesktop.model.ExternalMediaList;
+
 import java.util.Arrays;
 
-public class ClientExternalMediaList {
+public class ClientExternalMediaList implements ExternalMediaList {
     private String uuid;
     private int id;
     private String name;
@@ -24,7 +26,8 @@ public class ClientExternalMediaList {
         return uuid;
     }
 
-    public int getId() {
+    @Override
+    public int getListId() {
         return id;
     }
 
@@ -45,15 +48,8 @@ public class ClientExternalMediaList {
     }
 
     @Override
-    public String toString() {
-        return "ClientExternalMediaList{" +
-                "uuid='" + uuid + '\'' +
-                ", id=" + id +
-                ", name='" + name + '\'' +
-                ", medium=" + medium +
-                ", url='" + url + '\'' +
-                ", items=" + Arrays.toString(items) +
-                '}';
+    public int hashCode() {
+        return getId();
     }
 
     @Override
@@ -66,8 +62,19 @@ public class ClientExternalMediaList {
         return getId() == that.getId();
     }
 
+    public int getId() {
+        return id;
+    }
+
     @Override
-    public int hashCode() {
-        return getId();
+    public String toString() {
+        return "ClientExternalMediaList{" +
+                "uuid='" + uuid + '\'' +
+                ", id=" + id +
+                ", name='" + name + '\'' +
+                ", medium=" + medium +
+                ", url='" + url + '\'' +
+                ", items=" + Arrays.toString(items) +
+                '}';
     }
 }

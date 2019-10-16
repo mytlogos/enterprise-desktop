@@ -1,8 +1,10 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
+import com.mytlogos.enterprisedesktop.model.Medium;
+
 import java.util.Arrays;
 
-public class ClientMedium {
+public class ClientMedium implements Medium {
     private int[] parts;
     private int[] latestReleased;
     private int currentRead;
@@ -146,8 +148,13 @@ public class ClientMedium {
         return latestReleased;
     }
 
-    public int getCurrentRead() {
+    public Integer getCurrentRead() {
         return currentRead;
+    }
+
+    @Override
+    public int getMediumId() {
+        return id;
     }
 
     public int[] getUnreadEpisodes() {

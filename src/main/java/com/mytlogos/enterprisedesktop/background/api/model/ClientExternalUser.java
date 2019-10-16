@@ -1,8 +1,10 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
+import com.mytlogos.enterprisedesktop.model.ExternalUser;
+
 import java.util.Arrays;
 
-public class ClientExternalUser {
+public class ClientExternalUser implements ExternalUser {
     private String localUuid;
     private String uuid;
     private String identifier;
@@ -17,16 +19,21 @@ public class ClientExternalUser {
         this.lists = lists;
     }
 
+    public int getType() {
+        return type;
+    }
+
     public String getUuid() {
         return uuid;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    @Override
+    public String getUserUuid() {
+        return localUuid;
     }
 
-    public int getType() {
-        return type;
+    public String getIdentifier() {
+        return identifier;
     }
 
     public ClientExternalMediaList[] getLists() {
@@ -38,14 +45,8 @@ public class ClientExternalUser {
     }
 
     @Override
-    public String toString() {
-        return "ClientExternalUser{" +
-                "localUuid='" + localUuid + '\'' +
-                ", uuid='" + uuid + '\'' +
-                ", identifier='" + identifier + '\'' +
-                ", type=" + type +
-                ", lists=" + Arrays.toString(lists) +
-                '}';
+    public int hashCode() {
+        return getUuid() != null ? getUuid().hashCode() : 0;
     }
 
     @Override
@@ -59,7 +60,13 @@ public class ClientExternalUser {
     }
 
     @Override
-    public int hashCode() {
-        return getUuid() != null ? getUuid().hashCode() : 0;
+    public String toString() {
+        return "ClientExternalUser{" +
+                "localUuid='" + localUuid + '\'' +
+                ", uuid='" + uuid + '\'' +
+                ", identifier='" + identifier + '\'' +
+                ", type=" + type +
+                ", lists=" + Arrays.toString(lists) +
+                '}';
     }
 }

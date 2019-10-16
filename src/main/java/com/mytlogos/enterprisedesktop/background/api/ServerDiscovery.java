@@ -3,14 +3,10 @@ package com.mytlogos.enterprisedesktop.background.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import java.net.*;
 import java.time.LocalDateTime;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InterfaceAddress;
-import java.net.NetworkInterface;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -203,8 +199,10 @@ class ServerDiscovery {
 
     private void sendUDPPacket(DatagramSocket c, byte[] data, int port, InetAddress address) throws IOException {
         System.out.println("Sending Msg to " + address.getHostAddress() + ":" + port);
-        c.send(new DatagramPacket(data, data.length, address, port));
-        c.send(new DatagramPacket(data, data.length, address, port));
+        try {
+            c.send(new DatagramPacket(data, data.length, address, port));
+        } catch (SocketException ignored) {
+        }
     }
 
     boolean isReachable(Server server) {

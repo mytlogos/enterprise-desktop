@@ -229,7 +229,7 @@ public class LoadWorkerImpl extends LoadWorker {
                         for (DependantImpl dependantImpl : withoutBeforeRun) {
                             // skip dependantImpls which are not ready yet
                             if (!dependantImpl.isReadyToBeConsumed()) {
-                                System.out.println("dependantImpl not yet ready!: " + dependantImpl);
+                                System.out.println("dependant not yet ready!: " + dependantImpl);
                                 continue;
                             }
                             if (dependantImpl.value instanceof Collection) {
@@ -271,7 +271,7 @@ public class LoadWorkerImpl extends LoadWorker {
                                 }
                             } else {
                                 // todo what todo if it is still not ready?
-                                System.out.println("dependantImpl is still not ready!: " + dependantImpl);
+                                System.out.println("dependant is still not ready!: " + dependantImpl);
                             }
                         }));
             }
@@ -288,7 +288,7 @@ public class LoadWorkerImpl extends LoadWorker {
                 Collection<?> collection = (Collection<?>) dependantImpl.value;
 
                 if (collection.isEmpty()) {
-                    System.out.println("dependantImpl list value is empty");
+                    System.out.println("dependant list value is empty");
                     continue;
                 }
                 // check only the first value,
@@ -469,7 +469,7 @@ public class LoadWorkerImpl extends LoadWorker {
                         System.out.println(
                                 "Id '" + loaded + "' loaded with '" +
                                         this.getClass().getSimpleName() +
-                                        "' even though there are no dependantImpls?"
+                                        "' even though there are no dependants?"
                         );
                     } else {
                         for (DependantImpl dependantImpl : dependantImpls) {
@@ -478,7 +478,7 @@ public class LoadWorkerImpl extends LoadWorker {
                             Set<T> dependencies = (Set<T>) dependantImpl.dependencies.get(this);
 
                             if (dependencies == null) {
-                                throw new IllegalStateException(String.format("DependantImpl listed as DependantImpl even though it does not depend on any value of %s", this.getClass().getSimpleName()));
+                                throw new IllegalStateException(String.format("Dependant listed as Dependant even though it does not depend on any value of %s", this.getClass().getSimpleName()));
                             }
                             dependencies.remove(loaded);
                         }

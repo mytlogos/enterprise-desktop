@@ -1,8 +1,12 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
-import java.util.Arrays;
+import com.mytlogos.enterprisedesktop.model.Part;
 
-public class ClientPart {
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+public class ClientPart implements Part {
     private int mediumId;
     private int id;
     private String title;
@@ -20,6 +24,11 @@ public class ClientPart {
     }
 
     @Override
+    public int hashCode() {
+        return getId();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -27,11 +36,6 @@ public class ClientPart {
         ClientPart that = (ClientPart) o;
 
         return getId() == that.getId();
-    }
-
-    @Override
-    public int hashCode() {
-        return getId();
     }
 
     @Override
@@ -50,6 +54,11 @@ public class ClientPart {
         return id;
     }
 
+    @Override
+    public int getPartId() {
+        return 0;
+    }
+
     public String getTitle() {
         return title;
     }
@@ -62,11 +71,25 @@ public class ClientPart {
         return partialIndex;
     }
 
-    public ClientEpisode[] getEpisodes() {
+    public int getMediumId() {
+        return mediumId;
+    }
+
+    @Override
+    public double getCombiIndex() {
+        return Double.parseDouble(this.getTotalIndex() + "." + this.getPartialIndex());
+    }
+
+    public ClientEpisode[] getClientEpisodes() {
         return episodes;
     }
 
-    public int getMediumId() {
-        return mediumId;
+    public List<Integer> getEpisodes() {
+        final List<Integer> ids = new ArrayList<>(this.episodes.length);
+
+        for (ClientEpisode episode : this.episodes) {
+            ids.add(episode.getId());
+        }
+        return ids;
     }
 }

@@ -2,40 +2,17 @@ package com.mytlogos.enterprisedesktop.background.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mytlogos.enterprisedesktop.background.api.model.AddClientExternalUser;
-import com.mytlogos.enterprisedesktop.background.api.model.Authentication;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientDownloadedEpisode;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalUser;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientListQuery;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMediumInWait;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMultiListQuery;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientNews;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientSimpleUser;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientUpdateUser;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientUser;
-import com.mytlogos.enterprisedesktop.background.api.model.InvalidatedData;
-
-import java.time.LocalDateTime;
-
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-
+import com.mytlogos.enterprisedesktop.background.api.model.*;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     private static Map<Class<?>, Retrofit> retrofitMap = new HashMap<>();
@@ -45,18 +22,12 @@ public class Client {
         buildPathMap();
     }
 
+    private final NetworkIdentificator identificator;
     private Authentication authentication;
     private Server server;
     private String lastNetworkSSID;
-    private final NetworkIdentificator identificator;
     private LocalDateTime disconnectedSince;
     private Set<DisconnectedListener> disconnectedListeners = Collections.synchronizedSet(new HashSet<>());
-
-    @FunctionalInterface
-    public interface DisconnectedListener {
-        void handle(LocalDateTime timeDisconnected);
-    }
-
 
     public Client(NetworkIdentificator identificator) {
         this.identificator = identificator;
@@ -134,6 +105,91 @@ public class Client {
         return this.query(BasicApi.class, BasicApi::checkLogin);
     }
 
+    private <T, R> Response<R> query(Class<T> api, BuildCall<T, Call<R>> buildCall) throws IOException {
+        try {
+            Response<R> result = build(api, buildCall).execute();
+            this.setConnected();
+            System.out.println("Queried: " + result.raw().request().url().toString());
+            return result;
+        } catch (NotConnectedException e) {
+            this.setDisconnected();
+            throw new NotConnectedException(e);
+        }
+    }
+
+    private <T, R> Call<R> build(Class<T> api, BuildCall<T, Call<R>> buildCall) throws IOException {
+        Retrofit retrofit = Client.retrofitMap.get(api);
+        String path = Client.fullClassPathMap.get(api);
+
+        if (path == null) {
+            throw new IllegalArgumentException("Unknown api class: " + api.getCanonicalName());
+        }
+
+        this.server = this.getServer();
+
+        // FIXME: 29.07.2019 sometimes does not find server even though it is online
+        if (this.server == null) {
+            throw new NotConnectedException("No Server in reach");
+        }
+
+        if (retrofit == null) {
+            Gson gson = new GsonBuilder()
+                    .registerTypeHierarchyAdapter(LocalDateTime.class, new GsonAdapter.LocalDateTimeAdapter())
+                    .create();
+            OkHttpClient client = new OkHttpClient
+                    .Builder()
+                    .readTimeout(20, TimeUnit.SECONDS)
+                    .build();
+
+            retrofit = new Retrofit.Builder()
+                    .baseUrl(this.server.getAddress())
+                    .client(client)
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .build();
+            Client.retrofitMap.put(api, retrofit);
+        }
+
+        T apiImpl = retrofit.create(api);
+        return buildCall.call(apiImpl, path);
+    }
+
+    private void setConnected() {
+        System.out.println("connected");
+        if (this.disconnectedSince != null) {
+            for (DisconnectedListener listener : this.disconnectedListeners) {
+                listener.handle(this.disconnectedSince);
+            }
+            this.disconnectedSince = null;
+        }
+    }
+
+    private void setDisconnected() {
+        if (this.disconnectedSince == null) {
+            System.out.println("disconnected");
+            this.disconnectedSince = LocalDateTime.now();
+        }
+    }
+
+    private synchronized Server getServer() throws NotConnectedException {
+        String ssid = this.identificator.getSSID();
+
+        if (ssid.isEmpty()) {
+            throw new NotConnectedException("Not connected to any network");
+        }
+        ServerDiscovery discovery = new ServerDiscovery();
+
+        if (ssid.equals(this.lastNetworkSSID)) {
+            if (this.server == null) {
+                return discovery.discover(this.identificator.getBroadcastAddress());
+            } else if (this.server.isReachable()) {
+                return this.server;
+            }
+        } else {
+            this.lastNetworkSSID = ssid;
+        }
+        return discovery.discover(this.identificator.getBroadcastAddress());
+    }
+
     public Response<ClientUser> getUser() throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getUser(url, body));
@@ -151,20 +207,20 @@ public class Client {
         return body;
     }
 
-    private Map<String, Object> userVerificationMap(String mailName, String password) {
-        Map<String, Object> body = new HashMap<>();
-
-        body.put("userName", mailName);
-        body.put("pw", password);
-        return body;
-    }
-
     public Response<ClientUser> login(String mailName, String password) throws IOException {
         return this.query(BasicApi.class, (apiImpl, url) ->
                 apiImpl.login(
                         url,
                         this.userVerificationMap(mailName, password)
                 ));
+    }
+
+    private Map<String, Object> userVerificationMap(String mailName, String password) {
+        Map<String, Object> body = new HashMap<>();
+
+        body.put("userName", mailName);
+        body.put("pw", password);
+        return body;
     }
 
     public Response<ClientUser> register(String mailName, String password) throws IOException {
@@ -462,71 +518,6 @@ public class Client {
         return this.query(ProgressApi.class, (apiImpl, url) -> apiImpl.updateProgress(url, body));
     }
 
-    private void setConnected() {
-        System.out.println("connected");
-        if (this.disconnectedSince != null) {
-            for (DisconnectedListener listener : this.disconnectedListeners) {
-                listener.handle(this.disconnectedSince);
-            }
-            this.disconnectedSince = null;
-        }
-    }
-
-    private void setDisconnected() {
-        if (this.disconnectedSince == null) {
-            System.out.println("disconnected");
-            this.disconnectedSince = LocalDateTime.now();
-        }
-    }
-
-    private <T, R> Response<R> query(Class<T> api, BuildCall<T, Call<R>> buildCall) throws IOException {
-        try {
-            Response<R> result = build(api, buildCall).execute();
-            this.setConnected();
-            return result;
-        } catch (NotConnectedException e) {
-            this.setDisconnected();
-            throw new NotConnectedException(e);
-        }
-    }
-
-    private <T, R> Call<R> build(Class<T> api, BuildCall<T, Call<R>> buildCall) throws IOException {
-        Retrofit retrofit = Client.retrofitMap.get(api);
-        String path = Client.fullClassPathMap.get(api);
-
-        if (path == null) {
-            throw new IllegalArgumentException("Unknown api class: " + api.getCanonicalName());
-        }
-
-        this.server = this.getServer();
-
-        // FIXME: 29.07.2019 sometimes does not find server even though it is online
-        if (this.server == null) {
-            throw new NotConnectedException("No Server in reach");
-        }
-
-        if (retrofit == null) {
-            Gson gson = new GsonBuilder()
-                    .registerTypeHierarchyAdapter(LocalDateTime.class, new GsonAdapter.LocalDateTimeAdapter())
-                    .create();
-            OkHttpClient client = new OkHttpClient
-                    .Builder()
-                    .readTimeout(20, TimeUnit.SECONDS)
-                    .build();
-
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(this.server.getAddress())
-                    .client(client)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .build();
-            Client.retrofitMap.put(api, retrofit);
-        }
-
-
-        T apiImpl = retrofit.create(api);
-        return buildCall.call(apiImpl, path);
-    }
-
     public boolean isOnline() {
         try {
             this.server = getServer();
@@ -541,24 +532,9 @@ public class Client {
         return false;
     }
 
-    private synchronized Server getServer() throws NotConnectedException {
-        String ssid = this.identificator.getSSID();
-
-        if (ssid.isEmpty()) {
-            throw new NotConnectedException("Not connected to any network");
-        }
-        ServerDiscovery discovery = new ServerDiscovery();
-
-        if (ssid.equals(this.lastNetworkSSID)) {
-            if (this.server == null) {
-                return discovery.discover(this.identificator.getBroadcastAddress());
-            } else if (this.server.isReachable()) {
-                return this.server;
-            }
-        } else {
-            this.lastNetworkSSID = ssid;
-        }
-        return discovery.discover(this.identificator.getBroadcastAddress());
+    @FunctionalInterface
+    public interface DisconnectedListener {
+        void handle(LocalDateTime timeDisconnected);
     }
 
     private interface BuildCall<T, R> {

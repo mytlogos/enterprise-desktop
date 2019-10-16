@@ -14,6 +14,15 @@ public class ClientUpdateUser {
     }
 
     @Override
+    public int hashCode() {
+        int result = getUuid() != null ? getUuid().hashCode() : 0;
+        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
+        result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
+        result = 31 * result + (getNewPassword() != null ? getNewPassword().hashCode() : 0);
+        return result;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -27,15 +36,6 @@ public class ClientUpdateUser {
         if (getPassword() != null ? !getPassword().equals(that.getPassword()) : that.getPassword() != null)
             return false;
         return getNewPassword() != null ? getNewPassword().equals(that.getNewPassword()) : that.getNewPassword() == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = getUuid() != null ? getUuid().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getPassword() != null ? getPassword().hashCode() : 0);
-        result = 31 * result + (getNewPassword() != null ? getNewPassword().hashCode() : 0);
-        return result;
     }
 
     public String getUuid() {

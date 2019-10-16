@@ -1,11 +1,10 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
+import com.mytlogos.enterprisedesktop.model.UserImpl;
 import com.mytlogos.enterprisedesktop.model.User;
 import io.reactivex.rxjava3.core.Single;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -13,30 +12,59 @@ import java.sql.SQLException;
  */
 class UserTable extends AbstractTable {
 
-    void insertUser(User user) {
-        try (Connection connection = this.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement("INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)")) {
-                statement.setString(1, user.getUuid());
-                statement.setString(2, user.getSession());
-                statement.setString(3, user.getName());
-                statement.execute();
-            }
+    private final PreparedQuery<User> insertUserQuery = new PreparedQuery<User>() {
+        @Override
+        public String getQuery() {
+            return "INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)";
+        }
+
+        @Override
+        public void setValues(PreparedStatement statement, User value) throws SQLException {
+            statement.setString(1, value.getUuid());
+            statement.setString(2, value.getSession());
+            statement.setString(3, value.getName());
+        }
+    };
+
+    public void update(User user) {
+
+    }
+
+    void deleteAllUser() {
+        try {
+            this.executeQuery("DELETE FROM user");
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    User getUserNow() {
+        try {
+            return this.selectSingle("SELECT * FROM user", resultSet -> {
+                String uuid = resultSet.getString("uuid");
+                String name = resultSet.getString("name");
+                String session = resultSet.getString("session");
+                return new UserImpl(uuid, session, name);
+            });
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    void insert(User user) {
+        this.execute(user, this.insertUserQuery);
+    }
+
     Single<User> getUser() {
         return Single.create(emitter -> {
-            try (Connection connection = this.getConnection(); ResultSet set = connection.createStatement().executeQuery("SELECT * FROM user")) {
-                User user = null;
-
-                if (set.next()) {
-                    String uuid = set.getString("uuid");
-                    String name = set.getString("name");
-                    String session = set.getString("session");
-                    user = new User(uuid, session, name);
-                }
+            try {
+                final User user = this.selectSingle("SELECT * FROM user", resultSet -> {
+                    String uuid = resultSet.getString("uuid");
+                    String name = resultSet.getString("name");
+                    String session = resultSet.getString("session");
+                    return new UserImpl(uuid, session, name);
+                });
                 emitter.onSuccess(user);
             } catch (SQLException e) {
                 e.printStackTrace();
@@ -46,11 +74,7 @@ class UserTable extends AbstractTable {
     }
 
     @Override
-    void initialize() {
-        try (Connection connection = this.getConnection()) {
-            connection.createStatement().execute("CREATE TABLE IF NOT EXISTS user (name TEXT, uuid TEXT, session TEXT, PRIMARY KEY(uuid))");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    String createTableSql() {
+        return "CREATE TABLE IF NOT EXISTS user (name TEXT, uuid TEXT, session TEXT, PRIMARY KEY(uuid))";
     }
 }

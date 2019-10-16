@@ -1,8 +1,11 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
+import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.model.News;
+
 import java.time.LocalDateTime;
 
-public class ClientNews {
+public class ClientNews implements News {
     private String title;
     private String link;
     private LocalDateTime date;
@@ -43,6 +46,16 @@ public class ClientNews {
                 '}';
     }
 
+    @Override
+    public int getMediumType() {
+        return 0;
+    }
+
+    @Override
+    public String getTimeStampString() {
+        return Formatter.format(date);
+    }
+
     public String getTitle() {
         return title;
     }
@@ -61,5 +74,15 @@ public class ClientNews {
 
     public boolean isRead() {
         return read;
+    }
+
+    @Override
+    public LocalDateTime getTimeStamp() {
+        return date;
+    }
+
+    @Override
+    public String getUrl() {
+        return link;
     }
 }

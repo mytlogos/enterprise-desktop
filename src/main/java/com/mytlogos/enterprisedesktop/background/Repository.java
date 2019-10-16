@@ -172,7 +172,7 @@ public interface Repository {
 
     CompletableFuture<Boolean> addMediumToList(int listId, Collection<Integer> ids);
 
-    Flowable<PagedList<ExternalUser>> getExternalUser();
+    Flowable<PagedList<DisplayExternalUser>> getExternalUser();
 
     SpaceMedium getSpaceMedium(int mediumId);
 

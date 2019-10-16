@@ -1,12 +1,12 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
 
+import com.mytlogos.enterprisedesktop.model.Episode;
 
 import java.time.LocalDateTime;
-
 import java.util.Arrays;
 
-public class ClientEpisode {
+public class ClientEpisode implements Episode {
     private final int id;
     private final float progress;
     private final int partId;
@@ -29,30 +29,58 @@ public class ClientEpisode {
         return releases;
     }
 
-    public LocalDateTime getReadDate() {
-        return readDate;
-    }
-
     public int getId() {
         return id;
     }
 
-    public int getPartId() {
-        return partId;
+    @Override
+    public double getCombiIndex() {
+        return Double.parseDouble(this.getTotalIndex() + "." + this.getPartialIndex());
     }
 
-    public int getTotalIndex() {
-        return totalIndex;
-    }
-
-    public int getPartialIndex() {
-        return partialIndex;
+    @Override
+    public int getEpisodeId() {
+        return id;
     }
 
     public float getProgress() {
         return progress;
     }
 
+    public int getPartId() {
+        return partId;
+    }
+
+    public int getPartialIndex() {
+        return partialIndex;
+    }
+
+    public int getTotalIndex() {
+        return totalIndex;
+    }
+
+    public LocalDateTime getReadDate() {
+        return readDate;
+    }
+
+    @Override
+    public boolean isSaved() {
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ClientEpisode that = (ClientEpisode) o;
+        return id != that.id;
+    }
 
     @Override
     public String toString() {
@@ -65,20 +93,5 @@ public class ClientEpisode {
                 ", readDate=" + readDate +
                 ", releases=" + Arrays.toString(releases) +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClientEpisode that = (ClientEpisode) o;
-        return id != that.id;
-    }
-
-
-    @Override
-    public int hashCode() {
-        return id;
     }
 }

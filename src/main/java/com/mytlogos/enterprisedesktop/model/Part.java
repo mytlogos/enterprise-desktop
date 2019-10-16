@@ -12,4 +12,8 @@ public interface Part {
     int getPartialIndex();
 
     List<Integer> getEpisodes();
+
+    int getMediumId();
+
+    double getCombiIndex();
 }

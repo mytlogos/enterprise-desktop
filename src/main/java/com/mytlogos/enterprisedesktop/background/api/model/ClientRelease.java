@@ -2,9 +2,11 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 
 
 
+import com.mytlogos.enterprisedesktop.model.Release;
+
 import java.time.LocalDateTime;
 
-public class ClientRelease {
+public class ClientRelease implements Release {
     private final int episodeId;
     private final String title;
     private final String url;

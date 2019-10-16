@@ -6,7 +6,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 public class Formatter {
-    public static String formatLocalDateTime(LocalDateTime date) {
+    public static String format(LocalDateTime date) {
         return DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(date);
     }
 

@@ -9,6 +9,7 @@ import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientReadEpisode;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientRelease;
+import com.mytlogos.enterprisedesktop.model.ListMediumJoin;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,7 +52,7 @@ public class LoadWorkGenerator {
                 } else {
                     filteredParts.newParts.add(part);
                 }
-                Collections.addAll(episodes, part.getEpisodes());
+                Collections.addAll(episodes, part.getClientEpisodes());
             } else {
                 filteredParts.mediumDependencies.add(new IntDependency<>(part.getMediumId(), part));
             }
@@ -118,10 +119,10 @@ public class LoadWorkGenerator {
             }
 
             Set<Integer> missingMedia = new HashSet<>();
-            List<ListJoin> currentJoins = new ArrayList<>();
+            List<ListMediumJoin> currentJoins = new ArrayList<>();
 
             for (int item : mediaList.getItems()) {
-                ListJoin join = new ListJoin(mediaList.getId(), item);
+                ListMediumJoin join = new ListMediumJoin(mediaList.getId(), item, false);
 
                 if (!this.isMediumLoaded(item)) {
                     missingMedia.add(item);
@@ -162,10 +163,10 @@ public class LoadWorkGenerator {
 
 
             Set<Integer> missingMedia = new HashSet<>();
-            List<ListJoin> currentJoins = new ArrayList<>();
+            List<ListMediumJoin> currentJoins = new ArrayList<>();
 
             for (int item : externalMediaList.getItems()) {
-                ListJoin join = new ListJoin(externalMediaList.getId(), item);
+                ListMediumJoin join = new ListMediumJoin(externalMediaList.getId(), item, true);
 
                 if (!this.isMediumLoaded(item)) {
                     missingMedia.add(item);
@@ -208,10 +209,10 @@ public class LoadWorkGenerator {
                 }
 
                 Set<Integer> missingMedia = new HashSet<>();
-                List<ListJoin> currentJoins = new ArrayList<>();
+                List<ListMediumJoin> currentJoins = new ArrayList<>();
 
                 for (int item : userList.getItems()) {
-                    ListJoin join = new ListJoin(userList.getId(), item);
+                    ListMediumJoin join = new ListMediumJoin(userList.getId(), item, true);
 
                     if (!this.isMediumLoaded(item)) {
                         missingMedia.add(item);
@@ -265,36 +266,26 @@ public class LoadWorkGenerator {
         public final List<ClientExternalUser> updateUser = new ArrayList<>();
         public final List<ClientExternalMediaList> newList = new ArrayList<>();
         public final List<ClientExternalMediaList> updateList = new ArrayList<>();
-        public final List<ListJoin> joins = new ArrayList<>();
+        public final List<ListMediumJoin> joins = new ArrayList<>();
         public final List<Integer> clearJoins = new ArrayList<>();
-        public final List<IntDependency<List<ListJoin>>> mediumDependencies = new ArrayList<>();
+        public final List<IntDependency<List<ListMediumJoin>>> mediumDependencies = new ArrayList<>();
     }
 
     public static class FilteredExtMediaList {
         public final List<ClientExternalMediaList> newList = new ArrayList<>();
         public final List<ClientExternalMediaList> updateList = new ArrayList<>();
-        public final List<ListJoin> joins = new ArrayList<>();
+        public final List<ListMediumJoin> joins = new ArrayList<>();
         public final List<Integer> clearJoins = new ArrayList<>();
-        public final List<IntDependency<List<ListJoin>>> mediumDependencies = new ArrayList<>();
+        public final List<IntDependency<List<ListMediumJoin>>> mediumDependencies = new ArrayList<>();
         public final List<Dependency<String, ClientExternalMediaList>> userDependencies = new ArrayList<>();
     }
 
     public static class FilteredMediaList {
         public final List<ClientMediaList> newList = new ArrayList<>();
         public final List<ClientMediaList> updateList = new ArrayList<>();
-        public final List<ListJoin> joins = new ArrayList<>();
+        public final List<ListMediumJoin> joins = new ArrayList<>();
         public final List<Integer> clearJoins = new ArrayList<>();
-        public final List<IntDependency<List<ListJoin>>> mediumDependencies = new ArrayList<>();
-    }
-
-    public static class ListJoin {
-        public final int listId;
-        public final int mediumId;
-
-        ListJoin(int listId, int mediumId) {
-            this.listId = listId;
-            this.mediumId = mediumId;
-        }
+        public final List<IntDependency<List<ListMediumJoin>>> mediumDependencies = new ArrayList<>();
     }
 
     public static class FilteredMedia {

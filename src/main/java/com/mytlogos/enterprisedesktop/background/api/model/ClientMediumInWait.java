@@ -1,6 +1,8 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
-public class ClientMediumInWait {
+import com.mytlogos.enterprisedesktop.model.MediumInWait;
+
+public class ClientMediumInWait implements MediumInWait {
     private final String title;
     private final int medium;
     private final String link;

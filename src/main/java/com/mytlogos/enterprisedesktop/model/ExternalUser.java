@@ -1,29 +1,14 @@
 package com.mytlogos.enterprisedesktop.model;
 
-public class ExternalUser {
+/**
+ *
+ */
+public interface ExternalUser {
+    int getType();
 
-    private final String uuid;
+    String getUuid();
 
-    private final String identifier;
-    private final int type;
+    String getUserUuid();
 
-    public ExternalUser( String uuid,  String identifier, int type) {
-        this.uuid = uuid;
-        this.identifier = identifier;
-        this.type = type;
-    }
-
-
-    public String getUuid() {
-        return uuid;
-    }
-
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public int getType() {
-        return type;
-    }
+    String getIdentifier();
 }

@@ -1,8 +1,10 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
+import com.mytlogos.enterprisedesktop.model.MediaList;
+
 import java.util.Arrays;
 
-public class ClientMediaList {
+public class ClientMediaList implements MediaList {
     private String userUuid;
     private int id;
     private String name;
@@ -18,6 +20,16 @@ public class ClientMediaList {
     }
 
     public int getId() {
+        return id;
+    }
+
+    @Override
+    public String getUuid() {
+        return userUuid;
+    }
+
+    @Override
+    public int getListId() {
         return id;
     }
 

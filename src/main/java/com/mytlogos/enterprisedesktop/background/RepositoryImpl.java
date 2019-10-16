@@ -259,7 +259,7 @@ class RepositoryImpl implements Repository {
     @Override
     public List<ClientExternalUser> loadExternalUserSync(Collection<String> externalUuids) {
         try {
-            System.out.println("loading ExternalUser: " + externalUuids + " on " + Thread.currentThread());
+            System.out.println("loading DisplayExternalUser: " + externalUuids + " on " + Thread.currentThread());
             return this.client.getExternalUser(externalUuids).body();
         } catch (IOException e) {
             e.printStackTrace();
@@ -699,7 +699,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<ExternalUser>> getExternalUser() {
+    public Flowable<PagedList<DisplayExternalUser>> getExternalUser() {
         return this.storage.getExternalUser();
     }
 

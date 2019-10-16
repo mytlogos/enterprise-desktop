@@ -134,7 +134,7 @@ public interface DatabaseStorage {
 
     void moveItemsToList(int oldListId, int listId, Collection<Integer> ids);
 
-    Flowable<PagedList<ExternalUser>> getExternalUser();
+    Flowable<PagedList<DisplayExternalUser>> getExternalUser();
 
     SpaceMedium getSpaceMedium(int mediumId);
 

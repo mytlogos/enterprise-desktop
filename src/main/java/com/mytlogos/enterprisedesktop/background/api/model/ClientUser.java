@@ -1,6 +1,8 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
-public class ClientUser {
+import com.mytlogos.enterprisedesktop.model.User;
+
+public class ClientUser implements User {
     private String uuid;
     private String session;
     private String name;

@@ -1,29 +1,29 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 
+import com.mytlogos.enterprisedesktop.background.sqlite.internal.ConnectionImpl;
 import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
  *
  */
-public class ConnectionManager {
+class ConnectionManager {
     private static final ConnectionManager manager = new ConnectionManager();
     private final HikariDataSource dataSource;
 
-    public ConnectionManager() {
+    private ConnectionManager() {
         this.dataSource = new HikariDataSource();
         this.dataSource.setJdbcUrl("jdbc:sqlite:enterprise.db");
     }
 
-    public static ConnectionManager getManager() {
+    static ConnectionManager getManager() {
         return manager;
     }
 
     Connection getConnection() throws SQLException {
-        return dataSource.getConnection();
+        return new ConnectionImpl(this.dataSource.getConnection());
     }
 }
