@@ -1,9 +1,9 @@
 package com.mytlogos.enterprisedesktop.test;
 
 
-import io.reactivex.rxjava3.core.BackpressureStrategy;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -12,7 +12,7 @@ public class SimpleTest {
     public static void main(String[] args) throws Exception {
         AtomicInteger integer = new AtomicInteger();
 
-        final Flowable<Integer> flowable = Flowable.create(emitter -> {
+        final Observable<Integer> flowable = Observable.create(emitter -> {
             Thread thread = new Thread(() -> {
                 emitter.onNext(integer.getAndIncrement());
                 try {
@@ -30,8 +30,14 @@ public class SimpleTest {
                 emitter.onNext(integer.getAndIncrement());
             });
             thread.start();
-        }, BackpressureStrategy.BUFFER);
-
+        });
+        Subject<Integer> subject = PublishSubject.create();
+        subject.subscribe(integer1 -> System.out.println("[Main] value: " + integer1));
+        subject.onNext(integer.getAndIncrement());
+        subject.onNext(integer.getAndIncrement());
+        subject.onNext(integer.getAndIncrement());
+        subject.onNext(integer.getAndIncrement());
+        subject.onNext(integer.getAndIncrement());
         flowable.subscribe(integer1 -> System.out.println("[" + Thread.currentThread() + "] value: " + integer1));
     }
 

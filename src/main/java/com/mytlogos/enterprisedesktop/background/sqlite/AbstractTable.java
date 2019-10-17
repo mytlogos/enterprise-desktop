@@ -1,23 +1,21 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-import io.reactivex.rxjava3.core.BackpressureStrategy;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.subjects.PublishSubject;
-import io.reactivex.rxjava3.subjects.Subject;
+
+import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  *
  */
 abstract class AbstractTable {
     private final Subject<Boolean> invalidated = PublishSubject.create();
-    private final Flowable<Boolean> invalidationFlowable = this.invalidated.toFlowable(BackpressureStrategy.BUFFER);
+    private final Observable<Boolean> invalidationObservable = this.invalidated.distinctUntilChanged();
     private final Subject<Class<? extends AbstractTable>> invalidatedTables = PublishSubject.create();
-    private final Flowable<Class<? extends AbstractTable>> invalidatedTableFlowable = this.invalidatedTables.toFlowable(BackpressureStrategy.BUFFER);
+    private final Observable<Class<? extends AbstractTable>> invalidatedTableObservable = this.invalidatedTables.distinctUntilChanged();
 
     void initialize() {
         try (Connection connection = this.getConnection()) {
@@ -38,16 +36,52 @@ abstract class AbstractTable {
         this.invalidated.onNext(Boolean.FALSE);
     }
 
-    Flowable<Boolean> getInvalidated() {
-        return this.invalidationFlowable;
+    Observable<Boolean> getInvalidated() {
+        return this.invalidationObservable;
     }
 
-    Flowable<Class<? extends AbstractTable>> getInvalidatedTables() {
-        return this.invalidatedTableFlowable;
+    Observable<Class<? extends AbstractTable>> getInvalidatedTables() {
+        return this.invalidatedTableObservable;
     }
 
     void invalidated(Class<? extends AbstractTable> invalidatedClass) {
         this.invalidatedTables.onNext(invalidatedClass);
+    }
+
+    Set<Integer> getLoadedInt() {
+        try {
+            return new HashSet<>(this.selectList(this.getLoadedQuery(), value -> value.getInt(1)));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new HashSet<>();
+        }
+    }
+
+    Set<String> getLoadedString() {
+        try {
+            return new HashSet<>(this.selectList(this.getLoadedQuery(), value -> value.getString(1)));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new HashSet<>();
+        }
+    }
+
+    <T> List<T> selectList(String sql, SqlFunction<ResultSet, T> function) throws SQLException {
+        try (Connection connection = this.getConnection()) {
+            try (ResultSet set = connection.createStatement().executeQuery(sql)) {
+                List<T> values = new ArrayList<>();
+
+                while (set.next()) {
+                    T value = function.apply(set);
+                    values.add(value);
+                }
+                return values;
+            }
+        }
+    }
+
+    String getLoadedQuery() {
+        throw new UnsupportedOperationException();
     }
 
     <T> void execute(String sql, T value, SqlBiConsumer<PreparedStatement, T> consumer) {
@@ -145,16 +179,20 @@ abstract class AbstractTable {
         }
     }
 
-    <T> List<T> selectList(String sql, SqlFunction<ResultSet, T> function) throws SQLException {
+    <T> List<T> selectList(String sql, SqlConsumer<PreparedStatement> querySetter, SqlFunction<ResultSet, T> function) throws SQLException {
         try (Connection connection = this.getConnection()) {
-            try (ResultSet set = connection.createStatement().executeQuery(sql)) {
-                List<T> values = new ArrayList<>();
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                querySetter.apply(preparedStatement);
 
-                while (set.next()) {
-                    T value = function.apply(set);
-                    values.add(value);
+                try (ResultSet set = preparedStatement.executeQuery()) {
+                    List<T> values = new ArrayList<>();
+
+                    while (set.next()) {
+                        T value = function.apply(set);
+                        values.add(value);
+                    }
+                    return values;
                 }
-                return values;
             }
         }
     }

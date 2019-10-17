@@ -13,7 +13,7 @@ import com.mytlogos.enterprisedesktop.tools.ContentTool;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
 import com.mytlogos.enterprisedesktop.tools.Sortings;
 import com.mytlogos.enterprisedesktop.tools.Utils;
-import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.Observable;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -30,7 +30,7 @@ class RepositoryImpl implements Repository {
     private final Client client;
     private final DatabaseStorage storage;
     private final ClientModelPersister persister;
-    private final Flowable<User> storageUserLiveData;
+    private final Observable<User> storageUserLiveData;
     private final LoadData loadedData;
     private final LoadWorker loadWorker;
     private final EditService editService;
@@ -76,12 +76,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<HomeStats> getHomeStats() {
+    public Observable<HomeStats> getHomeStats() {
         return this.storage.getHomeStats();
     }
 
     @Override
-    public Flowable<User> getUser() {
+    public Observable<User> getUser() {
         return this.storageUserLiveData;
     }
 
@@ -162,9 +162,9 @@ class RepositoryImpl implements Repository {
                 if (this.loadedData.getMedia().contains(mediumId) || this.loadWorker.isMediumLoading(mediumId)) {
                     continue;
                 }
-                loadWorker.addIntegerIdTask(mediumId, null, loadWorker.MEDIUM_LOADER);
+                this.loadWorker.addIntegerIdTask(mediumId, null, this.loadWorker.MEDIUM_LOADER);
             }
-            loadWorker.work();
+            this.loadWorker.work();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -284,7 +284,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<News>> getNews() {
+    public Observable<PagedList<News>> getNews() {
         return this.storage.getNews();
     }
 
@@ -422,22 +422,22 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
+    public Observable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
         return this.storage.getDisplayEpisodes(saved, medium, read, minIndex, maxIndex, latestOnly);
     }
 
     @Override
-    public Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
+    public Observable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
         return this.storage.getDisplayEpisodesGrouped(saved, medium);
     }
 
     @Override
-    public Flowable<List<MediaList>> getLists() {
+    public Observable<List<MediaList>> getLists() {
         return this.storage.getLists();
     }
 
     @Override
-    public Flowable<? extends MediaListSetting> getListSettings(int id, boolean isExternal) {
+    public Observable<? extends MediaListSetting> getListSettings(int id, boolean isExternal) {
         return this.storage.getListSetting(id, isExternal);
     }
 
@@ -457,12 +457,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
+    public Observable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
         return this.storage.getAllMedia(sortings, title, medium, author, lastUpdate, minCountEpisodes, minCountReadEpisodes);
     }
 
     @Override
-    public Flowable<MediumSetting> getMediumSettings(int mediumId) {
+    public Observable<MediumSetting> getMediumSettings(int mediumId) {
         return this.storage.getMediumSettings(mediumId);
     }
 
@@ -472,12 +472,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved) {
+    public Observable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved) {
         return this.storage.getToc(mediumId, sortings, read, saved);
     }
 
     @Override
-    public Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
+    public Observable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
         return this.storage.getMediumItems(listId, isExternal);
     }
 
@@ -547,17 +547,17 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
+    public Observable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
         return this.storage.getReadTodayEpisodes();
     }
 
     @Override
-    public Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings) {
+    public Observable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings) {
         return this.storage.getMediaInWaitBy(filter, mediumFilter, hostFilter, sortings);
     }
 
     @Override
-    public Flowable<List<MediaList>> getInternLists() {
+    public Observable<List<MediaList>> getInternLists() {
         return this.storage.getInternLists();
     }
 
@@ -567,17 +567,17 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
+    public Observable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
         return this.storage.getSimilarMediaInWait(mediumInWait);
     }
 
     @Override
-    public Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
+    public Observable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
         return this.storage.getMediaSuggestions(title, medium);
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
+    public Observable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
         return this.storage.getMediaInWaitSuggestions(title, medium);
     }
 
@@ -674,12 +674,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<List<MediaList>> getListSuggestion(String name) {
+    public Observable<List<MediaList>> getListSuggestion(String name) {
         return this.storage.getListSuggestion(name);
     }
 
     @Override
-    public Flowable<Boolean> onDownloadable() {
+    public Observable<Boolean> onDownloadable() {
         return this.storage.onDownloadAble();
     }
 
@@ -689,7 +689,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<List<MediumItem>> getAllDanglingMedia() {
+    public Observable<List<MediumItem>> getAllDanglingMedia() {
         return this.storage.getAllDanglingMedia();
     }
 
@@ -699,7 +699,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<DisplayExternalUser>> getExternalUser() {
+    public Observable<PagedList<DisplayExternalUser>> getExternalUser() {
         return this.storage.getExternalUser();
     }
 
@@ -732,7 +732,7 @@ class RepositoryImpl implements Repository {
                 e.printStackTrace();
             }
         }
-        this.persister.persist(body);
+        this.persister.persist(body).finish();
     }
 
     @Override
@@ -745,7 +745,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<NotificationItem>> getNotifications() {
+    public Observable<PagedList<NotificationItem>> getNotifications() {
         return this.storage.getNotifications();
     }
 

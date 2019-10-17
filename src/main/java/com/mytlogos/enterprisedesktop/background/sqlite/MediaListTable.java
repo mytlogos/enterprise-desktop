@@ -37,4 +37,9 @@ class MediaListTable extends AbstractTable {
     String createTableSql() {
         return "CREATE TABLE IF NOT EXISTS media_list (`listId` INTEGER NOT NULL, `uuid` TEXT, `name` TEXT, `medium` INTEGER NOT NULL, PRIMARY KEY(`listId`), FOREIGN KEY(`uuid`) REFERENCES `user`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )";
     }
+
+    @Override
+    String getLoadedQuery() {
+        return "SELECT listId FROM media_list";
+    }
 }

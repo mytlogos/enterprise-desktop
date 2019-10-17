@@ -209,7 +209,7 @@ public class BlockingLoadWorker extends LoadWorker {
 
     private <T> Collection<DependantNode> loadIds(LoaderManagerImpl<T> manager) {
         Set<T> freeIds = manager.getFreeIds();
-        System.out.printf("Loader: %s got Ids: %s\n", manager.getLoader().getClass().getSimpleName(), freeIds);
+//        System.out.printf("Loader: %s got Ids: %s\n", manager.getLoader().getClass().getSimpleName(), freeIds);
 
         if (freeIds.isEmpty()) {
             return Collections.emptyList();
@@ -263,9 +263,9 @@ public class BlockingLoadWorker extends LoadWorker {
     private <T> Collection<DependantNode> getResolvedNodes(LoaderManagerImpl<T> manager, Set<T> freeIds) {
         Collection<DependantNode> nodes = new ArrayList<>();
 
-        System.out
-                .printf("Consumed FreeIds %d for %s", freeIds.size(), manager.getLoader().getClass().getSimpleName())
-                .println();
+//        System.out
+//                .printf("Consumed FreeIds %d for %s", freeIds.size(), manager.getLoader().getClass().getSimpleName())
+//                .println();
 
         for (T id : freeIds) {
             DependantNode node = manager.getIdDependant(id);
@@ -535,7 +535,7 @@ public class BlockingLoadWorker extends LoadWorker {
     private <T> void processLoadingManager(Collection<DependantNode> nodes, Map<Future<Collection<DependencyTask<?>>>, ProcessTasks> futureProcessTasksMap, LoaderManagerImpl<T> manager) {
         if (manager.hasFreeIds()) {
             Set<T> freeIds = manager.getFreeIds();
-            System.out.printf("Loader: %s got Ids: %s\n", manager.getLoader().getClass().getSimpleName(), freeIds);
+//            System.out.printf("Loader: %s got Ids: %s\n", manager.getLoader().getClass().getSimpleName(), freeIds);
 
             if (manager.loaded.containsAll(freeIds)) {
                 nodes.addAll(getResolvedNodes(manager, freeIds));

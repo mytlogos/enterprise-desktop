@@ -56,7 +56,7 @@ public class ClientPart implements Part {
 
     @Override
     public int getPartId() {
-        return 0;
+        return id;
     }
 
     public String getTitle() {

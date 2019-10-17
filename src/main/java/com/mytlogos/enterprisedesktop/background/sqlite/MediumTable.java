@@ -46,4 +46,9 @@ class MediumTable extends AbstractTable {
     String createTableSql() {
         return "CREATE TABLE IF NOT EXISTS medium (`mediumId` INTEGER NOT NULL, `currentRead` INTEGER, `countryOfOrigin` TEXT, `languageOfOrigin` TEXT, `author` TEXT, `title` TEXT, `medium` INTEGER NOT NULL, `artist` TEXT, `lang` TEXT, `stateOrigin` INTEGER NOT NULL, `stateTL` INTEGER NOT NULL, `series` TEXT, `universe` TEXT, PRIMARY KEY(`mediumId`), FOREIGN KEY(`currentRead`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE SET NULL )";
     }
+
+    @Override
+    String getLoadedQuery() {
+        return "SELECT mediumId FROM medium";
+    }
 }

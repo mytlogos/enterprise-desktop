@@ -21,7 +21,7 @@ class NotificationTable extends AbstractTable {
         public void setValues(PreparedStatement statement, NotificationItem value) throws SQLException {
             statement.setString(1, value.getTitle());
             statement.setString(2, value.getDescription());
-            statement.setString(3, Formatter.format(value.getDatetime()));
+            statement.setString(3, Formatter.isoFormat(value.getDatetime()));
         }
     };
 

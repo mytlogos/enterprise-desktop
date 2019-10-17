@@ -22,7 +22,7 @@ class EditEventTable extends AbstractTable {
             statement.setInt(1, value.getId());
             statement.setInt(2, value.getObjectType());
             statement.setInt(3, value.getEventType());
-            statement.setString(4, Formatter.format(value.getDateTime()));
+            statement.setString(4, Formatter.isoFormat(value.getDateTime()));
             statement.setString(5, value.getFirstValue());
             statement.setString(6, value.getSecondValue());
         }

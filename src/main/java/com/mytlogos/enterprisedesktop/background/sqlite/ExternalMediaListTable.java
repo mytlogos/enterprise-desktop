@@ -39,4 +39,9 @@ class ExternalMediaListTable extends AbstractTable {
     String createTableSql() {
         return "CREATE TABLE IF NOT EXISTS external_media_list (`uuid` TEXT, `externalListId` INTEGER NOT NULL, `name` TEXT, `medium` INTEGER NOT NULL, `url` TEXT, PRIMARY KEY(`externalListId`), FOREIGN KEY(`uuid`) REFERENCES `externalUser`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )";
     }
+
+    @Override
+    String getLoadedQuery() {
+        return "SELECT externalListId FROM external_media_list";
+    }
 }

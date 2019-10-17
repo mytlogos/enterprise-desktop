@@ -22,8 +22,8 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MainController">
     <center>
-        <TabPane tabClosingPolicy="UNAVAILABLE">
-            <Tab text="Episodes">
+        <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
+            <Tab fx:id="episodeTab" text="Episodes">
                 <VBox>
                     <FlowPane hgap="5.0" vgap="5.0" VBox.vgrow="SOMETIMES">
                         <padding>
@@ -39,24 +39,22 @@
                         <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio" />
                         <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only" />
                     </FlowPane>
-               <StackPane VBox.vgrow="ALWAYS">
-                  <children>
-                           <ListView fx:id="episodes" />
-                  </children>
-               </StackPane>
+                    <StackPane VBox.vgrow="ALWAYS">
+                        <ListView fx:id="episodes" />
+                    </StackPane>
                 </VBox>
             </Tab>
-            <Tab text="Lists">
+            <Tab fx:id="listsTab" text="Lists">
                 <SplitPane dividerPositions="0.3, 0.6">
                     <ListView fx:id="lists" prefHeight="200.0" prefWidth="200.0" />
                     <ListView fx:id="listMedia" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                     <ListView fx:id="mediumContent" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
                 </SplitPane>
             </Tab>
-            <Tab text="Statistics">
+            <Tab fx:id="statisticsTab" text="Statistics">
                 <AnchorPane prefHeight="400.0" prefWidth="600.0" />
             </Tab>
-            <Tab text="Externaluser">
+            <Tab fx:id="externalUserTab" text="Externaluser">
                 <AnchorPane prefHeight="400.0" prefWidth="600.0" />
             </Tab>
             <Tab text="Settings">

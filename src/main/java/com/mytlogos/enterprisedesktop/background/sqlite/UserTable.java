@@ -1,8 +1,7 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-import com.mytlogos.enterprisedesktop.model.UserImpl;
 import com.mytlogos.enterprisedesktop.model.User;
-import io.reactivex.rxjava3.core.Single;
+import com.mytlogos.enterprisedesktop.model.UserImpl;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -56,21 +55,18 @@ class UserTable extends AbstractTable {
         this.execute(user, this.insertUserQuery);
     }
 
-    Single<User> getUser() {
-        return Single.create(emitter -> {
-            try {
-                final User user = this.selectSingle("SELECT * FROM user", resultSet -> {
-                    String uuid = resultSet.getString("uuid");
-                    String name = resultSet.getString("name");
-                    String session = resultSet.getString("session");
-                    return new UserImpl(uuid, session, name);
-                });
-                emitter.onSuccess(user);
-            } catch (SQLException e) {
-                e.printStackTrace();
-                emitter.onError(e);
-            }
-        });
+    User getUser() {
+        try {
+            return this.selectSingle("SELECT * FROM user", resultSet -> {
+                String uuid = resultSet.getString("uuid");
+                String name = resultSet.getString("name");
+                String session = resultSet.getString("session");
+                return new UserImpl(uuid, session, name);
+            });
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     @Override

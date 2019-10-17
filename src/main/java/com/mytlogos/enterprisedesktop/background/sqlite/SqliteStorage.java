@@ -8,7 +8,7 @@ import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerato
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sortings;
-import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.Observable;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -60,8 +60,8 @@ public class SqliteStorage implements DatabaseStorage {
 
 
     @Override
-    public Flowable<User> getUser() {
-        return Flowable.empty();
+    public Observable<User> getUser() {
+        return Observable.empty();
     }
 
     @Override
@@ -70,8 +70,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<HomeStats> getHomeStats() {
-        return Flowable.empty();
+    public Observable<HomeStats> getHomeStats() {
+        return Observable.empty();
     }
 
     @Override
@@ -106,12 +106,20 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LoadData getLoadData() {
-        return new LoadData();
+        LoadData data = new LoadData();
+        data.getEpisodes().addAll(this.episodeTable.getLoadedInt());
+        data.getPart().addAll(this.partTable.getLoadedInt());
+        data.getNews().addAll(this.newsTable.getLoadedInt());
+        data.getMedia().addAll(this.mediumTable.getLoadedInt());
+        data.getExternalMediaList().addAll(this.externalMediaListTable.getLoadedInt());
+        data.getExternalUser().addAll(this.externalUserTable.getLoadedString());
+        data.getMediaList().addAll(this.mediaListTable.getLoadedInt());
+        return data;
     }
 
     @Override
-    public Flowable<PagedList<News>> getNews() {
-        return Flowable.empty();
+    public Observable<PagedList<News>> getNews() {
+        return Observable.empty();
     }
 
     @Override
@@ -150,8 +158,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<Integer>> getLiveListItems(Integer listId) {
-        return Flowable.empty();
+    public Observable<List<Integer>> getLiveListItems(Integer listId) {
+        return Observable.empty();
     }
 
     @Override
@@ -160,8 +168,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<Integer>> getLiveExternalListItems(Integer externalListId) {
-        return Flowable.empty();
+    public Observable<List<Integer>> getLiveExternalListItems(Integer externalListId) {
+        return Observable.empty();
     }
 
     @Override
@@ -175,18 +183,18 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
-        return Flowable.empty();
+    public Observable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
+        return this.releaseTable.getReleases(saved, medium, read, minIndex, maxIndex);
     }
 
     @Override
-    public Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
-        return Flowable.empty();
+    public Observable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<List<MediaList>> getLists() {
-        return Flowable.empty();
+    public Observable<List<MediaList>> getLists() {
+        return Observable.empty();
     }
 
     @Override
@@ -200,8 +208,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<? extends MediaListSetting> getListSetting(int id, boolean isExternal) {
-        return Flowable.empty();
+    public Observable<? extends MediaListSetting> getListSetting(int id, boolean isExternal) {
+        return Observable.empty();
     }
 
     @Override
@@ -215,13 +223,13 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
-        return Flowable.empty();
+    public Observable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<MediumSetting> getMediumSettings(int mediumId) {
-        return Flowable.empty();
+    public Observable<MediumSetting> getMediumSettings(int mediumId) {
+        return Observable.empty();
     }
 
     @Override
@@ -230,13 +238,13 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved) {
-        return Flowable.empty();
+    public Observable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
-        return Flowable.empty();
+    public Observable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
+        return Observable.empty();
     }
 
     @Override
@@ -270,18 +278,18 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings) {
-        return Flowable.empty();
+    public Observable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
-        return Flowable.empty();
+    public Observable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<List<MediaList>> getInternLists() {
-        return Flowable.empty();
+    public Observable<List<MediaList>> getInternLists() {
+        return Observable.empty();
     }
 
     @Override
@@ -290,28 +298,28 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
-        return Flowable.empty();
+    public Observable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
-        return Flowable.empty();
+    public Observable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
-        return Flowable.empty();
+    public Observable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<List<MediaList>> getListSuggestion(String name) {
-        return Flowable.empty();
+    public Observable<List<MediaList>> getListSuggestion(String name) {
+        return Observable.empty();
     }
 
     @Override
-    public Flowable<Boolean> onDownloadAble() {
-        return Flowable.empty();
+    public Observable<Boolean> onDownloadAble() {
+        return Observable.empty();
     }
 
     @Override
@@ -325,8 +333,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<MediumItem>> getAllDanglingMedia() {
-        return Flowable.empty();
+    public Observable<List<MediumItem>> getAllDanglingMedia() {
+        return Observable.empty();
     }
 
     @Override
@@ -345,8 +353,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<DisplayExternalUser>> getExternalUser() {
-        return Flowable.empty();
+    public Observable<PagedList<DisplayExternalUser>> getExternalUser() {
+        return Observable.empty();
     }
 
     @Override
@@ -370,8 +378,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<NotificationItem>> getNotifications() {
-        return Flowable.empty();
+    public Observable<PagedList<NotificationItem>> getNotifications() {
+        return Observable.empty();
     }
 
     @Override
@@ -1047,7 +1055,6 @@ public class SqliteStorage implements DatabaseStorage {
             for (ClientNews clientNews : list) {
                 this.loadedData.getNews().add(clientNews.getId());
             }
-            System.out.println("from " + news.size() + " persisted: " + list);
             return this;
         }
 

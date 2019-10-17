@@ -39,4 +39,9 @@ class PartTable extends AbstractTable {
     String createTableSql() {
         return "CREATE TABLE IF NOT EXISTS part (`partId` INTEGER NOT NULL, `mediumId` INTEGER NOT NULL, `title` TEXT, `totalIndex` INTEGER NOT NULL, `partialIndex` INTEGER NOT NULL, `combiIndex` REAL NOT NULL, PRIMARY KEY(`partId`), FOREIGN KEY(`mediumId`) REFERENCES `medium`(`mediumId`) ON UPDATE NO ACTION ON DELETE SET NULL )";
     }
+
+    @Override
+    String getLoadedQuery() {
+        return "SELECT partId FROM part";
+    }
 }

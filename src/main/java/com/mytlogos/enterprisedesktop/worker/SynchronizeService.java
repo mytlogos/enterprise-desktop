@@ -27,6 +27,7 @@ public class SynchronizeService extends ScheduledService<Void> {
                 }
 
                 repository.syncUser();
+                repository.loadAllMedia();
                 return null;
             }
         };

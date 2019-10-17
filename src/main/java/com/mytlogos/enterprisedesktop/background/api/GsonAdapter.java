@@ -25,7 +25,7 @@ class GsonAdapter {
 
         @Override
         public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
-            return src == null ? null : new JsonPrimitive(Formatter.format(src));
+            return src == null ? null : new JsonPrimitive(Formatter.isoFormat(src));
         }
     }
 
@@ -40,7 +40,7 @@ class GsonAdapter {
 
         @Override
         public JsonElement serialize(LocalDateTime src, Type typeOfSrc, JsonSerializationContext context) {
-            return src == null ? null : new JsonPrimitive(Formatter.format(src));
+            return src == null ? null : new JsonPrimitive(Formatter.isoFormat(src));
         }
     }
 }
