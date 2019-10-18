@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -31,11 +30,11 @@ import java.util.regex.Pattern;
 
 public class ImageContentTool extends ContentTool {
     private final Repository repository;
-    private Map<Integer, File> internalImageMedia;
+    private Map<Integer, File> imageMedia;
     private Map<Integer, File> externalImageMedia;
 
     ImageContentTool(File internalContentDir, File externalContentDir, Repository repository) {
-        super(internalContentDir, externalContentDir);
+        super(internalContentDir);
         this.repository = repository;
     }
 
@@ -64,7 +63,12 @@ public class ImageContentTool extends ContentTool {
         for (Integer episodeId : episodeIds) {
             prefixes.add(episodeId + "-");
         }
-        for (File episodePath : file.listFiles()) {
+        final File[] files = file.listFiles();
+        if (files == null) {
+            System.err.println("could not files of: " + file);
+            return;
+        }
+        for (File episodePath : files) {
 
             String name = episodePath.getName();
 
@@ -106,7 +110,13 @@ public class ImageContentTool extends ContentTool {
 
         Map<Integer, String> firstPageEpisodes = new HashMap<>();
 
-        for (String episodePath : file.list()) {
+        final String[] files = file.list();
+
+        if (files == null) {
+            System.err.println("could not files of: " + file);
+            return firstPageEpisodes;
+        }
+        for (String episodePath : files) {
             Matcher matcher = pagePattern.matcher(episodePath);
 
             if (!matcher.matches()) {
@@ -125,7 +135,12 @@ public class ImageContentTool extends ContentTool {
 
     @Override
     String getItemPath(int mediumId, File dir) {
-        for (File file : dir.listFiles()) {
+        final File[] files = dir.listFiles();
+        if (files == null) {
+            System.err.println("could not files of: " + dir);
+            return null;
+        }
+        for (File file : files) {
             if ((mediumId + "").equals(file.getName()) && file.isDirectory()) {
                 return file.getAbsolutePath();
             }
@@ -135,32 +150,19 @@ public class ImageContentTool extends ContentTool {
 
     @Override
     public void saveContent(Collection<ClientDownloadedEpisode> episodes, int mediumId) throws IOException {
-        if (externalImageMedia == null) {
-            externalImageMedia = this.getItemContainers(true);
-        }
-        if (internalImageMedia == null) {
-            internalImageMedia = this.getItemContainers(false);
+        if (this.imageMedia == null) {
+            this.imageMedia = this.getItemContainers();
         }
         File file;
 
-        boolean writeExternal = writeExternal();
-        boolean writeInternal = writeInternal();
+        if (!this.writeable()) {
+            throw new NotEnoughSpaceException("Out of Storage Space: Less than " + minMBSpaceAvailable + " MB available");
+        }
 
-        if (writeExternal && externalImageMedia.containsKey(mediumId)) {
-            file = externalImageMedia.get(mediumId);
-        } else if (writeInternal && internalImageMedia.containsKey(mediumId)) {
-            file = internalImageMedia.get(mediumId);
+        if (this.imageMedia.containsKey(mediumId)) {
+            file = this.imageMedia.get(mediumId);
         } else {
-            File dir;
-
-            if (writeExternal) {
-                dir = externalContentDir;
-            } else if (writeInternal) {
-                dir = internalContentDir;
-            } else {
-                throw new NotEnoughSpaceException("Out of Storage Space: Less than " + minMBSpaceAvailable + " MB available");
-            }
-            file = new File(dir, mediumId + "");
+            file = new File(this.contentDir, mediumId + "");
 
             if (!file.exists() && !file.mkdir()) {
                 throw new IOException("could not create image medium directory");
@@ -179,7 +181,7 @@ public class ImageContentTool extends ContentTool {
             File firstImage = writtenFiles.get(0);
             long estimatedByteSize = firstImage.length() * content.length;
 
-            if (!writeable(file, estimatedByteSize)) {
+            if (notWriteable(file, estimatedByteSize)) {
                 if (firstImage.exists() && !firstImage.delete()) {
                     System.out.println("could not delete image: " + firstImage.getAbsolutePath());
                 }
@@ -321,55 +323,16 @@ public class ImageContentTool extends ContentTool {
     }
 
     @Override
-    void mergeExternalAndInternalMedium(boolean toExternal, File source, File goal, File toParent, Integer mediumId) {
-        if (goal == null) {
-            goal = new File(toParent, mediumId + "");
-
-            if (!goal.mkdirs()) {
-                System.err.println("could not create medium container");
-                return;
-            }
-        }
-        Map<Integer, Set<ChapterPage>> paths = getEpisodePagePaths(source.getAbsolutePath());
-        for (Map.Entry<Integer, Set<ChapterPage>> entry : paths.entrySet()) {
-
-            Set<File> files = new HashSet<>();
-            long neededSpace = 0;
-
-            for (ChapterPage page : entry.getValue()) {
-                File file = new File(page.getPath());
-                files.add(file);
-                neededSpace += file.length();
-            }
-            if (!writeable(goal, neededSpace)) {
-                continue;
-            }
-            boolean successFull = false;
-            try {
-                for (File file : files) {
-                    copyFile(file, new File(goal, file.getName()));
-                }
-                successFull = true;
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            if (!successFull) {
-                continue;
-            }
-            for (File file : files) {
-                if (file.exists() && !file.delete()) {
-                    System.err.println("could not delete file");
-                }
-            }
-        }
-    }
-
-    @Override
     public long getEpisodeSize(File value, int episodeId) {
         String prefix = episodeId + "-";
         long size = 0;
 
-        for (File file : value.listFiles()) {
+        final File[] files = value.listFiles();
+        if (files == null) {
+            System.err.println("could not files of: " + value);
+            return size;
+        }
+        for (File file : files) {
             if (!file.getName().startsWith(prefix)) {
                 continue;
             }
@@ -384,6 +347,10 @@ public class ImageContentTool extends ContentTool {
         double sum = 0;
 
         File[] files = new File(itemPath).listFiles();
+        if (files == null) {
+            System.err.println("could not files of: " + itemPath);
+            return sum;
+        }
         for (File file : files) {
             sum += file.length();
         }
@@ -401,7 +368,13 @@ public class ImageContentTool extends ContentTool {
 
         Map<Integer, Set<ChapterPage>> episodePages = new HashMap<>();
 
-        for (String episodePath : file.list()) {
+        final String[] files = file.list();
+
+        if (files == null) {
+            System.err.println("could not files of: " + file);
+            return episodePages;
+        }
+        for (String episodePath : files) {
             Matcher matcher = pagePattern.matcher(episodePath);
 
             if (!matcher.matches()) {

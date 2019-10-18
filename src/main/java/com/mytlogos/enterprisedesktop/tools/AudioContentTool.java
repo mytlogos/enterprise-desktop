@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class AudioContentTool extends ContentTool {
 
     AudioContentTool(File internalContentDir, File externalContentDir) {
-        super(internalContentDir, externalContentDir);
+        super(internalContentDir);
     }
 
     @Override
@@ -54,16 +54,6 @@ public class AudioContentTool extends ContentTool {
     @Override
     public boolean isSupported() {
         return false;
-    }
-
-    @Override
-    public void mergeExternalAndInternalMedia(boolean toExternal) {
-        throw new IllegalStateException("Not yet implemented");
-    }
-
-    @Override
-    void mergeExternalAndInternalMedium(boolean toExternal, File source, File goal, File toParent, Integer mediumId) {
-        throw new IllegalStateException("Not yet implemented");
     }
 
     @Override

@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public class VideoContentTool extends ContentTool {
 
     VideoContentTool(File internalContentDir, File externalContentDir) {
-        super(internalContentDir, externalContentDir);
+        super(internalContentDir);
     }
 
     @Override
@@ -64,16 +64,6 @@ public class VideoContentTool extends ContentTool {
 
     @Override
     public void saveContent(Collection<ClientDownloadedEpisode> episode, int mediumId) {
-        throw new IllegalStateException("Not yet implemented");
-    }
-
-    @Override
-    public void mergeExternalAndInternalMedia(boolean toExternal) {
-        throw new IllegalStateException("Not yet implemented");
-    }
-
-    @Override
-    void mergeExternalAndInternalMedium(boolean toExternal, File source, File goal, File toParent, Integer mediumId) {
         throw new IllegalStateException("Not yet implemented");
     }
 

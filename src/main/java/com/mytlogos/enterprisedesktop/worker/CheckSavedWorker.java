@@ -41,8 +41,8 @@ public class CheckSavedWorker {
         Map<Integer, Set<Integer>> mediumSavedEpisodes = new HashMap<>();
 
         for (ContentTool tool : tools) {
-            this.putItemContainer(tool, mediumSavedEpisodes, true, repository);
-            this.putItemContainer(tool, mediumSavedEpisodes, false, repository);
+            this.putItemContainer(tool, mediumSavedEpisodes, repository);
+            this.putItemContainer(tool, mediumSavedEpisodes, repository);
         }
 
         Map<Integer, Map<Integer, Set<Integer>>> typeMediumSavedEpisodes = new HashMap<>();
@@ -106,8 +106,8 @@ public class CheckSavedWorker {
     private void updateNotificationContentText() {
     }
 
-    private void putItemContainer(ContentTool bookTool, Map<Integer, Set<Integer>> mediumSavedEpisodes, boolean externalSpace, Repository repository) {
-        for (Map.Entry<Integer, File> entry : bookTool.getItemContainers(externalSpace).entrySet()) {
+    private void putItemContainer(ContentTool bookTool, Map<Integer, Set<Integer>> mediumSavedEpisodes, Repository repository) {
+        for (Map.Entry<Integer, File> entry : bookTool.getItemContainers().entrySet()) {
             Map<Integer, String> episodePaths = bookTool.getEpisodePaths(entry.getValue().getAbsolutePath());
             Set<Integer> episodeIds = new HashSet<>(episodePaths.keySet());
 
