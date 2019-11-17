@@ -23,7 +23,7 @@ class ConnectionManager {
         return manager;
     }
 
-    Connection getConnection() throws SQLException {
+    ConnectionImpl getConnection() throws SQLException {
         return new ConnectionImpl(this.dataSource.getConnection());
     }
 }

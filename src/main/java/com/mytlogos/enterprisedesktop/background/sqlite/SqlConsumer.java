@@ -6,5 +6,5 @@ import java.sql.SQLException;
  *
  */
 public interface SqlConsumer<T> {
-    void apply(T value) throws SQLException;
+    void accept(T value) throws SQLException;
 }

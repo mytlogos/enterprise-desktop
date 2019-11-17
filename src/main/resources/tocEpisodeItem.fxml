@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
+    <padding>
+        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+    </padding>
+    <HBox>
+        <Text fx:id="topLeftContent" strokeType="OUTSIDE" strokeWidth="0.0" text="left" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Text fx:id="topRightContent" layoutX="10.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="right" />
+    </HBox>
+    <Text fx:id="content" strokeType="OUTSIDE" strokeWidth="0.0" text="content" />
+    <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" spacing="5.0">
+        <ImageView fx:id="lockedView" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
+        </ImageView>
+        <ImageView fx:id="readView" fitHeight="20.0" fitWidth="20.0" layoutX="10.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
+        </ImageView>
+        <ImageView fx:id="onlineView" fitHeight="20.0" fitWidth="20.0" layoutX="210.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
+        </ImageView>
+        <ImageView fx:id="localView" fitHeight="20.0" fitWidth="20.0" layoutX="410.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
+        </ImageView>
+    </HBox>
+</VBox>

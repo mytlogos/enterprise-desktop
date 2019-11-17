@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import java.util.List;
 
-public class TocEpisode {
+public class TocEpisode implements Indexable {
     private final int episodeId;
     private final float progress;
     private final LocalDateTime readDate;
@@ -37,10 +37,12 @@ public class TocEpisode {
         return partId;
     }
 
+    @Override
     public int getPartialIndex() {
         return partialIndex;
     }
 
+    @Override
     public int getTotalIndex() {
         return totalIndex;
     }

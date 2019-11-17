@@ -1,20 +1,30 @@
 package com.mytlogos.enterprisedesktop.background.sqlite.internal;
 
+import com.mytlogos.enterprisedesktop.tools.Range;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  *
  */
 public class PreparedStatementImpl implements PreparedStatement {
     private final PreparedStatement delegate;
+    private final List<Range> usedRanges = new ArrayList<>();
 
     public PreparedStatementImpl(PreparedStatement delegate) {
         this.delegate = delegate;
+    }
+
+    public void addUsedIndices(int from, int to) {
+        this.usedRanges.add(new Range(from, to));
     }
 
     @Override
@@ -29,88 +39,88 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public void setNull(int parameterIndex, int sqlType) throws SQLException {
-        delegate.setNull(parameterIndex, sqlType);
+        delegate.setNull(checkParameterIndex(parameterIndex), sqlType);
     }
 
     @Override
     public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-        delegate.setBoolean(parameterIndex, x);
+        delegate.setBoolean(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setByte(int parameterIndex, byte x) throws SQLException {
-        delegate.setByte(parameterIndex, x);
+        delegate.setByte(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setShort(int parameterIndex, short x) throws SQLException {
-        delegate.setShort(parameterIndex, x);
+        delegate.setShort(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setInt(int parameterIndex, int x) throws SQLException {
-        delegate.setInt(parameterIndex, x);
+        delegate.setInt(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setLong(int parameterIndex, long x) throws SQLException {
-        delegate.setLong(parameterIndex, x);
+        delegate.setLong(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setFloat(int parameterIndex, float x) throws SQLException {
-        delegate.setFloat(parameterIndex, x);
+        delegate.setFloat(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setDouble(int parameterIndex, double x) throws SQLException {
-        delegate.setDouble(parameterIndex, x);
+        delegate.setDouble(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
-        delegate.setBigDecimal(parameterIndex, x);
+        delegate.setBigDecimal(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setString(int parameterIndex, String x) throws SQLException {
-        delegate.setString(parameterIndex, x);
+        delegate.setString(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setBytes(int parameterIndex, byte[] x) throws SQLException {
-        delegate.setBytes(parameterIndex, x);
+        delegate.setBytes(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setDate(int parameterIndex, Date x) throws SQLException {
-        delegate.setDate(parameterIndex, x);
+        delegate.setDate(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setTime(int parameterIndex, Time x) throws SQLException {
-        delegate.setTime(parameterIndex, x);
+        delegate.setTime(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-        delegate.setTimestamp(parameterIndex, x);
+        delegate.setTimestamp(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        delegate.setAsciiStream(parameterIndex, x, length);
+        delegate.setAsciiStream(checkParameterIndex(parameterIndex), x, length);
     }
 
     @Override
     @Deprecated
     public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        delegate.setUnicodeStream(parameterIndex, x, length);
+        delegate.setUnicodeStream(checkParameterIndex(parameterIndex), x, length);
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
-        delegate.setBinaryStream(parameterIndex, x, length);
+        delegate.setBinaryStream(checkParameterIndex(parameterIndex), x, length);
     }
 
     @Override
@@ -120,16 +130,17 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
-        delegate.setObject(parameterIndex, x, targetSqlType);
+        delegate.setObject(checkParameterIndex(parameterIndex), x, targetSqlType);
     }
 
     @Override
     public void setObject(int parameterIndex, Object x) throws SQLException {
-        delegate.setObject(parameterIndex, x);
+        delegate.setObject(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public boolean execute() throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.execute();
     }
 
@@ -140,27 +151,27 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
-        delegate.setCharacterStream(parameterIndex, reader, length);
+        delegate.setCharacterStream(checkParameterIndex(parameterIndex), reader, length);
     }
 
     @Override
     public void setRef(int parameterIndex, Ref x) throws SQLException {
-        delegate.setRef(parameterIndex, x);
+        delegate.setRef(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setBlob(int parameterIndex, Blob x) throws SQLException {
-        delegate.setBlob(parameterIndex, x);
+        delegate.setBlob(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setClob(int parameterIndex, Clob x) throws SQLException {
-        delegate.setClob(parameterIndex, x);
+        delegate.setClob(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setArray(int parameterIndex, Array x) throws SQLException {
-        delegate.setArray(parameterIndex, x);
+        delegate.setArray(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
@@ -170,27 +181,27 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
-        delegate.setDate(parameterIndex, x, cal);
+        delegate.setDate(checkParameterIndex(parameterIndex), x, cal);
     }
 
     @Override
     public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
-        delegate.setTime(parameterIndex, x, cal);
+        delegate.setTime(checkParameterIndex(parameterIndex), x, cal);
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
-        delegate.setTimestamp(parameterIndex, x, cal);
+        delegate.setTimestamp(checkParameterIndex(parameterIndex), x, cal);
     }
 
     @Override
     public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
-        delegate.setNull(parameterIndex, sqlType, typeName);
+        delegate.setNull(checkParameterIndex(parameterIndex), sqlType, typeName);
     }
 
     @Override
     public void setURL(int parameterIndex, URL x) throws SQLException {
-        delegate.setURL(parameterIndex, x);
+        delegate.setURL(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
@@ -200,121 +211,144 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public void setRowId(int parameterIndex, RowId x) throws SQLException {
-        delegate.setRowId(parameterIndex, x);
+        delegate.setRowId(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setNString(int parameterIndex, String value) throws SQLException {
-        delegate.setNString(parameterIndex, value);
+        delegate.setNString(checkParameterIndex(parameterIndex), value);
     }
 
     @Override
     public void setNCharacterStream(int parameterIndex, Reader value, long length) throws SQLException {
-        delegate.setNCharacterStream(parameterIndex, value, length);
+        delegate.setNCharacterStream(checkParameterIndex(parameterIndex), value, length);
     }
 
     @Override
     public void setNClob(int parameterIndex, NClob value) throws SQLException {
-        delegate.setNClob(parameterIndex, value);
+        delegate.setNClob(checkParameterIndex(parameterIndex), value);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        delegate.setClob(parameterIndex, reader, length);
+        delegate.setClob(checkParameterIndex(parameterIndex), reader, length);
     }
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream, long length) throws SQLException {
-        delegate.setBlob(parameterIndex, inputStream, length);
+        delegate.setBlob(checkParameterIndex(parameterIndex), inputStream, length);
     }
 
     @Override
     public void setNClob(int parameterIndex, Reader reader, long length) throws SQLException {
-        delegate.setNClob(parameterIndex, reader, length);
+        delegate.setNClob(checkParameterIndex(parameterIndex), reader, length);
     }
 
     @Override
     public void setSQLXML(int parameterIndex, SQLXML xmlObject) throws SQLException {
-        delegate.setSQLXML(parameterIndex, xmlObject);
+        delegate.setSQLXML(checkParameterIndex(parameterIndex), xmlObject);
     }
 
     @Override
     public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength) throws SQLException {
-        delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+        delegate.setObject(checkParameterIndex(parameterIndex), x, targetSqlType, scaleOrLength);
     }
 
     @Override
     public void setAsciiStream(int parameterIndex, InputStream x, long length) throws SQLException {
-        delegate.setAsciiStream(parameterIndex, x, length);
+        delegate.setAsciiStream(checkParameterIndex(parameterIndex), x, length);
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream x, long length) throws SQLException {
-        delegate.setBinaryStream(parameterIndex, x, length);
+        delegate.setBinaryStream(checkParameterIndex(parameterIndex), x, length);
     }
 
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader, long length) throws SQLException {
-        delegate.setCharacterStream(parameterIndex, reader, length);
+        delegate.setCharacterStream(checkParameterIndex(parameterIndex), reader, length);
     }
 
     @Override
     public void setAsciiStream(int parameterIndex, InputStream x) throws SQLException {
-        delegate.setAsciiStream(parameterIndex, x);
+        delegate.setAsciiStream(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setBinaryStream(int parameterIndex, InputStream x) throws SQLException {
-        delegate.setBinaryStream(parameterIndex, x);
+        delegate.setBinaryStream(checkParameterIndex(parameterIndex), x);
     }
 
     @Override
     public void setCharacterStream(int parameterIndex, Reader reader) throws SQLException {
-        delegate.setCharacterStream(parameterIndex, reader);
+        delegate.setCharacterStream(checkParameterIndex(parameterIndex), reader);
     }
 
     @Override
     public void setNCharacterStream(int parameterIndex, Reader value) throws SQLException {
-        delegate.setNCharacterStream(parameterIndex, value);
+        delegate.setNCharacterStream(checkParameterIndex(parameterIndex), value);
     }
 
     @Override
     public void setClob(int parameterIndex, Reader reader) throws SQLException {
-        delegate.setClob(parameterIndex, reader);
+        delegate.setClob(checkParameterIndex(parameterIndex), reader);
     }
 
     @Override
     public void setBlob(int parameterIndex, InputStream inputStream) throws SQLException {
-        delegate.setBlob(parameterIndex, inputStream);
+        delegate.setBlob(checkParameterIndex(parameterIndex), inputStream);
     }
 
     @Override
     public void setNClob(int parameterIndex, Reader reader) throws SQLException {
-        delegate.setNClob(parameterIndex, reader);
+        delegate.setNClob(checkParameterIndex(parameterIndex), reader);
     }
 
     @Override
     public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
-        delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+        delegate.setObject(checkParameterIndex(parameterIndex), x, targetSqlType, scaleOrLength);
     }
 
     @Override
     public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
-        delegate.setObject(parameterIndex, x, targetSqlType);
+        delegate.setObject(checkParameterIndex(parameterIndex), x, targetSqlType);
     }
 
     @Override
     public long executeLargeUpdate() throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeLargeUpdate();
+    }
+
+    private int checkParameterIndex(int parameterIndex) {
+        boolean changed = true;
+        List<Range> ranges = new ArrayList<>(this.usedRanges);
+        while (changed) {
+            changed = false;
+            for (Iterator<Range> iterator = ranges.iterator(); iterator.hasNext(); ) {
+                Range range = iterator.next();
+                if (range.isAfter(parameterIndex)) {
+                    iterator.remove();
+                }
+                if (range.inRange(parameterIndex)) {
+                    parameterIndex = range.getTo() + 1;
+                    iterator.remove();
+                    changed = true;
+                }
+            }
+        }
+        return parameterIndex;
     }
 
     @Override
     public ResultSet executeQuery(String sql) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return new ResultSetImpl(delegate.executeQuery(sql));
     }
 
     @Override
     public int executeUpdate(String sql) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeUpdate(sql);
     }
 
@@ -380,6 +414,7 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public boolean execute(String sql) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.execute(sql);
     }
 
@@ -391,31 +426,42 @@ public class PreparedStatementImpl implements PreparedStatement {
     @Override
     public int getUpdateCount() throws SQLException {
         return delegate.getUpdateCount();
-    }    @Override
-    public void setFetchDirection(int direction) throws SQLException {
-        delegate.setFetchDirection(direction);
     }
 
     @Override
     public boolean getMoreResults() throws SQLException {
         return delegate.getMoreResults();
-    }    @Override
-    public int getFetchDirection() throws SQLException {
-        return delegate.getFetchDirection();
     }
 
     @Override
     public <T> T unwrap(Class<T> iface) throws SQLException {
         return delegate.unwrap(iface);
-    }    @Override
-    public void setFetchSize(int rows) throws SQLException {
-        delegate.setFetchSize(rows);
     }
 
     @Override
     public boolean isWrapperFor(Class<?> iface) throws SQLException {
         return delegate.isWrapperFor(iface);
-    }    @Override
+    }
+
+    @Override
+    public void setFetchDirection(int direction) throws SQLException {
+        delegate.setFetchDirection(direction);
+    }
+
+
+    @Override
+    public int getFetchDirection() throws SQLException {
+        return delegate.getFetchDirection();
+    }
+
+
+    @Override
+    public void setFetchSize(int rows) throws SQLException {
+        delegate.setFetchSize(rows);
+    }
+
+
+    @Override
     public int getFetchSize() throws SQLException {
         return delegate.getFetchSize();
     }
@@ -442,6 +488,7 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public int[] executeBatch() throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeBatch();
     }
 
@@ -462,31 +509,37 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public int executeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeUpdate(sql, autoGeneratedKeys);
     }
 
     @Override
     public int executeUpdate(String sql, int[] columnIndexes) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeUpdate(sql, columnIndexes);
     }
 
     @Override
     public int executeUpdate(String sql, String[] columnNames) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeUpdate(sql, columnNames);
     }
 
     @Override
     public boolean execute(String sql, int autoGeneratedKeys) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.execute(sql, autoGeneratedKeys);
     }
 
     @Override
     public boolean execute(String sql, int[] columnIndexes) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.execute(sql, columnIndexes);
     }
 
     @Override
     public boolean execute(String sql, String[] columnNames) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.execute(sql, columnNames);
     }
 
@@ -537,34 +590,33 @@ public class PreparedStatementImpl implements PreparedStatement {
 
     @Override
     public long[] executeLargeBatch() throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeLargeBatch();
     }
 
     @Override
     public long executeLargeUpdate(String sql) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeLargeUpdate(sql);
     }
 
     @Override
     public long executeLargeUpdate(String sql, int autoGeneratedKeys) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeLargeUpdate(sql, autoGeneratedKeys);
     }
 
     @Override
     public long executeLargeUpdate(String sql, int[] columnIndexes) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeLargeUpdate(sql, columnIndexes);
     }
 
     @Override
     public long executeLargeUpdate(String sql, String[] columnNames) throws SQLException {
+        System.out.printf("Executing Query on %s%n",Thread.currentThread());
         return delegate.executeLargeUpdate(sql, columnNames);
     }
-
-
-
-
-
-
 
 
 }

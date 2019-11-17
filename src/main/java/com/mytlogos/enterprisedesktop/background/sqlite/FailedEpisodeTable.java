@@ -4,7 +4,9 @@ import com.mytlogos.enterprisedesktop.model.FailedEpisode;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -22,6 +24,24 @@ class FailedEpisodeTable extends AbstractTable {
             statement.setInt(2, value.getFailCount());
         }
     };
+    private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?");
+
+    public List<FailedEpisode> getFailedEpisodes(Collection<Integer> episodeIds) {
+        try {
+            // FIXME: 17.11.2019: could be a bug to use query in and queryList together
+            return this.failedEpisodeQuery
+                    .setQueryIn(episodeIds, QueryBuilder.Type.INT)
+                    .setConverter(value -> new FailedEpisode(value.getInt(1), value.getInt(2)))
+                    .queryList();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
+    public void updateFailedDownload(int episodeId) {
+        // TODO 17.11.2019:
+    }
 
     void insert(FailedEpisode failedEpisode) {
         this.execute(failedEpisode, this.insertFailedEpisodeQuery);

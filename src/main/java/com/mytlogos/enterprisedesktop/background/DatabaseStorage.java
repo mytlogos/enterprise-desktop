@@ -3,8 +3,8 @@ package com.mytlogos.enterprisedesktop.background;
 
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.model.*;
-import com.mytlogos.enterprisedesktop.tools.Sortings;
-import io.reactivex.Observable;
+import com.mytlogos.enterprisedesktop.tools.Sorting;
+import io.reactivex.Flowable;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -20,11 +20,11 @@ import java.util.List;
  * </p>
  */
 public interface DatabaseStorage {
-    Observable<User> getUser();
+    Flowable<User> getUser();
 
     User getUserNow();
 
-    Observable<HomeStats> getHomeStats();
+    Flowable<HomeStats> getHomeStats();
 
     void deleteAllUser();
 
@@ -40,7 +40,7 @@ public interface DatabaseStorage {
 
     LoadData getLoadData();
 
-    Observable<PagedList<News>> getNews();
+    Flowable<PagedList<News>> getNews();
 
     List<Integer> getSavedEpisodes();
 
@@ -56,41 +56,41 @@ public interface DatabaseStorage {
 
     Collection<Integer> getListItems(Integer listId);
 
-    Observable<List<Integer>> getLiveListItems(Integer listId);
+    Flowable<List<Integer>> getLiveListItems(Integer listId);
 
     Collection<Integer> getExternalListItems(Integer externalListId);
 
-    Observable<List<Integer>> getLiveExternalListItems(Integer externalListId);
+    Flowable<List<Integer>> getLiveExternalListItems(Integer externalListId);
 
     List<Integer> getDownloadableEpisodes(Integer mediumId, int limit);
 
     List<Integer> getDownloadableEpisodes(Collection<Integer> mediumId);
 
-    Observable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
+    Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
 
-    Observable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
+    Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
 
-    Observable<List<MediaList>> getLists();
+    Flowable<List<MediaList>> getLists();
 
     void insertDanglingMedia(Collection<Integer> mediaIds);
 
     void removeDanglingMedia(Collection<Integer> mediaIds);
 
-    Observable<? extends MediaListSetting> getListSetting(int id, boolean isExternal);
+    Flowable<? extends MediaListSetting> getListSetting(int id, boolean isExternal);
 
     MediaListSetting getListSettingNow(int id, boolean isExternal);
 
     void updateToDownload(boolean add, ToDownload toDownload);
 
-    Observable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
+    Flowable<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
 
-    Observable<MediumSetting> getMediumSettings(int mediumId);
+    Flowable<MediumSetting> getMediumSettings(int mediumId);
 
     MediumSetting getMediumSettingsNow(int mediumId);
 
-    Observable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved);
+    Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved);
 
-    Observable<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
+    Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
 
     boolean listExists(String listName);
 
@@ -104,29 +104,29 @@ public interface DatabaseStorage {
 
     void updateProgress(Collection<Integer> episodeIds, float progress);
 
-    Observable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings);
+    Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings);
 
-    Observable<PagedList<ReadEpisode>> getReadTodayEpisodes();
+    Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes();
 
-    Observable<List<MediaList>> getInternLists();
+    Flowable<List<MediaList>> getInternLists();
 
     void addItemsToList(int listId, Collection<Integer> ids);
 
-    Observable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
+    Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
 
-    Observable<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
+    Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
 
-    Observable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium);
+    Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium);
 
-    Observable<List<MediaList>> getListSuggestion(String name);
+    Flowable<List<MediaList>> getListSuggestion(String name);
 
-    Observable<Boolean> onDownloadAble();
+    Flowable<Boolean> onDownloadAble();
 
     void clearMediaInWait();
 
     void deleteMediaInWait(Collection<MediumInWait> toDelete);
 
-    Observable<List<MediumItem>> getAllDanglingMedia();
+    Flowable<List<MediumItem>> getAllDanglingMedia();
 
     void removeItemFromList(int listId, int mediumId);
 
@@ -134,7 +134,7 @@ public interface DatabaseStorage {
 
     void moveItemsToList(int oldListId, int listId, Collection<Integer> ids);
 
-    Observable<PagedList<DisplayExternalUser>> getExternalUser();
+    Flowable<PagedList<DisplayExternalUser>> getExternalUser();
 
     SpaceMedium getSpaceMedium(int mediumId);
 
@@ -144,7 +144,7 @@ public interface DatabaseStorage {
 
     void clearLocalMediaData();
 
-    Observable<PagedList<NotificationItem>> getNotifications();
+    Flowable<PagedList<NotificationItem>> getNotifications();
 
     void updateFailedDownload(int episodeId);
 

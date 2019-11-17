@@ -3,7 +3,8 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.Release;
-import io.reactivex.Observable;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
@@ -33,8 +34,8 @@ class ReleaseTable extends AbstractTable {
         }
     };
 
-    Observable<PagedList<DisplayRelease>> getReleases(int saved, int medium, int read, int minIndex, int maxIndex) {
-        return Observable.create(emitter -> {
+    Flowable<PagedList<DisplayRelease>> getReleases(int saved, int medium, int read, int minIndex, int maxIndex) {
+        return Flowable.create(emitter -> {
             try {
                 final List<DisplayRelease> releases = this.selectList(
                         "SELECT episode.episodeId, episode.saved, episode.partialIndex, episode.totalIndex, \n" +
@@ -85,7 +86,7 @@ class ReleaseTable extends AbstractTable {
                 e.printStackTrace();
                 emitter.onError(e);
             }
-        });
+        }, BackpressureStrategy.LATEST);
     }
 
     void insert(Release release) {

@@ -14,8 +14,8 @@ package com.mytlogos.enterprisedesktop.worker;
 
 
 
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.Repository;
-import com.mytlogos.enterprisedesktop.background.RepositoryProvider;
 import com.mytlogos.enterprisedesktop.model.ToDownload;
 import com.mytlogos.enterprisedesktop.tools.ContentTool;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
@@ -35,8 +35,8 @@ public class CheckSavedWorker {
     private int mediaToCheck;
 
     public void doWork() {
-        Set<ContentTool> tools = FileTools.getSupportedContentTools(null);
-        Repository repository = new RepositoryProvider().provide();
+        Set<ContentTool> tools = FileTools.getSupportedContentTools();
+        Repository repository = ApplicationConfig.getRepository();
 
         Map<Integer, Set<Integer>> mediumSavedEpisodes = new HashMap<>();
 

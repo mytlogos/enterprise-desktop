@@ -1,7 +1,8 @@
 package com.mytlogos.enterprisedesktop.test;
 
 
-import io.reactivex.Observable;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
@@ -12,7 +13,7 @@ public class SimpleTest {
     public static void main(String[] args) throws Exception {
         AtomicInteger integer = new AtomicInteger();
 
-        final Observable<Integer> flowable = Observable.create(emitter -> {
+        final Flowable<Integer> flowable = Flowable.create(emitter -> {
             Thread thread = new Thread(() -> {
                 emitter.onNext(integer.getAndIncrement());
                 try {
@@ -30,7 +31,7 @@ public class SimpleTest {
                 emitter.onNext(integer.getAndIncrement());
             });
             thread.start();
-        });
+        }, BackpressureStrategy.LATEST);
         Subject<Integer> subject = PublishSubject.create();
         subject.subscribe(integer1 -> System.out.println("[Main] value: " + integer1));
         subject.onNext(integer.getAndIncrement());

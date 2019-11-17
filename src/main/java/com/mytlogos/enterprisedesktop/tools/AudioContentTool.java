@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 // TODO: 05.08.2019 implement this class
 public class AudioContentTool extends ContentTool {
 
-    AudioContentTool(File internalContentDir, File externalContentDir) {
+    AudioContentTool(File internalContentDir) {
         super(internalContentDir);
     }
 

@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.background;
 
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.api.Client;
 import com.mytlogos.enterprisedesktop.background.api.DesktopNetworkIdentificator;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
@@ -11,9 +12,9 @@ import com.mytlogos.enterprisedesktop.background.sqlite.SqliteStorage;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.ContentTool;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
-import com.mytlogos.enterprisedesktop.tools.Sortings;
+import com.mytlogos.enterprisedesktop.tools.Sorting;
 import com.mytlogos.enterprisedesktop.tools.Utils;
-import io.reactivex.Observable;
+import io.reactivex.Flowable;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -30,7 +31,7 @@ class RepositoryImpl implements Repository {
     private final Client client;
     private final DatabaseStorage storage;
     private final ClientModelPersister persister;
-    private final Observable<User> storageUserLiveData;
+    private final Flowable<User> storageUserLiveData;
     private final LoadData loadedData;
     private final LoadWorker loadWorker;
     private final EditService editService;
@@ -76,12 +77,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<HomeStats> getHomeStats() {
+    public Flowable<HomeStats> getHomeStats() {
         return this.storage.getHomeStats();
     }
 
     @Override
-    public Observable<User> getUser() {
+    public Flowable<User> getUser() {
         return this.storageUserLiveData;
     }
 
@@ -284,7 +285,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<News>> getNews() {
+    public Flowable<PagedList<News>> getNews() {
         return this.storage.getNews();
     }
 
@@ -422,22 +423,22 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
+    public Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
         return this.storage.getDisplayEpisodes(saved, medium, read, minIndex, maxIndex, latestOnly);
     }
 
     @Override
-    public Observable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
+    public Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
         return this.storage.getDisplayEpisodesGrouped(saved, medium);
     }
 
     @Override
-    public Observable<List<MediaList>> getLists() {
+    public Flowable<List<MediaList>> getLists() {
         return this.storage.getLists();
     }
 
     @Override
-    public Observable<? extends MediaListSetting> getListSettings(int id, boolean isExternal) {
+    public Flowable<? extends MediaListSetting> getListSettings(int id, boolean isExternal) {
         return this.storage.getListSetting(id, isExternal);
     }
 
@@ -457,12 +458,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
+    public Flowable<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
         return this.storage.getAllMedia(sortings, title, medium, author, lastUpdate, minCountEpisodes, minCountReadEpisodes);
     }
 
     @Override
-    public Observable<MediumSetting> getMediumSettings(int mediumId) {
+    public Flowable<MediumSetting> getMediumSettings(int mediumId) {
         return this.storage.getMediumSettings(mediumId);
     }
 
@@ -472,12 +473,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved) {
+    public Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
         return this.storage.getToc(mediumId, sortings, read, saved);
     }
 
     @Override
-    public Observable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
+    public Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
         return this.storage.getMediumItems(listId, isExternal);
     }
 
@@ -547,17 +548,17 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
+    public Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
         return this.storage.getReadTodayEpisodes();
     }
 
     @Override
-    public Observable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings) {
+    public Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
         return this.storage.getMediaInWaitBy(filter, mediumFilter, hostFilter, sortings);
     }
 
     @Override
-    public Observable<List<MediaList>> getInternLists() {
+    public Flowable<List<MediaList>> getInternLists() {
         return this.storage.getInternLists();
     }
 
@@ -567,17 +568,17 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
+    public Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
         return this.storage.getSimilarMediaInWait(mediumInWait);
     }
 
     @Override
-    public Observable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
+    public Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
         return this.storage.getMediaSuggestions(title, medium);
     }
 
     @Override
-    public Observable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
+    public Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
         return this.storage.getMediaInWaitSuggestions(title, medium);
     }
 
@@ -674,12 +675,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<List<MediaList>> getListSuggestion(String name) {
+    public Flowable<List<MediaList>> getListSuggestion(String name) {
         return this.storage.getListSuggestion(name);
     }
 
     @Override
-    public Observable<Boolean> onDownloadable() {
+    public Flowable<Boolean> onDownloadable() {
         return this.storage.onDownloadAble();
     }
 
@@ -689,7 +690,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<List<MediumItem>> getAllDanglingMedia() {
+    public Flowable<List<MediumItem>> getAllDanglingMedia() {
         return this.storage.getAllDanglingMedia();
     }
 
@@ -699,7 +700,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<DisplayExternalUser>> getExternalUser() {
+    public Flowable<PagedList<DisplayExternalUser>> getExternalUser() {
         return this.storage.getExternalUser();
     }
 
@@ -745,7 +746,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Observable<PagedList<NotificationItem>> getNotifications() {
+    public Flowable<PagedList<NotificationItem>> getNotifications() {
         return this.storage.getNotifications();
     }
 
@@ -936,24 +937,24 @@ class RepositoryImpl implements Repository {
     @Override
     public void downloadLowerIndex(double combiIndex, int mediumId) {
         List<Integer> episodeIds = this.storage.getEpisodeIdsWithLowerIndex(combiIndex, mediumId);
-        // TODO 13.10.2019: implement
+        ApplicationConfig.getTaskController().startDownloadTask(mediumId, episodeIds);
     }
 
     @Override
     public void downloadHigherIndex(double combiIndex, int mediumId) {
         List<Integer> episodeIds = this.storage.getEpisodeIdsWithHigherIndex(combiIndex, mediumId);
-        // TODO 13.10.2019: implement
+        ApplicationConfig.getTaskController().startDownloadTask(mediumId, episodeIds);
     }
 
     @Override
     public void download(Set<Integer> episodeIds, int mediumId) {
-        // TODO 13.10.2019: implement
+        ApplicationConfig.getTaskController().startDownloadTask(mediumId, new ArrayList<>(episodeIds));
     }
 
     @Override
     public void downloadAll(int mediumId) {
         Collection<Integer> episodeIds = this.storage.getAllEpisodes(mediumId);
-        // TODO 13.10.2019: implement
+        ApplicationConfig.getTaskController().startDownloadTask(mediumId, new ArrayList<>(episodeIds));
     }
 
     @Override
@@ -980,7 +981,7 @@ class RepositoryImpl implements Repository {
 
             integers.removeAll(loadedIds);
             this.storage.removeEpisodes(integers);
-            return true;
+            return false;
         });
     }
 

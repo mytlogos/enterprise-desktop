@@ -4,8 +4,8 @@ import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.model.*;
-import com.mytlogos.enterprisedesktop.tools.Sortings;
-import io.reactivex.Observable;
+import com.mytlogos.enterprisedesktop.tools.Sorting;
+import io.reactivex.Flowable;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -22,9 +22,9 @@ public interface Repository {
 
     LoadWorker getLoadWorker();
 
-    Observable<HomeStats> getHomeStats();
+    Flowable<HomeStats> getHomeStats();
 
-    Observable<User> getUser();
+    Flowable<User> getUser();
 
     void updateUser(UpdateUser updateUser);
 
@@ -66,7 +66,7 @@ public interface Repository {
 
     List<ClientNews> loadNewsSync(Collection<Integer> newsIds);
 
-    Observable<PagedList<News>> getNews();
+    Flowable<PagedList<News>> getNews();
 
     void removeOldNews();
 
@@ -100,13 +100,13 @@ public interface Repository {
 
     List<Integer> getDownloadableEpisodes(Integer mediumId, int limit);
 
-    Observable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
+    Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
 
-    Observable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
+    Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
 
-    Observable<List<MediaList>> getLists();
+    Flowable<List<MediaList>> getLists();
 
-    Observable<? extends MediaListSetting> getListSettings(int id, boolean isExternal);
+    Flowable<? extends MediaListSetting> getListSettings(int id, boolean isExternal);
 
     CompletableFuture<String> updateListName(MediaListSetting listSetting, String text);
 
@@ -114,15 +114,15 @@ public interface Repository {
 
     void updateToDownload(boolean add, ToDownload toDownload);
 
-    Observable<PagedList<MediumItem>> getAllMedia(Sortings sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
+    Flowable<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
 
-    Observable<MediumSetting> getMediumSettings(int mediumId);
+    Flowable<MediumSetting> getMediumSettings(int mediumId);
 
     CompletableFuture<String> updateMedium(MediumSetting mediumSettings);
 
-    Observable<PagedList<TocEpisode>> getToc(int mediumId, Sortings sortings, byte read, byte saved);
+    Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved);
 
-    Observable<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
+    Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
 
     void loadMediaInWaitSync() throws IOException;
 
@@ -138,19 +138,19 @@ public interface Repository {
 
     List<SimpleEpisode> getSimpleEpisodes(Collection<Integer> ids);
 
-    Observable<PagedList<ReadEpisode>> getReadTodayEpisodes();
+    Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes();
 
-    Observable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sortings sortings);
+    Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings);
 
-    Observable<List<MediaList>> getInternLists();
+    Flowable<List<MediaList>> getInternLists();
 
     CompletableFuture<Boolean> moveMediaToList(int oldListId, int listId, Collection<Integer> ids);
 
-    Observable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
+    Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
 
-    Observable<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
+    Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
 
-    Observable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium);
+    Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium);
 
     CompletableFuture<Boolean> consumeMediumInWait(SimpleMedium selectedMedium, List<MediumInWait> mediumInWaits);
 
@@ -162,17 +162,17 @@ public interface Repository {
 
     CompletableFuture<Boolean> moveItemFromList(int oldListId, int newListId, int mediumId);
 
-    Observable<List<MediaList>> getListSuggestion(String name);
+    Flowable<List<MediaList>> getListSuggestion(String name);
 
-    Observable<Boolean> onDownloadable();
+    Flowable<Boolean> onDownloadable();
 
     void removeDanglingMedia(Collection<Integer> mediaIds);
 
-    Observable<List<MediumItem>> getAllDanglingMedia();
+    Flowable<List<MediumItem>> getAllDanglingMedia();
 
     CompletableFuture<Boolean> addMediumToList(int listId, Collection<Integer> ids);
 
-    Observable<PagedList<DisplayExternalUser>> getExternalUser();
+    Flowable<PagedList<DisplayExternalUser>> getExternalUser();
 
     SpaceMedium getSpaceMedium(int mediumId);
 
@@ -184,7 +184,7 @@ public interface Repository {
 
     void clearLocalMediaData();
 
-    Observable<PagedList<NotificationItem>> getNotifications();
+    Flowable<PagedList<NotificationItem>> getNotifications();
 
     void updateFailedDownloads(int episodeId);
 
@@ -204,7 +204,7 @@ public interface Repository {
 
     void updateRead(Collection<Integer> episodeIds, boolean read) throws Exception;
 
-    void updateAllRead(int episodeId, boolean read) throws Exception;
+    void updateAllRead(int mediumId, boolean read) throws Exception;
 
     void updateReadWithHigherIndex(double episodeId, boolean read, int mediumId) throws Exception;
 
@@ -242,13 +242,13 @@ public interface Repository {
 
     void reloadAll(int mediumId) throws IOException;
 
-    void downloadLowerIndex(double combiIndex, int mediumId);
+    void downloadLowerIndex(double combiIndex, int mediumId) throws IOException;
 
-    void downloadHigherIndex(double combiIndex, int mediumId);
+    void downloadHigherIndex(double combiIndex, int mediumId) throws IOException;
 
-    void download(Set<Integer> episodeId, int mediumId);
+    void download(Set<Integer> episodeId, int mediumId) throws IOException;
 
-    void downloadAll(int mediumId);
+    void downloadAll(int mediumId) throws IOException;
 
     void updateProgress(int episodeId, float progress);
 }

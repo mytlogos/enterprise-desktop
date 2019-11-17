@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.VBox?>
+
+<SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.ListViewController">
+    <SplitPane dividerPositions="0.3, 0.6">
+        <ListView fx:id="listsView" />
+        <VBox>
+            <FlowPane hgap="5.0" vgap="5.0">
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                </padding>
+                <ChoiceBox fx:id="mediumSorting" prefWidth="150.0" />
+                <ToggleButton fx:id="mediumAscendingBtn" mnemonicParsing="false" text="Ascending" />
+                <ToggleButton fx:id="enableSelectBtn" mnemonicParsing="false" text="Select" />
+            </FlowPane>
+            <ListView fx:id="listMediaView" VBox.vgrow="ALWAYS" />
+        </VBox>
+        <VBox>
+            <FlowPane hgap="5.0" vgap="5.0">
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                </padding>
+                <ChoiceBox fx:id="episodeSorting" prefWidth="150.0" />
+                <ToggleButton fx:id="episodeAscendingBtn" mnemonicParsing="false" text="Ascending" />
+            <ChoiceBox fx:id="savedFilterBox" prefWidth="150.0" />
+                <TextField fx:id="scrollToEpisodeField" onAction="#scrollToEpisode" promptText="Scroll To" />
+            <ChoiceBox fx:id="readFilterBox" layoutX="247.0" layoutY="15.0" prefWidth="150.0" />
+            </FlowPane>
+            <ListView fx:id="mediumContentView" VBox.vgrow="ALWAYS" />
+        </VBox>
+    </SplitPane>
+   <ScrollPane fx:id="detailPane" fitToHeight="true" fitToWidth="true">
+      <padding>
+         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+      </padding>
+   </ScrollPane>
+</SplitPane>

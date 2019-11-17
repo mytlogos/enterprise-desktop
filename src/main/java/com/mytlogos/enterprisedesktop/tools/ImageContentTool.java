@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.tools;
 
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientDownloadedEpisode;
 import com.mytlogos.enterprisedesktop.model.ChapterPage;
@@ -29,13 +30,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ImageContentTool extends ContentTool {
-    private final Repository repository;
     private Map<Integer, File> imageMedia;
-    private Map<Integer, File> externalImageMedia;
 
-    ImageContentTool(File internalContentDir, File externalContentDir, Repository repository) {
-        super(internalContentDir);
-        this.repository = repository;
+    ImageContentTool(File contentDir) {
+        super(contentDir);
     }
 
     @Override
@@ -173,7 +171,7 @@ public class ImageContentTool extends ContentTool {
             if (content == null || content.length == 0) {
                 continue;
             }
-            List<String> links = this.repository.getReleaseLinks(episode.getEpisodeId());
+            List<String> links = ApplicationConfig.getRepository().getReleaseLinks(episode.getEpisodeId());
             List<File> writtenFiles = new ArrayList<>();
 
             downloadPage(content, 0, file, episode.getEpisodeId(), links, writtenFiles);

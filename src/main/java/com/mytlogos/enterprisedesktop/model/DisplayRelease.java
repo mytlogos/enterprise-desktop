@@ -3,7 +3,7 @@ package com.mytlogos.enterprisedesktop.model;
 
 import java.time.LocalDateTime;
 
-public class DisplayRelease {
+public class DisplayRelease implements Indexable {
     private final int episodeId;
     private final int mediumId;
     private final String mediumTitle;
@@ -19,7 +19,7 @@ public class DisplayRelease {
     private final LocalDateTime releaseDate;
     private final boolean locked;
 
-    public DisplayRelease(int episodeId, int mediumId, String mediumTitle, int totalIndex, int partialIndex, boolean saved, boolean read,  String title,  String url,  LocalDateTime releaseDate, boolean locked) {
+    public DisplayRelease(int episodeId, int mediumId, String mediumTitle, int totalIndex, int partialIndex, boolean saved, boolean read, String title, String url, LocalDateTime releaseDate, boolean locked) {
         this.episodeId = episodeId;
         this.mediumId = mediumId;
         this.mediumTitle = mediumTitle;
@@ -33,10 +33,6 @@ public class DisplayRelease {
         this.locked = locked;
     }
 
-    public int getEpisodeId() {
-        return episodeId;
-    }
-
     public int getMediumId() {
         return mediumId;
     }
@@ -45,12 +41,12 @@ public class DisplayRelease {
         return mediumTitle;
     }
 
-    public int getTotalIndex() {
-        return totalIndex;
-    }
-
     public int getPartialIndex() {
         return partialIndex;
+    }
+
+    public int getTotalIndex() {
+        return totalIndex;
     }
 
     public boolean isSaved() {
@@ -61,23 +57,17 @@ public class DisplayRelease {
         return read;
     }
 
-
     public String getTitle() {
         return title;
     }
 
-
-    public String getUrl() {
-        return url;
-    }
-
-
-    public LocalDateTime getReleaseDate() {
-        return releaseDate;
-    }
-
-    public boolean isLocked() {
-        return locked;
+    @Override
+    public int hashCode() {
+        int result = getEpisodeId();
+        result = 31 * result + getUrl().hashCode();
+        result = 31 * result + getReleaseDate().hashCode();
+        result = 31 * result + (isLocked() ? 1 : 0);
+        return result;
     }
 
     @Override
@@ -93,15 +83,21 @@ public class DisplayRelease {
         return getReleaseDate().equals(that.getReleaseDate());
     }
 
-    @Override
-    public int hashCode() {
-        int result = getEpisodeId();
-        result = 31 * result + getUrl().hashCode();
-        result = 31 * result + getReleaseDate().hashCode();
-        result = 31 * result + (isLocked() ? 1 : 0);
-        return result;
+    public int getEpisodeId() {
+        return episodeId;
     }
 
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public LocalDateTime getReleaseDate() {
+        return releaseDate;
+    }
 
     @Override
     public String toString() {

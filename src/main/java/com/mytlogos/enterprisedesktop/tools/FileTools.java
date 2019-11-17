@@ -1,6 +1,6 @@
 package com.mytlogos.enterprisedesktop.tools;
 
-import com.mytlogos.enterprisedesktop.background.RepositoryProvider;
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.model.MediumType;
 import javafx.application.Application;
 
@@ -9,16 +9,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileTools {
-    private static final int minMBSpaceAvailable = 150;
-
-
     /**
      * Copied from
      * <a href="https://stackoverflow.com/a/3758880/9492864">
      * How to convert byte size into human readable format in java?
      * </a>
      */
-
     public static String humanReadableByteCount(long bytes, boolean si) {
         int unit = si ? 1000 : 1024;
         if (bytes < unit) return bytes + " B";
@@ -28,134 +24,70 @@ public class FileTools {
     }
 
     public static TextContentTool getTextContentTool() {
-        return new TextContentTool(getInternalBookDir(), getExternalBookDir());
+        return new TextContentTool(getBookDir());
     }
 
     public static AudioContentTool getAudioContentTool() {
-        return new AudioContentTool(getInternalAudioDir(), getExternalAudioDir());
+        return new AudioContentTool(getAudioDir());
     }
 
     public static VideoContentTool getVideoContentTool() {
-        return new VideoContentTool(getInternalVideoDir(), getExternalVideoDir());
+        return new VideoContentTool(getVideoDir());
     }
 
     public static ImageContentTool getImageContentTool() {
-        return new ImageContentTool(null, null, new RepositoryProvider().provide());
+        return new ImageContentTool(getImageDir());
     }
 
     public static boolean isImageContentSupported() {
-        return new ImageContentTool(null, null, null).isSupported();
+        return new ImageContentTool(getImageDir()).isSupported();
     }
 
     public static boolean isVideoContentSupported() {
-        return new ImageContentTool(null, null, null).isSupported();
+        return new VideoContentTool(getVideoDir()).isSupported();
     }
 
     public static boolean isTextContentSupported() {
-        return new ImageContentTool(null, null, null).isSupported();
+        return new TextContentTool(getBookDir()).isSupported();
     }
 
     public static boolean isAudioContentSupported() {
-        return new ImageContentTool(null, null, null).isSupported();
+        return new AudioContentTool(getAudioDir()).isSupported();
+    }
+
+    public static File getBookDir() {
+        return createDir(ApplicationConfig.getMainPreferences().getDownloadPreferences().getTextFile());
     }
 
 
-    public static File getExternalBookDir() {
-        return createBookDirectory(null);
+    public static File getAudioDir() {
+        return createDir(ApplicationConfig.getMainPreferences().getDownloadPreferences().getAudioFile());
     }
 
-
-    public static File getInternalBookDir() {
-        return createBookDirectory(null);
+    public static File getImageDir() {
+        return createDir(ApplicationConfig.getMainPreferences().getDownloadPreferences().getImageFile());
     }
 
-
-    public static File getInternalAudioDir() {
-        return createAudioDirectory(getInternalAppDir());
+    public static File getVideoDir() {
+        return createDir(ApplicationConfig.getMainPreferences().getDownloadPreferences().getVideoFile());
     }
 
-
-    public static File getExternalAudioDir() {
-        File dir = getExternalAppDir();
-        if (dir == null) {
-            return null;
-        }
-        return createAudioDirectory(dir);
-    }
-
-
-    public static File getExternalImageDir() {
-        File dir = getExternalAppDir();
-        if (dir == null) {
-            return null;
-        }
-        return createImageDirectory(dir);
-    }
-
-
-    public static File getInternalImageDir() {
-        return createImageDirectory(getInternalAppDir());
-    }
-
-
-    public static File getExternalVideoDir() {
-        File dir = getExternalAppDir();
-        if (dir == null) {
-            return null;
-        }
-        return createVideoDirectory(dir);
-    }
-
-
-    public static File getInternalVideoDir() {
-        return createVideoDirectory(getInternalAppDir());
-    }
-
-
-    public static File getExternalAppDir() {
-        throw new UnsupportedOperationException();
-    }
-
-
-    public static File getInternalAppDir() {
-        return null;
-    }
-
-    private static File createBookDirectory(File filesDir) {
-        return createDir(filesDir, "Enterprise Books");
-    }
-
-    private static File createAudioDirectory(File filesDir) {
-        return createDir(filesDir, "Enterprise Audios");
-    }
-
-    private static File createVideoDirectory(File filesDir) {
-        return createDir(filesDir, "Enterprise Videos");
-    }
-
-    private static File createImageDirectory(File filesDir) {
-        return createDir(filesDir, "Enterprise Images");
-    }
-
-    private static File createDir(File filesDir, String name) {
+    private static File createDir(File filesDir) {
         if (filesDir == null) {
             return null;
         }
-        File file = new File(filesDir, name);
 
-        if (!file.exists()) {
-            // TODO: 13.08.2019 cannot create dir on external storage
-            if (file.mkdirs()) {
-                return file;
+        if (!filesDir.exists()) {
+            if (filesDir.mkdirs()) {
+                return filesDir;
             } else {
                 return null;
             }
         }
-
-        return file;
+        return filesDir;
     }
 
-    public static Set<ContentTool> getSupportedContentTools(Application application) {
+    public static Set<ContentTool> getSupportedContentTools() {
         Set<ContentTool> tools = new HashSet<>();
         ContentTool tool = FileTools.getImageContentTool();
 
@@ -196,26 +128,5 @@ public class FileTools {
         } else {
             throw new IllegalArgumentException("invalid medium type: " + mediumType);
         }
-    }
-
-    public static boolean writeInternal(Application application) {
-        return isWriteable(application, getInternalAppDir());
-    }
-
-    public static boolean writeExternal(Application application) {
-        return isWriteable(application, getExternalAppDir());
-    }
-
-    public static boolean writable(Application application) {
-        return FileTools.writeExternal(application) || FileTools.writeInternal(application);
-    }
-
-    private static boolean isWriteable(Application application, File dir) {
-        return dir != null && getFreeMBSpace(dir) >= minMBSpaceAvailable;
-    }
-
-
-    public static long getFreeMBSpace(File file) {
-        return file.getUsableSpace() / (1024L * 1024L);
     }
 }

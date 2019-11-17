@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
-<?import javafx.scene.control.ChoiceBox?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.Spinner?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.input.KeyCodeCombination?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
@@ -24,37 +18,17 @@
     <center>
         <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
             <Tab fx:id="episodeTab" text="Episodes">
-                <VBox>
-                    <FlowPane hgap="5.0" vgap="5.0" VBox.vgrow="SOMETIMES">
-                        <padding>
-                            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-                        </padding>
-                        <ChoiceBox fx:id="readFilter" prefWidth="150.0" />
-                        <ChoiceBox fx:id="savedFilter" prefWidth="150.0" />
-                        <Spinner fx:id="minEpisodeIndex" editable="true" />
-                        <Spinner fx:id="maxEpisodeIndex" editable="true" />
-                        <CheckBox fx:id="showTextBox" mnemonicParsing="false" text="Text" />
-                        <CheckBox fx:id="showImageBox" mnemonicParsing="false" text="Image" />
-                        <CheckBox fx:id="showVideoBox" mnemonicParsing="false" text="Video" />
-                        <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio" />
-                        <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only" />
-                    </FlowPane>
-                    <StackPane VBox.vgrow="ALWAYS">
-                        <ListView fx:id="episodes" />
-                    </StackPane>
-                </VBox>
+
             </Tab>
             <Tab fx:id="listsTab" text="Lists">
-                <SplitPane dividerPositions="0.3, 0.6">
-                    <ListView fx:id="lists" prefHeight="200.0" prefWidth="200.0" />
-                    <ListView fx:id="listMedia" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
-                    <ListView fx:id="mediumContent" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" />
-                </SplitPane>
             </Tab>
             <Tab fx:id="statisticsTab" text="Statistics">
                 <AnchorPane prefHeight="400.0" prefWidth="600.0" />
             </Tab>
             <Tab fx:id="externalUserTab" text="Externaluser">
+                <AnchorPane prefHeight="400.0" prefWidth="600.0" />
+            </Tab>
+            <Tab fx:id="mediumInWaitTab" text="MediaInWait">
                 <AnchorPane prefHeight="400.0" prefWidth="600.0" />
             </Tab>
             <Tab text="Settings">
@@ -70,6 +44,15 @@
             <Menu mnemonicParsing="false" text="Edit">
                 <MenuItem mnemonicParsing="false" text="Delete" />
             </Menu>
+         <Menu mnemonicParsing="false" text="Extras">
+            <items>
+               <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings">
+                  <accelerator>
+                     <KeyCodeCombination alt="DOWN" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
+                  </accelerator>
+               </MenuItem>
+            </items>
+         </Menu>
             <Menu mnemonicParsing="false" text="Help">
                 <MenuItem mnemonicParsing="false" text="About" />
             </Menu>

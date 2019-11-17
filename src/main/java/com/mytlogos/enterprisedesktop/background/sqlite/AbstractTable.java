@@ -1,7 +1,8 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 
-import io.reactivex.Observable;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
@@ -13,9 +14,9 @@ import java.util.*;
  */
 abstract class AbstractTable {
     private final Subject<Boolean> invalidated = PublishSubject.create();
-    private final Observable<Boolean> invalidationObservable = this.invalidated.distinctUntilChanged();
+    private final Flowable<Boolean> invalidationFlowable = this.invalidated.distinctUntilChanged().toFlowable(BackpressureStrategy.BUFFER);
     private final Subject<Class<? extends AbstractTable>> invalidatedTables = PublishSubject.create();
-    private final Observable<Class<? extends AbstractTable>> invalidatedTableObservable = this.invalidatedTables.distinctUntilChanged();
+    private final Flowable<Class<? extends AbstractTable>> invalidatedTableFlowable = this.invalidatedTables.distinctUntilChanged().toFlowable(BackpressureStrategy.BUFFER);
 
     void initialize() {
         try (Connection connection = this.getConnection()) {
@@ -36,12 +37,12 @@ abstract class AbstractTable {
         this.invalidated.onNext(Boolean.FALSE);
     }
 
-    Observable<Boolean> getInvalidated() {
-        return this.invalidationObservable;
+    Flowable<Boolean> getInvalidated() {
+        return this.invalidationFlowable;
     }
 
-    Observable<Class<? extends AbstractTable>> getInvalidatedTables() {
-        return this.invalidatedTableObservable;
+    Flowable<Class<? extends AbstractTable>> getInvalidatedTables() {
+        return this.invalidatedTableFlowable;
     }
 
     void invalidated(Class<? extends AbstractTable> invalidatedClass) {
@@ -51,15 +52,6 @@ abstract class AbstractTable {
     Set<Integer> getLoadedInt() {
         try {
             return new HashSet<>(this.selectList(this.getLoadedQuery(), value -> value.getInt(1)));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new HashSet<>();
-        }
-    }
-
-    Set<String> getLoadedString() {
-        try {
-            return new HashSet<>(this.selectList(this.getLoadedQuery(), value -> value.getString(1)));
         } catch (SQLException e) {
             e.printStackTrace();
             return new HashSet<>();
@@ -82,6 +74,15 @@ abstract class AbstractTable {
 
     String getLoadedQuery() {
         throw new UnsupportedOperationException();
+    }
+
+    Set<String> getLoadedString() {
+        try {
+            return new HashSet<>(this.selectList(this.getLoadedQuery(), value -> value.getString(1)));
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new HashSet<>();
+        }
     }
 
     <T> void execute(String sql, T value, SqlBiConsumer<PreparedStatement, T> consumer) {
@@ -166,6 +167,30 @@ abstract class AbstractTable {
         }
     }
 
+    <T> void execute(String sql, SqlConsumer<PreparedStatement> consumer) {
+        try (Connection connection = this.getConnection()) {
+            connection.setAutoCommit(false);
+
+            try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                consumer.accept(statement);
+
+                final int[] execute = statement.executeBatch();
+                for (int insertInfo : execute) {
+                    if (insertInfo > 0) {
+                        this.setInvalidated();
+                        break;
+                    }
+                }
+                connection.commit();
+            } catch (SQLException e) {
+                connection.rollback();
+                e.printStackTrace();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     <T> T selectSingle(String sql, SqlFunction<ResultSet, T> function) throws SQLException {
         try (Connection connection = this.getConnection()) {
             try (ResultSet set = connection.createStatement().executeQuery(sql)) {
@@ -179,10 +204,27 @@ abstract class AbstractTable {
         }
     }
 
+    <T> T selectSingle(String sql, SqlConsumer<PreparedStatement> querySetter, SqlFunction<ResultSet, T> function) throws SQLException {
+        try (Connection connection = this.getConnection()) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                querySetter.accept(preparedStatement);
+
+                try (ResultSet set = preparedStatement.executeQuery()) {
+                    T value = null;
+
+                    if (set.next()) {
+                        value = function.apply(set);
+                    }
+                    return value;
+                }
+            }
+        }
+    }
+
     <T> List<T> selectList(String sql, SqlConsumer<PreparedStatement> querySetter, SqlFunction<ResultSet, T> function) throws SQLException {
         try (Connection connection = this.getConnection()) {
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                querySetter.apply(preparedStatement);
+                querySetter.accept(preparedStatement);
 
                 try (ResultSet set = preparedStatement.executeQuery()) {
                     List<T> values = new ArrayList<>();

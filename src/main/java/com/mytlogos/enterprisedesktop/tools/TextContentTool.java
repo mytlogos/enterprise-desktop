@@ -22,8 +22,8 @@ public class TextContentTool extends ContentTool {
     private Map<Integer, File> episodeFiles;
     private Map<Integer, String> episodePaths;
 
-    TextContentTool(File internalContentDir, File externalContentDir) {
-        super(internalContentDir);
+    TextContentTool(File contentDir) {
+        super(contentDir);
     }
 
     @Override
@@ -117,6 +117,9 @@ public class TextContentTool extends ContentTool {
         }
         if (file == null) {
             return;
+        }
+        if (!file.exists() && !file.mkdirs()) {
+            throw new IOException("Could not create medium directory: " + file.getAbsolutePath());
         }
         for (ClientDownloadedEpisode episode : episodes) {
             final Path episodePath = Paths.get(file.getAbsolutePath(), episode.getEpisodeId() + ".html");

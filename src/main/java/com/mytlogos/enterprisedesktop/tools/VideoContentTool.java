@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 // TODO: 05.08.2019 implement this class
 public class VideoContentTool extends ContentTool {
 
-    VideoContentTool(File internalContentDir, File externalContentDir) {
+    VideoContentTool(File internalContentDir) {
         super(internalContentDir);
     }
 

@@ -1,5 +1,7 @@
 package com.mytlogos.enterprisedesktop.background;
 
+import javafx.concurrent.Task;
+
 /**
  *
  */
@@ -11,7 +13,7 @@ public class RepositoryProvider {
             synchronized (RepositoryProvider.class) {
                 if (repository == null) {
                     final RepositoryImpl repositoryImpl = new RepositoryImpl();
-                    repositoryImpl.initialize();
+                    TaskManager.runTask(repositoryImpl::initialize);
                     repository = repositoryImpl;
                 }
             }

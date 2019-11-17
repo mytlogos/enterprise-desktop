@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.worker;
 
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.RepositoryProvider;
 import javafx.concurrent.ScheduledService;
@@ -20,7 +21,7 @@ public class SynchronizeService extends ScheduledService<Void> {
         return new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                final Repository repository = new RepositoryProvider().provide();
+                final Repository repository = ApplicationConfig.getRepository();
 
                 if (!repository.isClientAuthenticated()) {
                     throw new IllegalStateException("Not Authenticated");

@@ -1,6 +1,6 @@
 package com.mytlogos.enterprisedesktop.tools;
 
-public enum Sortings {
+public enum AllSortings implements Sorting {
     HOST_AZ(1),
     HOST_ZA(-1),
     MEDIUM(2),
@@ -24,10 +24,11 @@ public enum Sortings {
 
     private final int sortValue;
 
-    Sortings(int sortValue) {
+    AllSortings(int sortValue) {
         this.sortValue = sortValue;
     }
 
+    @Override
     public int getSortValue() {
         return sortValue;
     }

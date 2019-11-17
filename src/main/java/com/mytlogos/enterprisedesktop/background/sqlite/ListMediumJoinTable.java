@@ -4,6 +4,7 @@ import com.mytlogos.enterprisedesktop.model.ListMediumJoin;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -34,6 +35,19 @@ class ListMediumJoinTable extends AbstractTable {
             statement.setInt(1, value);
         }
     };
+
+    public Collection<Integer> getMediumItemsIds(Integer listId) {
+        try {
+            return this.selectList(
+                    "SELECT mediumId FROM list_medium WHERE listId=?",
+                    value -> value.setInt(1, listId),
+                    value -> value.getInt(1)
+            );
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 
     public void delete(int listId) {
         this.execute(listId, this.deleteJoinQuery);
