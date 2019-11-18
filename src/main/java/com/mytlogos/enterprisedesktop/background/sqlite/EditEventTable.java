@@ -3,36 +3,30 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.EditEvent;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
 
 /**
  *
  */
 class EditEventTable extends AbstractTable {
-    private final PreparedQuery<EditEvent> insertEditEventQuery = new PreparedQuery<EditEvent>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO edit_event (id, objectType, eventType, dateTime, firstValue, secondValue) VALUES (?,?,?,?,?,?)";
-        }
+    private QueryBuilder<EditEvent> insertEditEventQuery = new QueryBuilder<EditEvent>(
+            "INSERT OR IGNORE INTO edit_event (id, objectType, eventType, dateTime, firstValue, secondValue) VALUES (?,?,?,?,?,?)"
+    )
+            .setValueSetter((preparedStatement, editEvent) -> {
+                preparedStatement.setInt(1, editEvent.getId());
+                preparedStatement.setInt(2, editEvent.getObjectType());
+                preparedStatement.setInt(3, editEvent.getEventType());
+                preparedStatement.setString(4, Formatter.isoFormat(editEvent.getDateTime()));
+                preparedStatement.setString(5, editEvent.getFirstValue());
+                preparedStatement.setString(6, editEvent.getSecondValue());
+            });
 
-        @Override
-        public void setValues(PreparedStatement statement, EditEvent value) throws SQLException {
-            statement.setInt(1, value.getId());
-            statement.setInt(2, value.getObjectType());
-            statement.setInt(3, value.getEventType());
-            statement.setString(4, Formatter.isoFormat(value.getDateTime()));
-            statement.setString(5, value.getFirstValue());
-            statement.setString(6, value.getSecondValue());
-        }
-    };
-    void insert(EditEvent editEvent) {
-        this.execute(editEvent, this.insertEditEventQuery);
+    void insert(EditEvent value) {
+        this.executeDMLQuery(value, this.insertEditEventQuery);
     }
 
-    void insert(Collection<? extends EditEvent> editEvents) {
-        this.execute(editEvents, this.insertEditEventQuery);
+    void insert(Collection<? extends EditEvent> value) {
+        this.executeDMLQuery(value, this.insertEditEventQuery);
     }
 
     @Override

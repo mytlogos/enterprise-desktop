@@ -43,8 +43,19 @@ class QueryBuilder<R> {
         return this;
     }
 
+    QueryBuilder<R> setValue(Collection<? extends R> value) {
+        //noinspection unchecked
+        this.values = (Collection<Object>) value;
+        return this;
+    }
+
     QueryBuilder<R> setValues(SqlConsumer<PreparedStatement> singleQuerySetter) {
         this.singleQuerySetter = singleQuerySetter;
+        return this;
+    }
+
+    QueryBuilder<R> setValueSetter(SqlBiConsumer<PreparedStatement, R> querySetter) {
+        this.multiQuerySetter = (SqlBiConsumer<PreparedStatement, Object>) querySetter;
         return this;
     }
 
@@ -93,6 +104,15 @@ class QueryBuilder<R> {
             }
         } else if (this.singleQuerySetter != null) {
             this.singleQuerySetter.accept(preparedStatement);
+        }
+    }
+
+    R query() {
+        try {
+            return this.query(ConnectionManager.getManager().getConnection());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 
@@ -161,6 +181,15 @@ class QueryBuilder<R> {
                 }
             }
         }
+    }
+
+    boolean execute() {
+        try {
+            return this.execute(ConnectionManager.getManager().getConnection());
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     boolean execute(Connection con) {

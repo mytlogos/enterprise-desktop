@@ -33,20 +33,30 @@ abstract class AbstractTable {
 
     abstract String createTableSql();
 
+    <R> void executeDMLQuery(R value, QueryBuilder<R> queryBuilder) {
+        this.executeDMLQuery(Collections.singleton(value), queryBuilder);
+    }
+
+    <R> void executeDMLQuery(Collection<? extends R> value, QueryBuilder<R> queryBuilder) {
+        try {
+            if (queryBuilder.setValue(value).execute(this.getConnection())) {
+                this.setInvalidated();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void setInvalidated() {
+        this.invalidated.onNext(Boolean.TRUE);
+    }
+
     void clearInvalidated() {
         this.invalidated.onNext(Boolean.FALSE);
     }
 
     Flowable<Boolean> getInvalidated() {
         return this.invalidationFlowable;
-    }
-
-    Flowable<Class<? extends AbstractTable>> getInvalidatedTables() {
-        return this.invalidatedTableFlowable;
-    }
-
-    void invalidated(Class<? extends AbstractTable> invalidatedClass) {
-        this.invalidatedTables.onNext(invalidatedClass);
     }
 
     Set<Integer> getLoadedInt() {
@@ -96,10 +106,6 @@ abstract class AbstractTable {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    void setInvalidated() {
-        this.invalidated.onNext(Boolean.TRUE);
     }
 
     <T> void execute(T value, PreparedQuery<T> preparedQuery) {

@@ -10,26 +10,20 @@ import java.util.Collection;
  *
  */
 class MediumInWaitTable extends AbstractTable {
-    private final PreparedQuery<MediumInWait> insertMediumInWaitQuery = new PreparedQuery<MediumInWait>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO medium_in_wait (title, medium, link) VALUES (?,?,?)";
-        }
-
-        @Override
-        public void setValues(PreparedStatement statement, MediumInWait value) throws SQLException {
-            statement.setString(1, value.getTitle());
-            statement.setInt(2, value.getMedium());
-            statement.setString(3, value.getLink());
-        }
-    };
+    private final QueryBuilder<MediumInWait> insertMediumInWaitQuery = new QueryBuilder<MediumInWait>(
+            "INSERT OR IGNORE INTO medium_in_wait (title, medium, link) VALUES (?,?,?)"
+    ).setValueSetter((statement, mediumInWait) -> {
+        statement.setString(1, mediumInWait.getTitle());
+        statement.setInt(2, mediumInWait.getMedium());
+        statement.setString(3, mediumInWait.getLink());
+    });
 
     void insert(MediumInWait mediumInWait) {
-        this.execute(mediumInWait, this.insertMediumInWaitQuery);
+        this.executeDMLQuery(mediumInWait, this.insertMediumInWaitQuery);
     }
 
     void insert(Collection<? extends MediumInWait> mediumInWaits) {
-        this.execute(mediumInWaits, this.insertMediumInWaitQuery);
+        this.executeDMLQuery(mediumInWaits, this.insertMediumInWaitQuery);
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.model.User;
 import com.mytlogos.enterprisedesktop.model.UserImpl;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 /**
@@ -11,19 +10,21 @@ import java.sql.SQLException;
  */
 class UserTable extends AbstractTable {
 
-    private final PreparedQuery<User> insertUserQuery = new PreparedQuery<User>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)";
-        }
+    private final QueryBuilder<User> insertUserQuery = new QueryBuilder<User>(
+            "INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)"
+    ).setValueSetter((statement, user) -> {
+        statement.setString(1, user.getUuid());
+        statement.setString(2, user.getSession());
+        statement.setString(3, user.getName());
+    });
 
-        @Override
-        public void setValues(PreparedStatement statement, User value) throws SQLException {
-            statement.setString(1, value.getUuid());
-            statement.setString(2, value.getSession());
-            statement.setString(3, value.getName());
-        }
-    };
+    private final QueryBuilder<User> getUserQuery = new QueryBuilder<User>("SELECT * FROM user")
+            .setConverter(resultSet -> {
+                String uuid = resultSet.getString("uuid");
+                String name = resultSet.getString("name");
+                String session = resultSet.getString("session");
+                return new UserImpl(uuid, session, name);
+            });
 
     public void update(User user) {
 
@@ -38,35 +39,15 @@ class UserTable extends AbstractTable {
     }
 
     User getUserNow() {
-        try {
-            return this.selectSingle("SELECT * FROM user", resultSet -> {
-                String uuid = resultSet.getString("uuid");
-                String name = resultSet.getString("name");
-                String session = resultSet.getString("session");
-                return new UserImpl(uuid, session, name);
-            });
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return this.getUserQuery.query();
     }
 
     void insert(User user) {
-        this.execute(user, this.insertUserQuery);
+        this.executeDMLQuery(user, this.insertUserQuery);
     }
 
     User getUser() {
-        try {
-            return this.selectSingle("SELECT * FROM user", resultSet -> {
-                String uuid = resultSet.getString("uuid");
-                String name = resultSet.getString("name");
-                String session = resultSet.getString("session");
-                return new UserImpl(uuid, session, name);
-            });
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return this.getUserQuery.query();
     }
 
     @Override

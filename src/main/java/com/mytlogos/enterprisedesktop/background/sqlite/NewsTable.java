@@ -10,28 +10,22 @@ import java.util.Collection;
  *
  */
 class NewsTable extends AbstractTable {
-    private final PreparedQuery<News> insertNewsQuery = new PreparedQuery<News>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO news (title, timeStamp, newsId, read, link) VALUES (?,?,?,?,?)";
-        }
-
-        @Override
-        public void setValues(PreparedStatement statement, News value) throws SQLException {
-            statement.setString(1, value.getTitle());
-            statement.setString(2, value.getTimeStampString());
-            statement.setInt(3, value.getId());
-            statement.setBoolean(4, value.isRead());
-            statement.setString(5, value.getUrl());
-        }
-    };
+    private final QueryBuilder<News> insertNewsQuery = new QueryBuilder<News>(
+            "INSERT OR IGNORE INTO news (title, timeStamp, newsId, read, link) VALUES (?,?,?,?,?)"
+    ).setValueSetter((statement, news) -> {
+        statement.setString(1, news.getTitle());
+        statement.setString(2, news.getTimeStampString());
+        statement.setInt(3, news.getId());
+        statement.setBoolean(4, news.isRead());
+        statement.setString(5, news.getUrl());
+    });
 
     void insert(News news) {
-        this.execute(news, this.insertNewsQuery);
+        this.executeDMLQuery(news, this.insertNewsQuery);
     }
 
     void insert(Collection<? extends News> news) {
-        this.execute(news, this.insertNewsQuery);
+        this.executeDMLQuery(news, this.insertNewsQuery);
     }
 
     @Override

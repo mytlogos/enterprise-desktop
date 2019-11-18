@@ -10,29 +10,24 @@ import java.util.Collection;
  *
  */
 class PartTable extends AbstractTable {
-    private final PreparedQuery<Part> insertPartQuery = new PreparedQuery<Part>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO part (partId, mediumId, title, totalIndex, partialIndex, combiIndex) VALUES (?,?,?,?,?,?)";
-        }
+    private final QueryBuilder<Part> insertPartQuery = new QueryBuilder<Part>(
+            "INSERT OR IGNORE INTO part (partId, mediumId, title, totalIndex, partialIndex, combiIndex) VALUES (?,?,?,?,?,?)"
+    ).setValueSetter((statement, part) -> {
+        statement.setInt(1, part.getPartId());
+        statement.setInt(2, part.getMediumId());
+        statement.setString(3, part.getTitle());
+        statement.setInt(4, part.getTotalIndex());
+        statement.setInt(5, part.getPartialIndex());
+        statement.setDouble(6, part.getCombiIndex());
+    });
 
-        @Override
-        public void setValues(PreparedStatement statement, Part value) throws SQLException {
-            statement.setInt(1, value.getPartId());
-            statement.setInt(2, value.getMediumId());
-            statement.setString(3, value.getTitle());
-            statement.setInt(4, value.getTotalIndex());
-            statement.setInt(5, value.getPartialIndex());
-            statement.setDouble(6, value.getCombiIndex());
-        }
-    };
 
     void insert(Part part) {
-        this.execute(part, this.insertPartQuery);
+        this.executeDMLQuery(part, this.insertPartQuery);
     }
 
     void insert(Collection<? extends Part> parts) {
-        this.execute(parts, this.insertPartQuery);
+        this.executeDMLQuery(parts, this.insertPartQuery);
     }
 
     @Override

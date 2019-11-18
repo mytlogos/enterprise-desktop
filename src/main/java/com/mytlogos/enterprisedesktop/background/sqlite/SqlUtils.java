@@ -33,6 +33,14 @@ public class SqlUtils {
         };
     }
 
+    public static <R> List<R> mergeLists(List<R> list1, List<R> list2) {
+        if (list1 == null) {
+            return list2;
+        }
+        list1.addAll(list2);
+        return list1;
+    }
+
     public static SqlFunction<PreparedStatement, Void> ignoreResult() {
         return (preparedStatement) -> {
             preparedStatement.executeUpdate();

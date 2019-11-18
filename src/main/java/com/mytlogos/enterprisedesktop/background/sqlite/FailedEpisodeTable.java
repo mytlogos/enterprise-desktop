@@ -2,7 +2,6 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.model.FailedEpisode;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,18 +11,12 @@ import java.util.List;
  *
  */
 class FailedEpisodeTable extends AbstractTable {
-    private final PreparedQuery<FailedEpisode> insertFailedEpisodeQuery = new PreparedQuery<FailedEpisode>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO failed_episode (episodeId, failCount) VALUES (?,?)";
-        }
-
-        @Override
-        public void setValues(PreparedStatement statement, FailedEpisode value) throws SQLException {
-            statement.setInt(1, value.getEpisodeId());
-            statement.setInt(2, value.getFailCount());
-        }
-    };
+    private final QueryBuilder<FailedEpisode> insertFailedEpisodeQuery = new QueryBuilder<FailedEpisode>(
+            "INSERT OR IGNORE INTO failed_episode (episodeId, failCount) VALUES (?,?)"
+    ).setValueSetter((statement, failedEpisode) -> {
+        statement.setInt(1, failedEpisode.getEpisodeId());
+        statement.setInt(2, failedEpisode.getFailCount());
+    });
     private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?");
 
     public List<FailedEpisode> getFailedEpisodes(Collection<Integer> episodeIds) {
@@ -44,11 +37,11 @@ class FailedEpisodeTable extends AbstractTable {
     }
 
     void insert(FailedEpisode failedEpisode) {
-        this.execute(failedEpisode, this.insertFailedEpisodeQuery);
+        this.executeDMLQuery(failedEpisode, this.insertFailedEpisodeQuery);
     }
 
     void insert(Collection<? extends FailedEpisode> failedEpisodes) {
-        this.execute(failedEpisodes, this.insertFailedEpisodeQuery);
+        this.executeDMLQuery(failedEpisodes, this.insertFailedEpisodeQuery);
     }
 
     @Override

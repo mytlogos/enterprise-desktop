@@ -2,47 +2,33 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.model.ListMediumJoin;
 
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  *
  */
 class ExternalListMediumJoinTable extends AbstractTable {
-    private final PreparedQuery<ListMediumJoin> joinInsertQuery = new PreparedQuery<ListMediumJoin>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO external_list_medium (listId, mediumId) VALUES (?,?)";
-        }
 
-        @Override
-        public void setValues(PreparedStatement statement, ListMediumJoin value) throws SQLException {
-            statement.setInt(1, value.getListId());
-            statement.setInt(2, value.getMediumId());
-        }
-    };
-    private final PreparedQuery<Integer> deleteJoinQuery = new PreparedQuery<Integer>() {
-        @Override
-        public String getQuery() {
-            return "DELETE FROM external_list_medium WHERE listId = ?";
-        }
+    private final QueryBuilder<ListMediumJoin> joinInsertQuery = new QueryBuilder<ListMediumJoin>(
+            "INSERT OR IGNORE INTO external_list_medium (listId, mediumId) VALUES (?,?)"
+    ).setValueSetter((preparedStatement, listMediumJoin) -> {
+        preparedStatement.setInt(1, listMediumJoin.getListId());
+        preparedStatement.setInt(2, listMediumJoin.getMediumId());
+    });
 
-        @Override
-        public void setValues(PreparedStatement statement, Integer value) throws SQLException {
-            statement.setInt(1, value);
-        }
-    };
+    private final QueryBuilder<Integer> deleteJoinQuery = new QueryBuilder<Integer>(
+            "DELETE FROM external_list_medium WHERE listId = ?"
+    ).setValueSetter((preparedStatement, value) -> preparedStatement.setInt(1, value));
+
+    private final QueryBuilder<Integer> getMediumItemsIdsQuery = new
+            QueryBuilder<Integer>("SELECT mediumId FROM external_list_medium WHERE listId=?")
+            .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
+            .setConverter(value -> value.getInt(1));
 
     public Collection<Integer> getMediumItemsIds(Integer externalListId) {
         try {
-            return this.selectList(
-                    "SELECT mediumId FROM external_list_medium WHERE listId=?",
-                    value -> value.setInt(1, externalListId),
-                    value -> value.getInt(1)
-            );
+            return this.getMediumItemsIdsQuery.setValue(Collections.singleton(externalListId)).queryList();
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
@@ -50,19 +36,19 @@ class ExternalListMediumJoinTable extends AbstractTable {
     }
 
     public void delete(List<Integer> listIds) {
-        this.execute(listIds, this.deleteJoinQuery);
+        this.executeDMLQuery(listIds, this.deleteJoinQuery);
     }
 
     public void delete(int listId) {
-        this.execute(listId, this.deleteJoinQuery);
+        this.delete(Collections.singletonList(listId));
     }
 
-    void insert(ListMediumJoin news) {
-        this.execute(news, this.joinInsertQuery);
+    void insert(ListMediumJoin join) {
+        this.insert(Collections.singleton(join));
     }
 
-    void insert(Collection<? extends ListMediumJoin> news) {
-        this.execute(news, this.joinInsertQuery);
+    void insert(Collection<? extends ListMediumJoin> joins) {
+        this.executeDMLQuery(joins, this.joinInsertQuery);
     }
 
     @Override

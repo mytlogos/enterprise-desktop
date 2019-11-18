@@ -2,35 +2,29 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.model.ExternalUser;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  *
  */
 class ExternalUserTable extends AbstractTable {
-    private final PreparedQuery<ExternalUser> insertExternalUserQuery = new PreparedQuery<ExternalUser>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO external_user (uuid, userUuid, identifier, type) VALUES (?,?,?,?)";
-        }
+    private final QueryBuilder<ExternalUser> insertExternalUserQuery = new QueryBuilder<ExternalUser>(
+            "INSERT OR IGNORE INTO external_user (uuid, userUuid, identifier, type) VALUES (?,?,?,?)"
+    ).setValueSetter((statement, externalUser) -> {
+        statement.setString(1, externalUser.getUuid());
+        statement.setString(2, externalUser.getUserUuid());
+        statement.setString(3, externalUser.getIdentifier());
+        statement.setInt(4, externalUser.getType());
 
-        @Override
-        public void setValues(PreparedStatement statement, ExternalUser value) throws SQLException {
-            statement.setString(1, value.getUuid());
-            statement.setString(2, value.getUserUuid());
-            statement.setString(3, value.getIdentifier());
-            statement.setInt(4, value.getType());
-        }
-    };
+    });
 
     void insert(ExternalUser externalUser) {
-        this.execute(externalUser, this.insertExternalUserQuery);
+        this.insert(Collections.singleton(externalUser));
     }
 
     void insert(Collection<? extends ExternalUser> externalUsers) {
-        this.execute(externalUsers, this.insertExternalUserQuery);
+        this.executeDMLQuery(externalUsers, this.insertExternalUserQuery);
     }
 
     @Override

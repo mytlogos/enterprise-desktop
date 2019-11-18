@@ -11,26 +11,20 @@ import java.util.Collection;
  *
  */
 class NotificationTable extends AbstractTable {
-    private final PreparedQuery<NotificationItem> insertNotificationItemQuery = new PreparedQuery<NotificationItem>() {
-        @Override
-        public String getQuery() {
-            return "INSERT OR IGNORE INTO notification (title, description, dateTime) VALUES (?,?,?)";
-        }
-
-        @Override
-        public void setValues(PreparedStatement statement, NotificationItem value) throws SQLException {
-            statement.setString(1, value.getTitle());
-            statement.setString(2, value.getDescription());
-            statement.setString(3, Formatter.isoFormat(value.getDatetime()));
-        }
-    };
+    private final QueryBuilder<NotificationItem> insertNotificationItemQuery = new QueryBuilder<NotificationItem>(
+            "INSERT OR IGNORE INTO notification (title, description, dateTime) VALUES (?,?,?)"
+    ).setValueSetter((statement, notificationItem) -> {
+        statement.setString(1, notificationItem.getTitle());
+        statement.setString(2, notificationItem.getDescription());
+        statement.setString(3, Formatter.isoFormat(notificationItem.getDatetime()));
+    });
 
     void insert(NotificationItem item) {
-        this.execute(item, this.insertNotificationItemQuery);
+        this.executeDMLQuery(item, this.insertNotificationItemQuery);
     }
 
     void insert(Collection<? extends NotificationItem> items) {
-        this.execute(items, this.insertNotificationItemQuery);
+        this.executeDMLQuery(items, this.insertNotificationItemQuery);
     }
     @Override
     String createTableSql() {
