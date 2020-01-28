@@ -232,7 +232,6 @@ public class ListViewController implements Attachable {
                     this.mediumDisplayController.setMedium(mediumSetting);
                     this.detailPane.setContent(this.mediumDisplayController.getRoot());
                 }, Throwable::printStackTrace);
-        ;
     }
 
     private <T, R> Disposable subscribePublisher(ObservableValue<T> value, Function<T, Publisher<R>> mapFunction, Consumer<R> consumer) {

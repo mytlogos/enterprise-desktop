@@ -7,6 +7,7 @@ import com.mytlogos.enterprisedesktop.model.MediumItem;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -95,17 +96,25 @@ class ExternalMediaListTable extends AbstractTable {
     });
 
     public Flowable<List<ExternalMediaList>> getLists() {
-        return Flowable.create(emitter -> {
-            final List<ExternalMediaList> mediaLists = this.getListsQuery.queryList();
-            emitter.onNext(mediaLists);
-        }, BackpressureStrategy.LATEST);
+        try {
+            return this.getListsQuery.queryFlowableList();
+        } catch (SQLException e) {
+            return Flowable.create(emitter -> {
+                emitter.onError(e);
+                emitter.onComplete();
+            }, BackpressureStrategy.LATEST);
+        }
     }
 
     Flowable<List<MediumItem>> getMediumItems(int listId) {
-        return Flowable.create(emitter -> {
-            final List<MediumItem> items = this.getMediumItems.setValues(value -> value.setInt(1, listId)).queryList();
-            emitter.onNext(items);
-        }, BackpressureStrategy.LATEST);
+        try {
+            return this.getMediumItems.setValues(value -> value.setInt(1, listId)).queryFlowableList();
+        } catch (SQLException e) {
+            return Flowable.create(emitter -> {
+                emitter.onError(e);
+                emitter.onComplete();
+            }, BackpressureStrategy.LATEST);
+        }
     }
 
     void insert(ExternalMediaList externalMediaList) {

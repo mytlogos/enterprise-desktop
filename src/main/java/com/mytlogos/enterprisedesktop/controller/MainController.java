@@ -21,6 +21,8 @@ public class MainController {
     @FXML
     private Tab episodeTab;
     @FXML
+    private Tab searchTab;
+    @FXML
     private Tab listsTab;
     @FXML
     private Tab statisticsTab;
@@ -34,6 +36,7 @@ public class MainController {
     private EpisodeViewController episodeViewController;
     private ListViewController listViewController;
     private MediaInWaitController mediaInWaitController;
+    private SearchMediumController searchController;
     private MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
 
     public void initialize() {
@@ -55,6 +58,8 @@ public class MainController {
             this.detachTab((Attachable) null);
         } else if (oldValue == this.mediumInWaitTab) {
             this.detachTab(this.mediaInWaitController);
+        } else if (oldValue == this.searchTab) {
+            this.detachTab(this.searchController);
         } else if (oldValue == this.statisticsTab) {
             this.detachTab((Attachable) null);
         }
@@ -73,6 +78,8 @@ public class MainController {
             this.attachStatisticsTab();
         } else if (newValue == this.mediumInWaitTab) {
             this.attachMediumInWaitTab();
+        } else if (newValue == this.searchTab) {
+            this.attachSearchTab();
         }
     }
 
@@ -105,9 +112,16 @@ public class MainController {
 
     }
 
+    private void attachSearchTab() {
+        if (this.searchController == null) {
+            this.searchController = ControllerUtils.load("/searchMedium.fxml", node -> this.searchTab.setContent(node));
+        }
+        this.searchController.onAttach();
+    }
+
     private void attachMediumInWaitTab() {
         if (this.mediaInWaitController == null) {
-            this.mediaInWaitController = ControllerUtils.load("/episodeListView.fxml", node -> this.mediumInWaitTab.setContent(node));
+            this.mediaInWaitController = ControllerUtils.load("/mediumInWaitListView.fxml", node -> this.mediumInWaitTab.setContent(node));
         }
         this.mediaInWaitController.onAttach();
     }

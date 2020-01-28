@@ -3,10 +3,7 @@ package com.mytlogos.enterprisedesktop.controller;
 import com.mytlogos.enterprisedesktop.model.MediumInWait;
 import io.reactivex.disposables.Disposable;
 import javafx.fxml.FXML;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ListView;
-import javafx.scene.control.Spinner;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 
 /**
  *

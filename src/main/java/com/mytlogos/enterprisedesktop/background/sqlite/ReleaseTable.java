@@ -3,13 +3,10 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.Release;
-import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
 
 /**
  *
@@ -60,9 +57,8 @@ class ReleaseTable extends AbstractTable {
     });
 
     Flowable<PagedList<DisplayRelease>> getReleases(int saved, int medium, int read, int minIndex, int maxIndex) {
-        return Flowable.create(emitter -> {
-            try {
-                final List<DisplayRelease> releases = this.getReleasesQuery.setValues(value -> {
+        return this.getReleasesQuery
+                .setValues(value -> {
                     value.setInt(1, read);
                     value.setInt(2, medium);
                     value.setInt(3, medium);
@@ -72,13 +68,9 @@ class ReleaseTable extends AbstractTable {
                     value.setInt(7, minIndex);
                     value.setInt(8, maxIndex);
                     value.setInt(9, maxIndex);
-                }).queryList();
-                emitter.onNext(new PagedList<>(releases));
-            } catch (SQLException e) {
-                e.printStackTrace();
-                emitter.onError(e);
-            }
-        }, BackpressureStrategy.LATEST);
+                })
+                .queryFlowableListPassError()
+                .map(PagedList::new);
     }
 
     void insert(Release release) {

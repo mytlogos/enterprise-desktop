@@ -3,6 +3,8 @@ package com.mytlogos.enterprisedesktop.background.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
+import com.mytlogos.enterprisedesktop.model.SearchRequest;
+import com.mytlogos.enterprisedesktop.model.SearchResponse;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -205,6 +207,13 @@ public class Client {
         body.put("uuid", this.authentication.getUuid());
         body.put("session", this.authentication.getSession());
         return body;
+    }
+
+    public Response<List<SearchResponse>> searchRequest(SearchRequest searchRequest) throws IOException {
+        final Map<String, Object> map = this.userAuthenticationMap();
+        map.put("text", searchRequest.title);
+        map.put("medium", searchRequest.mediumType);
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.search(url, map));
     }
 
     public Response<ClientUser> login(String mailName, String password) throws IOException {

@@ -962,6 +962,18 @@ class RepositoryImpl implements Repository {
         TaskManager.runTask(() -> this.storage.updateProgress(Collections.singleton(episodeId), progress));
     }
 
+    @Override
+    public List<SearchResponse> requestSearch(SearchRequest searchRequest) {
+        try {
+            final Response<List<SearchResponse>> response = this.client.searchRequest(searchRequest);
+            final List<SearchResponse> body = response.body();
+            return body;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+
     private void reloadEpisodes(Collection<Integer> episodeIds) throws Exception {
         Utils.doPartitioned(episodeIds, integers -> {
             List<ClientEpisode> episodes = this.client.getEpisodes(integers).body();

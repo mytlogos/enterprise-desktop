@@ -9,6 +9,7 @@ import com.mytlogos.enterprisedesktop.background.api.model.InvalidatedData;
 import java.util.List;
 import java.util.Map;
 
+import com.mytlogos.enterprisedesktop.model.SearchResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -37,6 +38,9 @@ interface UserApi {
 
     @GET("{start}/invalidated")
     Call<List<InvalidatedData>> getInvalidated(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/search")
+    Call<List<SearchResponse>> search(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
 
     @GET("{start}/download")
     Call<List<ClientDownloadedEpisode>> downloadEpisodes(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);

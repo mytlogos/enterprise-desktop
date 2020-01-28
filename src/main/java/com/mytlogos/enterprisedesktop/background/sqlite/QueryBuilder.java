@@ -5,6 +5,11 @@ import com.mytlogos.enterprisedesktop.background.sqlite.internal.PreparedStateme
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.internal.disposables.DisposableHelper;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -27,7 +32,8 @@ class QueryBuilder<R> {
     private Collection<Object> values;
     private SqlBiConsumer<PreparedStatement, Object> multiQuerySetter;
     private SqlFunction<ResultSet, R> converter;
-    private Class<? extends AbstractTable>[] tables;
+    @SuppressWarnings("unchecked")
+    private Class<? extends AbstractTable>[] tables = new Class[0];
     private Type type;
     private List<?> queryInValues;
 
@@ -55,6 +61,7 @@ class QueryBuilder<R> {
     }
 
     QueryBuilder<R> setValueSetter(SqlBiConsumer<PreparedStatement, R> querySetter) {
+        //noinspection unchecked
         this.multiQuerySetter = (SqlBiConsumer<PreparedStatement, Object>) querySetter;
         return this;
     }
@@ -64,8 +71,9 @@ class QueryBuilder<R> {
         return this;
     }
 
-    QueryBuilder<R> setDependencies(Class<? extends AbstractTable>... tables) {
-        this.tables = tables;
+    QueryBuilder<R> setDependencies(Class<?>... tables) {
+        //noinspection unchecked
+        this.tables = (Class<? extends AbstractTable>[]) tables;
         return this;
     }
 
@@ -73,6 +81,15 @@ class QueryBuilder<R> {
         this.queryInValues = new ArrayList<>(objects);
         this.type = type;
         return this;
+    }
+
+    List<R> queryListIgnoreError() {
+        try {
+            return this.queryList();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     List<R> queryList() throws SQLException {
@@ -135,51 +152,94 @@ class QueryBuilder<R> {
         }
     }
 
-    Flowable<R> queryFlowable(Connection con) throws SQLException {
-        return this.queryFlowable(con, BackpressureStrategy.LATEST);
+    Flowable<R> queryFlowablePassError() {
+        try {
+            return this.queryFlowable(BackpressureStrategy.LATEST);
+        } catch (SQLException e) {
+            return Flowable.create(emitter -> {
+                emitter.onError(e);
+                emitter.onComplete();
+            }, BackpressureStrategy.LATEST);
+        }
     }
 
-    Flowable<R> queryFlowable(Connection con, BackpressureStrategy strategy) throws SQLException {
+    Flowable<R> queryFlowable(BackpressureStrategy strategy) throws SQLException {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
-        try (Connection connection = con) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
-                this.prepareStatement(preparedStatement);
+        return this.createFlowable(strategy, () -> {
+            try (Connection connection = ConnectionManager.getManager().getConnection()) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
+                    this.prepareStatement(preparedStatement);
 
-                try (ResultSet set = preparedStatement.executeQuery()) {
-                    if (set.next()) {
-                        return Flowable.create(emitter -> emitter.onNext(this.converter.apply(set)), strategy);
-                    } else {
-                        return null;
+                    try (ResultSet set = preparedStatement.executeQuery()) {
+                        if (set.next()) {
+                            return this.converter.apply(set);
+                        } else {
+                            return null;
+                        }
                     }
                 }
             }
+        });
+    }
+
+    private <T> Flowable<T> createFlowable(BackpressureStrategy strategy, SqlSupplier<T> supplier) {
+        Subject<T> subject = PublishSubject.create();
+        final SqlRunnable sqlRunnable = () -> subject.onNext(supplier.supply());
+        subject.map(t -> t);
+        final Flowable<T> map = subject.toFlowable(BackpressureStrategy.BUFFER).map(t -> t);
+        final Flowable<T> result = subject.doOnDispose(() -> InvalidationManager.get().removeObserver(sqlRunnable)).toFlowable(strategy).map(t -> t);
+        try {
+            final T supplyValue = supplier.supply();
+            subject.onNext(supplyValue);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            subject.onError(e);
         }
+        InvalidationManager.get().observeInvalidatedTables(sqlRunnable, Arrays.asList(this.tables));
+        return map;
     }
 
-    Flowable<List<R>> queryFlowableList(Connection con) throws SQLException {
-        return this.queryFlowableList(con, BackpressureStrategy.LATEST);
+    Flowable<R> queryFlowable() throws SQLException {
+        return this.queryFlowable(BackpressureStrategy.LATEST);
     }
 
-    Flowable<List<R>> queryFlowableList(Connection con, BackpressureStrategy strategy) throws SQLException {
+    Flowable<List<R>> queryFlowableList() throws SQLException {
+        return this.queryFlowableList(BackpressureStrategy.LATEST);
+    }
+
+    Flowable<List<R>> queryFlowableList(BackpressureStrategy strategy) throws SQLException {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
-        try (Connection connection = con) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
-                this.prepareStatement(preparedStatement);
+        return this.createFlowable(strategy, () -> {
+            try (Connection connection = ConnectionManager.getManager().getConnection()) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
+                    this.prepareStatement(preparedStatement);
 
-                try (ResultSet set = preparedStatement.executeQuery()) {
-                    List<R> values = new ArrayList<>();
+                    try (ResultSet set = preparedStatement.executeQuery()) {
+                        List<R> values = new ArrayList<>();
 
-                    while (set.next()) {
-                        R value = this.converter.apply(set);
-                        values.add(value);
+                        while (set.next()) {
+                            R value = this.converter.apply(set);
+                            values.add(value);
+                        }
+                        return values;
                     }
-                    return Flowable.create(emitter -> emitter.onNext(values), strategy);
                 }
             }
+        });
+    }
+
+    Flowable<List<R>> queryFlowableListPassError() {
+        try {
+            return this.queryFlowableList(BackpressureStrategy.LATEST);
+        } catch (SQLException e) {
+            return Flowable.create(emitter -> {
+                emitter.onError(e);
+                emitter.onComplete();
+            }, BackpressureStrategy.LATEST);
         }
     }
 
@@ -224,25 +284,30 @@ class QueryBuilder<R> {
         return false;
     }
 
+    Flowable<R> executeInFlowable(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) {
+        return this.createFlowable(BackpressureStrategy.LATEST, () -> this.executeIn(biFunction, mergeFunction));
+    }
+
     R executeIn(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) throws SQLException {
+        final String inPlaceholder = "$?";
+        int index = this.query.indexOf(inPlaceholder);
+        if (index < 0 && !this.queryInValues.isEmpty()) {
+            throw new IllegalStateException("expected a '$?' placeholder in query");
+        }
+        List<?> inValues = this.queryInValues;
+
+        final String before = this.query.substring(0, index);
+        final String after = this.query.substring(index + inPlaceholder.length());
+
+        int placeHolderCountBefore = Utils.countChar(before, '?');
+        int placeHolderCountAfter = Utils.countChar(after, '?');
+
+        int remainingCount = MAX_PARAM_COUNT - placeHolderCountBefore - placeHolderCountAfter;
+        String queryPart = before + "IN (";
+
+        AtomicReference<R> value = new AtomicReference<>();
+
         try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
-            final String inPlaceholder = "$?";
-            int index = this.query.indexOf(inPlaceholder);
-            if (index < 0 && !this.queryInValues.isEmpty()) {
-                throw new IllegalStateException("expected a '$?' placeholder in query");
-            }
-            List<?> inValues = this.queryInValues;
-
-            final String before = this.query.substring(0, index);
-            final String after = this.query.substring(index + inPlaceholder.length());
-
-            int placeHolderCountBefore = Utils.countChar(before, '?');
-            int placeHolderCountAfter = Utils.countChar(after, '?');
-
-            int remainingCount = MAX_PARAM_COUNT - placeHolderCountBefore - placeHolderCountAfter;
-            String queryPart = before + "IN (";
-
-            AtomicReference<R> value = new AtomicReference<>();
             try {
                 Utils.doPartitioned(remainingCount, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];
@@ -273,6 +338,68 @@ class QueryBuilder<R> {
             }
         }
         return null;
+    }
+
+    Flowable<List<R>> selectInFlowableList(SqlFunction<ResultSet, R> biFunction) {
+        return this.createFlowable(BackpressureStrategy.LATEST, () -> this.selectInList(biFunction));
+    }
+
+    List<R> selectInList(SqlFunction<ResultSet, R> biFunction) throws SQLException {
+        final String inPlaceholder = "$?";
+        int index = this.query.indexOf(inPlaceholder);
+        if (index < 0 && !this.queryInValues.isEmpty()) {
+            throw new IllegalStateException("expected a '$?' placeholder in query");
+        }
+        List<?> inValues = this.queryInValues;
+
+        final String before = this.query.substring(0, index);
+        final String after = this.query.substring(index + inPlaceholder.length());
+
+        int placeHolderCountBefore = Utils.countChar(before, '?');
+        int placeHolderCountAfter = Utils.countChar(after, '?');
+
+        int remainingCount = MAX_PARAM_COUNT - placeHolderCountBefore - placeHolderCountAfter;
+        String queryPart = before + "IN (";
+
+        List<R> resultValues = new ArrayList<>();
+
+        try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+            try {
+                Utils.doPartitioned(remainingCount, inValues, objects -> {
+                    String[] placeholderArray = new String[objects.size()];
+                    Arrays.fill(placeholderArray, "?");
+                    final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
+
+                    try (PreparedStatementImpl statement = connection.prepareStatement(query)) {
+                        final int from = placeHolderCountBefore + 1;
+                        final int to = placeHolderCountBefore + objects.size();
+
+                        for (int pIndex = from, i = 0; i < objects.size(); pIndex++, i++) {
+                            this.type.setValue(statement, pIndex, objects.get(i));
+                        }
+                        // add used indices AFTER setting the values for said indices,
+                        // else values cant be set in the right places
+                        statement.addUsedIndices(from, to);
+
+                        if (statement.execute()) {
+                            try (ResultSet resultSet = statement.getResultSet()) {
+                                while (resultSet.next()) {
+                                    final R result = biFunction.apply(resultSet);
+                                    resultValues.add(result);
+                                }
+                            }
+                        }
+                    }
+                    return false;
+                });
+                return resultValues;
+            } catch (SQLException e) {
+                throw new SQLException(e);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return new ArrayList<>();
     }
 
     enum Type {

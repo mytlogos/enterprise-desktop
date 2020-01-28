@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.mytlogos.enterprisedesktop.controller.MediaInWaitController">
+    <FlowPane hgap="5.0" vgap="5.0" VBox.vgrow="SOMETIMES">
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+        </padding>
+        <Spinner fx:id="minEpisodeIndex" editable="true"/>
+        <Spinner fx:id="maxEpisodeIndex" editable="true"/>
+        <CheckBox fx:id="showTextBox" mnemonicParsing="false" text="Text"/>
+        <CheckBox fx:id="showImageBox" mnemonicParsing="false" text="Image"/>
+        <CheckBox fx:id="showVideoBox" mnemonicParsing="false" text="Video"/>
+        <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio"/>
+        <TextField fx:id="nameFilter"/>
+        <TextField fx:id="hostFilter"/>
+    </FlowPane>
+    <StackPane VBox.vgrow="ALWAYS">
+        <ListView fx:id="mediumInWaitListView"/>
+    </StackPane>
+</VBox>

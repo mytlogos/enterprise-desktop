@@ -36,8 +36,8 @@ class EpisodeTable extends AbstractTable {
                     )
             );
 
-    private QueryBuilder<Void> updateSavedQuery = new QueryBuilder<>("UPDATE episode SET saved=? WHERE episodeId $?");
-    private QueryBuilder<Void> updateProgressQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
+    private QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("UPDATE episode SET saved=? WHERE episodeId $?");
+    private QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
     private QueryBuilder<Integer> saveEpisodesQuery = new QueryBuilder<>("SELECT episodeId FROM episode WHERE saved=1;");
     private QueryBuilder<Integer> getDownloadableQuery = new QueryBuilder<Integer>(
             "SELECT episodeId FROM (SELECT episode.episodeId, episode.saved FROM episode " +
@@ -60,6 +60,7 @@ class EpisodeTable extends AbstractTable {
                     "as episode " +
                     "WHERE saved = 0"
     ).setConverter(value -> value.getInt(1));
+
     private QueryBuilder<TocEpisode> getTocAscQuery = new QueryBuilder<TocEpisode>(
             "SELECT episode.episodeId, episode.progress, episode.readDate, episode.partId, " +
                     "episode.totalIndex, episode.partialIndex, episode.saved " +
@@ -104,17 +105,13 @@ class EpisodeTable extends AbstractTable {
     );
 
     public void updateProgress(int episodeId, float progress, LocalDateTime readDate) {
-        try {
-            final QueryBuilder<Void> voidQueryBuilder = this.updateProgressQuery.setValues((statement) -> {
-                statement.setFloat(1, progress);
-                statement.setString(2, Formatter.isoFormat(readDate));
-                statement.setInt(3, episodeId);
-            });
-            if (voidQueryBuilder.execute(this.getConnection())) {
-                this.setInvalidated();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        final QueryBuilder<Boolean> voidQueryBuilder = this.updateProgressQuery.setValues((statement) -> {
+            statement.setFloat(1, progress);
+            statement.setString(2, Formatter.isoFormat(readDate));
+            statement.setInt(3, episodeId);
+        });
+        if (voidQueryBuilder.execute()) {
+            this.setInvalidated();
         }
     }
 
@@ -147,12 +144,15 @@ class EpisodeTable extends AbstractTable {
 
     public void updateSaved(Collection<Integer> episodeIds, boolean saved) {
         try {
-            this.updateSavedQuery
+            final Boolean update = this.updateSavedQuery
                     .setQueryIn(episodeIds, QueryBuilder.Type.INT)
                     .executeIn(
                             SqlUtils.update(value -> value.setBoolean(1, saved)),
-                            (o, o1) -> null
+                            (o, o1) -> o || o1
                     );
+            if (update != null && update) {
+                this.setInvalidated();
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }

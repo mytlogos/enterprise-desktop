@@ -4,7 +4,6 @@ import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.model.Medium;
 import com.mytlogos.enterprisedesktop.model.MediumSetting;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
-import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 
 import java.time.LocalDateTime;
@@ -101,10 +100,7 @@ class MediumTable extends AbstractTable {
     ));
 
     public Flowable<MediumSetting> getSettings(int mediumId) {
-        return Flowable.create(emitter -> {
-            final MediumSetting setting = this.getSettingsQuery.setValues(value -> value.setInt(1, mediumId)).query();
-            emitter.onNext(setting);
-        }, BackpressureStrategy.LATEST);
+        return this.getSettingsQuery.setValues(value -> value.setInt(1, mediumId)).queryFlowablePassError();
     }
 
     public SimpleMedium getSimpleMedium(int mediumId) {

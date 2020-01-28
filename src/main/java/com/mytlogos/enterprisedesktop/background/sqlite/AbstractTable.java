@@ -15,8 +15,10 @@ import java.util.*;
 abstract class AbstractTable {
     private final Subject<Boolean> invalidated = PublishSubject.create();
     private final Flowable<Boolean> invalidationFlowable = this.invalidated.distinctUntilChanged().toFlowable(BackpressureStrategy.BUFFER);
-    private final Subject<Class<? extends AbstractTable>> invalidatedTables = PublishSubject.create();
-    private final Flowable<Class<? extends AbstractTable>> invalidatedTableFlowable = this.invalidatedTables.distinctUntilChanged().toFlowable(BackpressureStrategy.BUFFER);
+
+    AbstractTable() {
+        InvalidationManager.get().registerTable(this);
+    }
 
     void initialize() {
         try (Connection connection = this.getConnection()) {
@@ -245,7 +247,7 @@ abstract class AbstractTable {
         }
     }
 
-    void executeQuery(String query) throws SQLException {
+    void executeDMLQuery(String query) throws SQLException {
         try (Connection connection = this.getConnection()) {
             try (Statement statement = connection.createStatement()) {
                 if (!statement.execute(query) && statement.getUpdateCount() > 0) {

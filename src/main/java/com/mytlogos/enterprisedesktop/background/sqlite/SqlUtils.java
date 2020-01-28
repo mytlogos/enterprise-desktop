@@ -48,11 +48,10 @@ public class SqlUtils {
         };
     }
 
-    public static SqlFunction<PreparedStatement, Void> update(SqlConsumer<PreparedStatement> statementSqlConsumer) {
+    public static SqlFunction<PreparedStatement, Boolean> update(SqlConsumer<PreparedStatement> statementSqlConsumer) {
         return (preparedStatement) -> {
             statementSqlConsumer.accept(preparedStatement);
-            preparedStatement.executeUpdate();
-            return null;
+            return preparedStatement.executeUpdate() > 0;
         };
     }
 }

@@ -33,6 +33,12 @@
             </repository>
         </repositories>
     <dependencies>
+        <!-- https://mvnrepository.com/artifact/com.comcast/hlsparserj -->
+        <dependency>
+            <groupId>com.comcast</groupId>
+            <artifactId>hlsparserj</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
         <dependency>
             <groupId>org.jsoup</groupId>

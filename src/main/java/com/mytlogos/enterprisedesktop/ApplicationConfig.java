@@ -59,7 +59,7 @@ public abstract class ApplicationConfig {
                 final Disposable subscribe = repositorySubject.subscribe(emitter::onNext);
                 emitter.setDisposable(subscribe);
             }
-        }, BackpressureStrategy.BUFFER);
+        }, BackpressureStrategy.LATEST);
     }
 
     public static void setInitializeFuture(Future<?> initializeFuture) {

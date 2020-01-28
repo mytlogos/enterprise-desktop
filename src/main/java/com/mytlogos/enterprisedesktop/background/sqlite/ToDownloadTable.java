@@ -32,12 +32,7 @@ class ToDownloadTable extends AbstractTable {
     });
 
     public List<ToDownload> getItems() {
-        try {
-            return this.getItemsQuery.queryList();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+        return this.getItemsQuery.queryListIgnoreError();
     }
 
     void insert(ToDownload toDownload) {

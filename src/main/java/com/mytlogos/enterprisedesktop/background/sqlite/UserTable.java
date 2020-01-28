@@ -27,12 +27,12 @@ class UserTable extends AbstractTable {
             });
 
     public void update(User user) {
-
+        System.out.println("updating user");
     }
 
     void deleteAllUser() {
         try {
-            this.executeQuery("DELETE FROM user");
+            this.executeDMLQuery("DELETE FROM user");
         } catch (SQLException e) {
             e.printStackTrace();
         }

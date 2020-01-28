@@ -251,4 +251,6 @@ public interface Repository {
     void downloadAll(int mediumId) throws IOException;
 
     void updateProgress(int episodeId, float progress);
+
+    List<SearchResponse> requestSearch(SearchRequest searchRequest);
 }

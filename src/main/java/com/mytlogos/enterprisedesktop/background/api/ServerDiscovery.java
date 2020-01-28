@@ -27,7 +27,7 @@ class ServerDiscovery {
 
     private final int maxAddress = 50;
     private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress);
-    private static final boolean isDev = true;
+    private static final boolean isDev = false;
 
 
     Server discover(InetAddress broadcastAddress) {
@@ -43,7 +43,7 @@ class ServerDiscovery {
         try {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> this.discoverLocalNetworkServerPerUdp(broadcastAddress, discoveredServer));
             try {
-                future.get(5, TimeUnit.SECONDS);
+                future.get(2, TimeUnit.SECONDS);
             } catch (TimeoutException ignored) {
             }
 
@@ -70,7 +70,7 @@ class ServerDiscovery {
             if (server != null) {
                 return server;
             }
-            return executor.submit(this::discoverInternetServerPerUdp).get(2, TimeUnit.SECONDS);
+            return executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
             return null;
         }

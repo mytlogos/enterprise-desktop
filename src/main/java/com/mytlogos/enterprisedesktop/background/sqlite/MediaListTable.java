@@ -7,9 +7,7 @@ import com.mytlogos.enterprisedesktop.model.MediumItem;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -105,19 +103,11 @@ class MediaListTable extends AbstractTable {
     }
 
     public Collection<Integer> getMediumItemsIds(Integer listId) {
-        try {
-            return this.getMediumItemsIdsQuery.setValues(value -> value.setInt(1, listId)).queryList();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+        return this.getMediumItemsIdsQuery.setValues(value -> value.setInt(1, listId)).queryListIgnoreError();
     }
 
     Flowable<List<MediumItem>> getMediumItems(int listId) {
-        return Flowable.create(emitter -> {
-            final List<MediumItem> items = this.getMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryList();
-            emitter.onNext(items);
-        }, BackpressureStrategy.LATEST);
+        return this.getMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryFlowableListPassError();
     }
 
     void insert(MediaList mediaList) {
