@@ -90,6 +90,19 @@ public abstract class LiveData<T> {
         return new LiveDataImpl<>(() -> null);
     }
 
+    public CompletableFuture<T> firstElement() {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        final Observer<T> complete = new Observer<T>() {
+            @Override
+            public void onChanged(T t) {
+                future.complete(t);
+                LiveData.this.removeObserver(this);
+            }
+        };
+        this.observe(complete);
+        return future;
+    }
+
     /**
      * Removes the given observer from the observers list.
      *
@@ -102,12 +115,6 @@ public abstract class LiveData<T> {
         }
         removed.detachObserver();
         removed.activeStateChanged(false);
-    }
-
-    public CompletableFuture<T> firstElement() {
-        CompletableFuture<T> future = new CompletableFuture<>();
-        this.observe(future::complete);
-        return future;
     }
 
     /**
