@@ -1,10 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
-import com.mytlogos.enterprisedesktop.background.api.model.ClientDownloadedEpisode;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientNews;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientUser;
-import com.mytlogos.enterprisedesktop.background.api.model.InvalidatedData;
+import com.mytlogos.enterprisedesktop.background.api.model.*;
 
 import java.util.List;
 import java.util.Map;
@@ -44,6 +40,12 @@ interface UserApi {
 
     @GET("{start}/download")
     Call<List<ClientDownloadedEpisode>> downloadEpisodes(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/stats")
+    Call<ClientStat> getStats(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/new")
+    Call<ClientChangedEntities> getNew(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
 
     // TODO: 22.07.2019 add toc {uuid, toc: string, mediumId} ?
 }

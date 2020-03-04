@@ -1,14 +1,10 @@
 package com.mytlogos.enterprisedesktop;
 
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.MutableLiveData;
 import com.mytlogos.enterprisedesktop.controller.TaskController;
 import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -18,8 +14,7 @@ import java.util.concurrent.Future;
 public abstract class ApplicationConfig {
     private static Repository repository;
     private static Future<?> initializeFuture;
-    private static Subject<Repository> repositorySubject = PublishSubject.create();
-    private static final Flowable<Repository> repositoryFlowable = repositorySubject.toFlowable(BackpressureStrategy.BUFFER);
+    private static final MutableLiveData<Repository> repositoryLiveData = new MutableLiveData<>();
     private static MainPreferences mainPreferences = new MainPreferences();
     private static TaskController taskController = new TaskController();
 
@@ -51,15 +46,8 @@ public abstract class ApplicationConfig {
         }
     }
 
-    public static Flowable<Repository> getFlowableRepository() {
-        return Flowable.create(emitter -> {
-            if (repository != null) {
-                emitter.onNext(repository);
-            } else {
-                final Disposable subscribe = repositorySubject.subscribe(emitter::onNext);
-                emitter.setDisposable(subscribe);
-            }
-        }, BackpressureStrategy.LATEST);
+    public static LiveData<Repository> getLiveDataRepository() {
+        return ApplicationConfig.repositoryLiveData;
     }
 
     public static void setInitializeFuture(Future<?> initializeFuture) {
@@ -68,6 +56,6 @@ public abstract class ApplicationConfig {
 
     public static void initialize(Repository repository) {
         ApplicationConfig.repository = repository;
-        ApplicationConfig.repositorySubject.onNext(repository);
+        ApplicationConfig.repositoryLiveData.postValue(repository);
     }
 }

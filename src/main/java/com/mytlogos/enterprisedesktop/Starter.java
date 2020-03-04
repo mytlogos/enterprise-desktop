@@ -26,10 +26,10 @@ public class Starter extends Application {
 
     private static void initializeAsync() {
         ExecutorService service = Executors.newSingleThreadExecutor();
-        ApplicationConfig.setInitializeFuture(service.submit(() -> {
-            final Repository repository = new RepositoryProvider().provide();
-            ApplicationConfig.initialize(repository);
-        }));
+        final Repository repository = new RepositoryProvider().provide();
+        ApplicationConfig.initialize(repository);
+//        ApplicationConfig.setInitializeFuture(service.submit(() -> {
+//        }));
     }
 
     @Override

@@ -1,19 +1,24 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.background.PartEpisode;
+import com.mytlogos.enterprisedesktop.background.PartStat;
+import com.mytlogos.enterprisedesktop.background.SmallRelease;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
 
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 
 /**
  *
  */
 class EpisodeTable extends AbstractTable {
+
     private final QueryBuilder<Episode> insertEpisodeQuery = new QueryBuilder<Episode>(
             "INSERT OR IGNORE INTO episode (episodeId, progress, readDate, partId, totalIndex, partialIndex, combiIndex, saved) VALUES (?,?,?,?,?,?,?,?)"
     ).setValueSetter((statement, episode) -> {
@@ -104,6 +109,10 @@ class EpisodeTable extends AbstractTable {
             }
     );
 
+    EpisodeTable() {
+        super("episode");
+    }
+
     public void updateProgress(int episodeId, float progress, LocalDateTime readDate) {
         final QueryBuilder<Boolean> voidQueryBuilder = this.updateProgressQuery.setValues((statement) -> {
             statement.setFloat(1, progress);
@@ -167,9 +176,67 @@ class EpisodeTable extends AbstractTable {
         }
     }
 
+    public List<PartStat> getStat() {
+        try {
+            return new QueryBuilder<PartStat>("SELECT partId, count(DISTINCT episode.episodeId) as episodeCount, " +
+                    "sum(DISTINCT episode.episodeId) as episodeSum, count(url) as releaseCount " +
+                    "FROM episode LEFT JOIN episode_release ON episode.episodeId=episode_release.episodeId " +
+                    "GROUP BY partId")
+                    .setConverter(value -> new PartStat(
+                            value.getInt(1),
+                            value.getInt(2),
+                            value.getInt(3),
+                            value.getInt(4)
+                    ))
+                    .queryList();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return Collections.emptyList();
+        }
+    }
 
-    Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
-        return Flowable.create(emitter -> {
+    public List<PartEpisode> getEpisodes(Set<Integer> partIds) {
+        return new QueryBuilder<PartEpisode>("SELECT partId, episodeId FROM episode WHERE partId $?")
+                .setQueryIn(partIds, QueryBuilder.Type.INT)
+                .selectInListIgnoreError(value -> new PartEpisode(value.getInt(1), value.getInt(2)));
+    }
+
+    public void deletePerId(List<Integer> deleteEpisodes) {
+        this.executeDMLQuery(
+                deleteEpisodes,
+                new QueryBuilder<Integer>("DELETE FROM episode WHERE episodeId = ?")
+                        .setValueSetter((preparedStatement, episodeId) -> preparedStatement.setInt(1, episodeId))
+        );
+    }
+
+    public List<SmallRelease> getReleases(Set<Integer> partIds) {
+        return new QueryBuilder<SmallRelease>("SELECT partId, RoomEpisode.episodeId, RoomRelease.url \n" +
+                "FROM RoomEpisode INNER JOIN RoomRelease ON RoomRelease.episodeId=RoomEpisode.episodeId \n" +
+                "WHERE partId $?")
+                .setQueryIn(partIds, QueryBuilder.Type.INT)
+                .selectInListIgnoreError(value -> new SmallRelease(
+                        value.getInt(1),
+                        value.getInt(2),
+                        value.getString(3)
+                ));
+    }
+
+    public void update(List<ClientEpisode> update) {
+        final HashMap<String, Function<ClientEpisode, ?>> attrMap = new HashMap<>();
+        attrMap.put("progress", (FloatProducer<ClientEpisode>) ClientEpisode::getProgress);
+        attrMap.put("totalIndex", (IntProducer<ClientEpisode>) ClientEpisode::getTotalIndex);
+        attrMap.put("partialIndex", (IntProducer<ClientEpisode>) ClientEpisode::getPartialIndex);
+        attrMap.put("combiIndex", (DoubleProducer<ClientEpisode>) ClientEpisode::getCombiIndex);
+        attrMap.put("saved", (BooleanProducer<ClientEpisode>) ClientEpisode::isSaved);
+
+        final Map<String, Function<ClientEpisode, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("episodeId", (IntProducer<ClientEpisode>) ClientEpisode::getId);
+        this.update(update, "episode", attrMap, keyExtractors);
+    }
+
+
+    LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
+        return LiveData.create(() -> {
             QueryBuilder<TocEpisode> queryBuilder = sortings.getSortValue() > 0 ? this.getTocAscQuery : this.getTocDescQuery;
             final List<TocEpisode> tocEpisodes = queryBuilder.setValues(value -> {
                 value.setInt(1, mediumId);
@@ -201,8 +268,8 @@ class EpisodeTable extends AbstractTable {
                 final TocEpisode episode = idsMap.get(release.getEpisodeId());
                 episode.getReleases().add(release);
             }
-            emitter.onNext(new PagedList<>(tocEpisodes));
-        }, BackpressureStrategy.LATEST);
+            return new PagedList<>(tocEpisodes);
+        });
     }
 
     void insert(Episode episode) {

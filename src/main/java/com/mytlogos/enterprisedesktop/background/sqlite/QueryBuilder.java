@@ -2,14 +2,8 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.background.sqlite.internal.ConnectionImpl;
 import com.mytlogos.enterprisedesktop.background.sqlite.internal.PreparedStatementImpl;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.tools.Utils;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.FlowableEmitter;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.internal.disposables.DisposableHelper;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -19,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 
@@ -152,22 +147,15 @@ class QueryBuilder<R> {
         }
     }
 
-    Flowable<R> queryFlowablePassError() {
-        try {
-            return this.queryFlowable(BackpressureStrategy.LATEST);
-        } catch (SQLException e) {
-            return Flowable.create(emitter -> {
-                emitter.onError(e);
-                emitter.onComplete();
-            }, BackpressureStrategy.LATEST);
-        }
+    LiveData<R> queryLiveDataPassError() {
+        return this.queryLiveData();
     }
 
-    Flowable<R> queryFlowable(BackpressureStrategy strategy) throws SQLException {
+    LiveData<R> queryLiveData() {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
-        return this.createFlowable(strategy, () -> {
+        return this.createLiveData(() -> {
             try (Connection connection = ConnectionManager.getManager().getConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
                     this.prepareStatement(preparedStatement);
@@ -184,36 +172,17 @@ class QueryBuilder<R> {
         });
     }
 
-    private <T> Flowable<T> createFlowable(BackpressureStrategy strategy, SqlSupplier<T> supplier) {
-        Subject<T> subject = PublishSubject.create();
-        final SqlRunnable sqlRunnable = () -> subject.onNext(supplier.supply());
-        subject.map(t -> t);
-        final Flowable<T> map = subject.toFlowable(BackpressureStrategy.BUFFER).map(t -> t);
-        final Flowable<T> result = subject.doOnDispose(() -> InvalidationManager.get().removeObserver(sqlRunnable)).toFlowable(strategy).map(t -> t);
-        try {
-            final T supplyValue = supplier.supply();
-            subject.onNext(supplyValue);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            subject.onError(e);
-        }
-        InvalidationManager.get().observeInvalidatedTables(sqlRunnable, Arrays.asList(this.tables));
-        return map;
+    private <T> LiveData<T> createLiveData(Callable<T> supplier) {
+        LiveData<T> liveData = LiveData.create(supplier);
+//        InvalidationManager.get().observeInvalidatedTables(liveData, Arrays.asList(this.tables));
+        return liveData;
     }
 
-    Flowable<R> queryFlowable() throws SQLException {
-        return this.queryFlowable(BackpressureStrategy.LATEST);
-    }
-
-    Flowable<List<R>> queryFlowableList() throws SQLException {
-        return this.queryFlowableList(BackpressureStrategy.LATEST);
-    }
-
-    Flowable<List<R>> queryFlowableList(BackpressureStrategy strategy) throws SQLException {
+    LiveData<List<R>> queryLiveDataList() {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
-        return this.createFlowable(strategy, () -> {
+        return this.createLiveData(() -> {
             try (Connection connection = ConnectionManager.getManager().getConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
                     this.prepareStatement(preparedStatement);
@@ -230,17 +199,6 @@ class QueryBuilder<R> {
                 }
             }
         });
-    }
-
-    Flowable<List<R>> queryFlowableListPassError() {
-        try {
-            return this.queryFlowableList(BackpressureStrategy.LATEST);
-        } catch (SQLException e) {
-            return Flowable.create(emitter -> {
-                emitter.onError(e);
-                emitter.onComplete();
-            }, BackpressureStrategy.LATEST);
-        }
     }
 
     boolean execute() {
@@ -284,8 +242,8 @@ class QueryBuilder<R> {
         return false;
     }
 
-    Flowable<R> executeInFlowable(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) {
-        return this.createFlowable(BackpressureStrategy.LATEST, () -> this.executeIn(biFunction, mergeFunction));
+    LiveData<R> executeInLiveData(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) {
+        return this.createLiveData(() -> this.executeIn(biFunction, mergeFunction));
     }
 
     R executeIn(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) throws SQLException {
@@ -340,8 +298,8 @@ class QueryBuilder<R> {
         return null;
     }
 
-    Flowable<List<R>> selectInFlowableList(SqlFunction<ResultSet, R> biFunction) {
-        return this.createFlowable(BackpressureStrategy.LATEST, () -> this.selectInList(biFunction));
+    LiveData<List<R>> selectInLiveDataList(SqlFunction<ResultSet, R> biFunction) {
+        return this.createLiveData(() -> this.selectInList(biFunction));
     }
 
     List<R> selectInList(SqlFunction<ResultSet, R> biFunction) throws SQLException {
@@ -400,6 +358,15 @@ class QueryBuilder<R> {
             }
         }
         return new ArrayList<>();
+    }
+
+    List<R> selectInListIgnoreError(SqlFunction<ResultSet, R> biFunction) {
+        try {
+            return this.selectInList(biFunction);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     enum Type {

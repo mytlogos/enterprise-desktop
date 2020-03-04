@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  *
@@ -12,6 +13,6 @@ public class PagedList<E> extends ArrayList<E> {
     }
 
     public PagedList(Collection<? extends E> c) {
-        super(c);
+        super(c == null ? Collections.emptyList() : c);
     }
 }

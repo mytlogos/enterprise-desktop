@@ -4,12 +4,12 @@ package com.mytlogos.enterprisedesktop.worker;
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientDownloadedEpisode;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.preferences.DownloadPreferences;
 import com.mytlogos.enterprisedesktop.tools.ContentTool;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
 import com.mytlogos.enterprisedesktop.tools.NotEnoughSpaceException;
-import io.reactivex.Flowable;
 import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.util.Duration;
@@ -39,34 +39,29 @@ public class DownloadWorker extends ScheduledService<Void> {
     protected Task<Void> createTask() {
         return new Task<Void>() {
             @Override
-            protected Void call() throws Exception {
-                Flowable<Repository> repositoryFlowable = ApplicationConfig.getFlowableRepository();
-
+            protected Void call() {
+                LiveData<Repository> repositoryLiveData = ApplicationConfig.getLiveDataRepository();
                 try {
-                    //noinspection ResultOfMethodCallIgnored
-                    repositoryFlowable
-                            .map(repository -> {
-                                contentTools = FileTools.getSupportedContentTools();
+                    final Repository repository = repositoryLiveData.firstElement().get();
+                    contentTools = FileTools.getSupportedContentTools();
 
-                                if (!repository.isClientAuthenticated()) {
-                                    return false;
-                                }
-                                if (!repository.isClientOnline()) {
-                                    this.updateTitle("Download: Server not in reach");
-                                    return false;
-                                }
-                                this.updateTitle("Getting Data for Download");
-                                this.updateProgress(0, 0);
+                    if (!repository.isClientAuthenticated()) {
+                        cleanUp();
+                        return null;
+                    }
+                    if (!repository.isClientOnline()) {
+                        this.updateTitle("Download: Server not in reach");
+                        cleanUp();
+                        return null;
+                    }
+                    this.updateTitle("Getting Data for Download");
+                    this.updateProgress(0, 0);
 
-                                if (mediumId <= 0) {
-                                    download(repository);
-                                } else {
-                                    downloadData(repository);
-                                }
-                                return false;
-                            })
-                            .firstElement()
-                            .blockingGet();
+                    if (mediumId <= 0) {
+                        download(repository);
+                    } else {
+                        downloadData(repository);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

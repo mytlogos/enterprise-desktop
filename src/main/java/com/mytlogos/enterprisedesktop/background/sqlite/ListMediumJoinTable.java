@@ -26,6 +26,10 @@ class ListMediumJoinTable extends AbstractTable {
             "SELECT mediumId FROM list_medium WHERE listId=?"
     ).setConverter(value -> value.getInt(1));
 
+    ListMediumJoinTable() {
+        super("list_medium");
+    }
+
     public Collection<Integer> getMediumItemsIds(Integer listId) {
         try {
             return this.getMediumItemsIdsQuery.setValues(value -> value.setInt(1, listId)).queryList();
@@ -41,6 +45,25 @@ class ListMediumJoinTable extends AbstractTable {
 
     public void delete(List<Integer> listIds) {
         this.executeDMLQuery(listIds, this.deleteJoinQuery);
+    }
+
+    public List<ListMediumJoin> getListItems() {
+        return new QueryBuilder<ListMediumJoin>("SELECT listId, mediumId FROM list_medium")
+                .setConverter(value -> new ListMediumJoin(value.getInt(1), value.getInt(2), false))
+                .queryListIgnoreError();
+    }
+
+    public void removeJoin(List<ListMediumJoin> joins) {
+        this.executeDMLQuery(
+                joins,
+                new QueryBuilder<ListMediumJoin>("DELETE FROM list_medium WHERE listId = ? and mediumId = ?;")
+                        .setValueSetter((preparedStatement, listMediumJoin) -> {
+                            if (listMediumJoin.external) {
+                                throw new IllegalArgumentException("Trying to delete an external ListJoin from an normal one");
+                            }
+                            preparedStatement.setInt(1, listMediumJoin.listId);
+                            preparedStatement.setInt(2, listMediumJoin.mediumId);
+                        }));
     }
 
     void insert(ListMediumJoin listMediumJoin) {

@@ -1,7 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-import io.reactivex.schedulers.Schedulers;
-
+import java.sql.SQLException;
 import java.util.*;
 
 /**
@@ -25,8 +24,7 @@ public class InvalidationManager {
     public void registerTable(AbstractTable table) {
         final Set<SqlRunnable> values = Collections.synchronizedSet(new HashSet<>());
         this.tableRunnable.put(table, values);
-        //noinspection ResultOfMethodCallIgnored
-        table.getInvalidated().subscribeOn(Schedulers.io()).subscribe(invalidated -> {
+        table.getInvalidated().observe(invalidated -> {
             final Boolean invalidationRunning = this.tableInvalidationRunning.get(table);
 
             if (!invalidated || (invalidationRunning != null && invalidationRunning)) {
@@ -35,8 +33,13 @@ public class InvalidationManager {
             this.tableInvalidationRunning.put(table, true);
             System.out.println("Invalidated: " + table.getClass().getName());
 
+            // TODO 01.3.2020: this may be/is a (potential) pitfall, executing SqlRunnable on Main? Thread
             for (SqlRunnable runnable : values) {
-                runnable.run();
+                try {
+                    runnable.run();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
             this.tableInvalidationRunning.put(table, false);
             table.clearInvalidated();

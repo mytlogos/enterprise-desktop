@@ -19,6 +19,10 @@ class FailedEpisodeTable extends AbstractTable {
     });
     private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?");
 
+    FailedEpisodeTable() {
+        super("failed_episode");
+    }
+
     public List<FailedEpisode> getFailedEpisodes(Collection<Integer> episodeIds) {
         try {
             // FIXME: 17.11.2019: could be a bug to use query in and queryList together

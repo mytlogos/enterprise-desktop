@@ -1,23 +1,23 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
 import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientRelease;
+import retrofit2.Call;
+import retrofit2.http.*;
 
 import java.util.List;
 import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Url;
 
 interface EpisodeApi {
 
     @GET
     Call<ClientEpisode> getEpisode(@Url String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/all")
+    Call<List<ClientEpisode>> getAll(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/releases/all")
+    Call<List<ClientRelease>> getAllReleases(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);
 
     @GET
     Call<List<ClientEpisode>> getEpisodes(@Url String url, @QueryMap Map<String, Object> body);

@@ -1,23 +1,54 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.MutableLiveData;
+import com.mytlogos.enterprisedesktop.tools.Log;
 
 import java.sql.*;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  *
  */
 abstract class AbstractTable {
-    private final Subject<Boolean> invalidated = PublishSubject.create();
-    private final Flowable<Boolean> invalidationFlowable = this.invalidated.distinctUntilChanged().toFlowable(BackpressureStrategy.BUFFER);
+    private final MutableLiveData<Boolean> invalidated = new MutableLiveData<>();
+    private final String table;
 
-    AbstractTable() {
+    AbstractTable(String table) {
+        this.table = table;
         InvalidationManager.get().registerTable(this);
+    }
+
+    public void deleteAll() {
+        this.executeDMLQueryIgnoreError("DELETE FROM `" + this.table + "`");
+    }
+
+    void executeDMLQueryIgnoreError(String query) {
+        try {
+            this.executeDMLQuery(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            Log.severe("%s: %s", e.getMessage(), Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    void executeDMLQuery(String query) throws SQLException {
+        try (Connection connection = this.getConnection()) {
+            try (Statement statement = connection.createStatement()) {
+
+                if (!statement.execute(query) && statement.getUpdateCount() > 0) {
+                    this.setInvalidated();
+                }
+                Log.info(query);
+            }
+        }
+    }
+
+    void setInvalidated() {
+        this.invalidated.postValue(Boolean.TRUE);
     }
 
     void initialize() {
@@ -49,16 +80,12 @@ abstract class AbstractTable {
         }
     }
 
-    void setInvalidated() {
-        this.invalidated.onNext(Boolean.TRUE);
-    }
-
     void clearInvalidated() {
-        this.invalidated.onNext(Boolean.FALSE);
+        this.invalidated.postValue(Boolean.FALSE);
     }
 
-    Flowable<Boolean> getInvalidated() {
-        return this.invalidationFlowable;
+    LiveData<Boolean> getInvalidated() {
+        return this.invalidated;
     }
 
     Set<Integer> getLoadedInt() {
@@ -73,12 +100,14 @@ abstract class AbstractTable {
     <T> List<T> selectList(String sql, SqlFunction<ResultSet, T> function) throws SQLException {
         try (Connection connection = this.getConnection()) {
             try (ResultSet set = connection.createStatement().executeQuery(sql)) {
+
                 List<T> values = new ArrayList<>();
 
                 while (set.next()) {
                     T value = function.apply(set);
                     values.add(value);
                 }
+                Log.info("%s: %d", sql, values.size());
                 return values;
             }
         }
@@ -101,6 +130,7 @@ abstract class AbstractTable {
         try (Connection connection = this.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(sql)) {
                 consumer.accept(statement, value);
+                Log.info(sql);
                 if (!statement.execute() && statement.getUpdateCount() > 0) {
                     this.setInvalidated();
                 }
@@ -113,6 +143,8 @@ abstract class AbstractTable {
     <T> void execute(T value, PreparedQuery<T> preparedQuery) {
         try (Connection connection = this.getConnection()) {
             try (PreparedStatement statement = connection.prepareStatement(preparedQuery.getQuery())) {
+                Log.info(preparedQuery.getQuery());
+
                 preparedQuery.setValues(statement, value);
                 if (!statement.execute() && statement.getUpdateCount() > 0) {
                     this.setInvalidated();
@@ -133,6 +165,8 @@ abstract class AbstractTable {
                     statement.addBatch();
                 }
                 final int[] execute = statement.executeBatch();
+                Log.info("%s: %s", preparedQuery.getQuery(), Arrays.toString(execute));
+
                 for (int insertInfo : execute) {
                     if (insertInfo > 0) {
                         this.setInvalidated();
@@ -149,6 +183,72 @@ abstract class AbstractTable {
         }
     }
 
+    <T> void update(Collection<T> values, String table, Map<String, Function<T, ?>> attrExtractors, Map<String, Function<T, ?>> keyExtractors) {
+        // TODO 02.3.2020: use something else maybe, as this may be used for SQLInjection?
+        if (attrExtractors.isEmpty()) {
+            System.out.println("trying to update without any attrExtractor");
+            return;
+        }
+        final List<String> attrNames = new ArrayList<>(attrExtractors.keySet());
+        final List<String> keyNames = new ArrayList<>(keyExtractors.keySet());
+        String query = attrNames
+                .stream()
+                .map(attr -> "`" + attr + "` = ?")
+                .collect(Collectors.joining(",", "UPDATE `" + table + "` SET ", ""));
+
+        query = keyNames.stream()
+                .map(attr -> "`" + attr + "` = ?")
+                .collect(Collectors.joining(",", query + " WHERE ", ";"));
+
+        this.executeDMLQuery(
+                values,
+                new QueryBuilder<T>(query)
+                        .setValueSetter((preparedStatement, t) -> {
+                            int placeholder = 1;
+                            for (int i = 0, attrNamesSize = attrNames.size(); i < attrNamesSize; i++, placeholder++) {
+                                String attrName = attrNames.get(i);
+                                final Function<T, ?> function = attrExtractors.get(attrName);
+
+                                setValue(preparedStatement, t, placeholder, function);
+                            }
+                            for (int i = 0; i < keyNames.size(); i++, placeholder++) {
+                                String keyName = keyNames.get(i);
+                                final Function<T, ?> function = keyExtractors.get(keyName);
+
+                                setValue(preparedStatement, t, placeholder, function);
+                            }
+                        })
+        );
+    }
+
+    private <T> void setValue(PreparedStatement preparedStatement, T t, int placeholder, Function<T, ?> function) throws SQLException {
+        if (function instanceof ByteProducer) {
+            //noinspection unchecked
+            preparedStatement.setByte(placeholder, ((ByteProducer<T>) function).apply(t));
+        } else if (function instanceof ShortProducer) {
+            //noinspection unchecked
+            preparedStatement.setShort(placeholder, ((ShortProducer<T>) function).apply(t));
+        } else if (function instanceof IntProducer) {
+            //noinspection unchecked
+            preparedStatement.setInt(placeholder, ((IntProducer<T>) function).apply(t));
+        } else if (function instanceof LongProducer) {
+            //noinspection unchecked
+            preparedStatement.setLong(placeholder, ((LongProducer<T>) function).apply(t));
+        } else if (function instanceof FloatProducer) {
+            //noinspection unchecked
+            preparedStatement.setFloat(placeholder, ((FloatProducer<T>) function).apply(t));
+        } else if (function instanceof DoubleProducer) {
+            //noinspection unchecked
+            preparedStatement.setDouble(placeholder, ((DoubleProducer<T>) function).apply(t));
+        } else if (function instanceof BooleanProducer) {
+            //noinspection unchecked
+            preparedStatement.setBoolean(placeholder, ((BooleanProducer<T>) function).apply(t));
+        } else if (function instanceof StringProducer) {
+            //noinspection unchecked
+            preparedStatement.setString(placeholder, ((StringProducer<T>) function).apply(t));
+        }
+    }
+
     <T> void execute(String sql, Collection<T> collection, SqlBiConsumer<PreparedStatement, T> consumer) {
         try (Connection connection = this.getConnection()) {
             connection.setAutoCommit(false);
@@ -159,6 +259,7 @@ abstract class AbstractTable {
                     statement.addBatch();
                 }
                 final int[] execute = statement.executeBatch();
+                Log.info("%s: %s", sql, Arrays.toString(execute));
                 for (int insertInfo : execute) {
                     if (insertInfo > 0) {
                         this.setInvalidated();
@@ -183,6 +284,8 @@ abstract class AbstractTable {
                 consumer.accept(statement);
 
                 final int[] execute = statement.executeBatch();
+                Log.info("%s: %s", sql, Arrays.toString(execute));
+
                 for (int insertInfo : execute) {
                     if (insertInfo > 0) {
                         this.setInvalidated();
@@ -202,6 +305,7 @@ abstract class AbstractTable {
     <T> T selectSingle(String sql, SqlFunction<ResultSet, T> function) throws SQLException {
         try (Connection connection = this.getConnection()) {
             try (ResultSet set = connection.createStatement().executeQuery(sql)) {
+                Log.info(sql);
                 T value = null;
 
                 if (set.next()) {
@@ -218,6 +322,8 @@ abstract class AbstractTable {
                 querySetter.accept(preparedStatement);
 
                 try (ResultSet set = preparedStatement.executeQuery()) {
+                    Log.info(sql);
+
                     T value = null;
 
                     if (set.next()) {
@@ -241,20 +347,35 @@ abstract class AbstractTable {
                         T value = function.apply(set);
                         values.add(value);
                     }
+                    Log.info("%s: %d Results", sql, values.size());
                     return values;
                 }
             }
         }
     }
 
-    void executeDMLQuery(String query) throws SQLException {
-        try (Connection connection = this.getConnection()) {
-            try (Statement statement = connection.createStatement()) {
-                if (!statement.execute(query) && statement.getUpdateCount() > 0) {
-                    this.setInvalidated();
-                }
-            }
-        }
+    interface IntProducer<R> extends Function<R, Integer> {
+    }
+
+    interface ShortProducer<R> extends Function<R, Short> {
+    }
+
+    interface ByteProducer<R> extends Function<R, Byte> {
+    }
+
+    interface StringProducer<R> extends Function<R, String> {
+    }
+
+    interface LongProducer<R> extends Function<R, Long> {
+    }
+
+    interface DoubleProducer<R> extends Function<R, Double> {
+    }
+
+    interface FloatProducer<R> extends Function<R, Float> {
+    }
+
+    interface BooleanProducer<R> extends Function<R, Boolean> {
     }
 
     protected interface PreparedQuery<T> {

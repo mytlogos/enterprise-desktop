@@ -6,9 +6,9 @@ import com.mytlogos.enterprisedesktop.background.resourceLoader.DependantValue;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.DependencyTask;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
-import io.reactivex.Flowable;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -60,8 +60,8 @@ public class SqliteStorage implements DatabaseStorage {
 
 
     @Override
-    public Flowable<User> getUser() {
-        return Flowable.empty();
+    public LiveData<User> getUser() {
+        return LiveData.empty();
     }
 
     @Override
@@ -70,8 +70,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<HomeStats> getHomeStats() {
-        return Flowable.empty();
+    public LiveData<HomeStats> getHomeStats() {
+        return LiveData.empty();
     }
 
     @Override
@@ -118,8 +118,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<News>> getNews() {
-        return Flowable.empty();
+    public LiveData<PagedList<News>> getNews() {
+        return LiveData.empty();
     }
 
     @Override
@@ -158,8 +158,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<Integer>> getLiveListItems(Integer listId) {
-        return Flowable.empty();
+    public LiveData<List<Integer>> getLiveListItems(Integer listId) {
+        return LiveData.empty();
     }
 
     @Override
@@ -168,8 +168,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<Integer>> getLiveExternalListItems(Integer externalListId) {
-        return Flowable.empty();
+    public LiveData<List<Integer>> getLiveExternalListItems(Integer externalListId) {
+        return LiveData.empty();
     }
 
     @Override
@@ -183,21 +183,27 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
+    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
         return this.releaseTable.getReleases(saved, medium, read, minIndex, maxIndex);
     }
 
     @Override
-    public Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
-        return Flowable.empty();
+    public LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<List<MediaList>> getLists() {
-        final Flowable<List<ExternalMediaList>> externalMediaLists = this.externalMediaListTable.getLists();
-        final Flowable<List<MediaList>> mediaLists = this.mediaListTable.getLists();
+    public LiveData<List<MediaList>> getLists() {
+        final LiveData<List<ExternalMediaList>> externalMediaLists = this.externalMediaListTable.getLists();
+        final LiveData<List<MediaList>> mediaLists = this.mediaListTable.getLists();
 
-        return Flowable.combineLatest(mediaLists, externalMediaLists, (mediaLists1, externalMediaLists1) -> {
+        return mediaLists.map(externalMediaLists, (mediaLists1, externalMediaLists1) -> {
+            if (mediaLists1 == null) {
+                mediaLists1 = Collections.emptyList();
+            }
+            if (externalMediaLists1 == null) {
+                externalMediaLists1 = Collections.emptyList();
+            }
             List<MediaList> lists = new ArrayList<>(mediaLists1);
             lists.addAll(externalMediaLists1);
             return lists;
@@ -215,8 +221,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<? extends MediaListSetting> getListSetting(int id, boolean isExternal) {
-        return Flowable.empty();
+    public LiveData<? extends MediaListSetting> getListSetting(int id, boolean isExternal) {
+        return LiveData.empty();
     }
 
     @Override
@@ -230,12 +236,12 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
-        return Flowable.empty();
+    public LiveData<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<MediumSetting> getMediumSettings(int mediumId) {
+    public LiveData<MediumSetting> getMediumSettings(int mediumId) {
         return this.mediumTable.getSettings(mediumId);
     }
 
@@ -245,12 +251,12 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
+    public LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
         return this.episodeTable.getToc(mediumId, sortings, read, saved);
     }
 
     @Override
-    public Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
+    public LiveData<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
         return isExternal ? this.externalMediaListTable.getMediumItems(listId) : this.mediaListTable.getMediumItems(listId);
     }
 
@@ -285,18 +291,18 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
-        return Flowable.empty();
+    public LiveData<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
-        return Flowable.empty();
+    public LiveData<PagedList<ReadEpisode>> getReadTodayEpisodes() {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<List<MediaList>> getInternLists() {
-        return Flowable.empty();
+    public LiveData<List<MediaList>> getInternLists() {
+        return LiveData.empty();
     }
 
     @Override
@@ -305,28 +311,28 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
-        return Flowable.empty();
+    public LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
-        return Flowable.empty();
+    public LiveData<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
-        return Flowable.empty();
+    public LiveData<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<List<MediaList>> getListSuggestion(String name) {
-        return Flowable.empty();
+    public LiveData<List<MediaList>> getListSuggestion(String name) {
+        return LiveData.empty();
     }
 
     @Override
-    public Flowable<Boolean> onDownloadAble() {
-        return Flowable.empty();
+    public LiveData<Boolean> onDownloadAble() {
+        return LiveData.empty();
     }
 
     @Override
@@ -340,8 +346,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<List<MediumItem>> getAllDanglingMedia() {
-        return Flowable.empty();
+    public LiveData<List<MediumItem>> getAllDanglingMedia() {
+        return LiveData.empty();
     }
 
     @Override
@@ -360,8 +366,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<DisplayExternalUser>> getExternalUser() {
-        return Flowable.empty();
+    public LiveData<PagedList<DisplayExternalUser>> getExternalUser() {
+        return LiveData.empty();
     }
 
     @Override
@@ -385,8 +391,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public Flowable<PagedList<NotificationItem>> getNotifications() {
-        return Flowable.empty();
+    public LiveData<PagedList<NotificationItem>> getNotifications() {
+        return LiveData.empty();
     }
 
     @Override
@@ -502,6 +508,93 @@ public class SqliteStorage implements DatabaseStorage {
     @Override
     public void removeEditEvents(Collection<EditEvent> editEvents) {
 
+    }
+
+    @Override
+    public ReloadPart checkReload(ClientStat.ParsedStat parsedStat) {
+        List<PartStat> roomStats = this.episodeTable.getStat();
+
+        Map<Integer, ClientStat.Partstat> partStats = new HashMap<>();
+
+        for (Map<Integer, ClientStat.Partstat> value : parsedStat.media.values()) {
+            partStats.putAll(value);
+        }
+
+        List<Integer> loadEpisode = new LinkedList<>();
+        List<Integer> loadRelease = new LinkedList<>();
+
+        for (PartStat roomStat : roomStats) {
+            ClientStat.Partstat partstat = partStats.get(roomStat.partId);
+
+            if (partstat == null) {
+                throw new IllegalStateException(String.format(
+                        "Local Part %s does not exist on Server, missing local Part Deletion",
+                        roomStat.partId
+                ));
+            }
+
+            if (partstat.episodeCount != roomStat.episodeCount
+                    || partstat.episodeSum != roomStat.episodeSum) {
+                loadEpisode.add(roomStat.partId);
+            } else if (partstat.releaseCount != roomStat.releaseCount) {
+                loadRelease.add(roomStat.partId);
+            }
+        }
+        return new ReloadPart(loadEpisode, loadRelease);
+    }
+
+    @Override
+    public void deleteMedia(Collection<Integer> toDelete) {
+
+    }
+
+    @Override
+    public void deleteParts(Collection<Integer> toDelete) {
+
+    }
+
+    @Override
+    public void deleteEpisodes(Collection<Integer> toDelete) {
+
+    }
+
+    @Override
+    public void deleteReleases(Collection<Release> toDelete) {
+
+    }
+
+    @Override
+    public void deleteList(Collection<Integer> toDelete) {
+
+    }
+
+    @Override
+    public void deleteExternalList(Collection<Integer> toDelete) {
+
+    }
+
+    @Override
+    public void deleteExternalUser(Collection<Integer> toDelete) {
+
+    }
+
+    @Override
+    public void clearAll() {
+        this.listMediumJoinTable.deleteAll();
+        this.notificationTable.deleteAll();
+        this.editEventTable.deleteAll();
+        this.externalListMediumJoinTable.deleteAll();
+        this.toDownloadTable.deleteAll();
+        this.releaseTable.deleteAll();
+        this.failedEpisodeTable.deleteAll();
+        this.episodeTable.deleteAll();
+        this.partTable.deleteAll();
+        this.mediumTable.deleteAll();
+        this.mediaListTable.deleteAll();
+        this.externalMediaListTable.deleteAll();
+        this.externalUserTable.deleteAll();
+        this.mediumInWaitTable.deleteAll();
+        this.newsTable.deleteAll();
     }
 
     private class SqliteDependantGenerator implements DependantGenerator {
@@ -674,7 +767,6 @@ public class SqliteStorage implements DatabaseStorage {
 
 
     private class SqlitePersister implements ClientModelPersister {
-        private final Collection<ClientConsumer<?>> consumer = new ArrayList<>();
         private final LoadData loadedData;
         private final Repository repository;
         private final LoadWorkGenerator generator;
@@ -684,125 +776,70 @@ public class SqliteStorage implements DatabaseStorage {
             this.loadedData = loadedData;
             this.repository = repository;
             this.generator = new LoadWorkGenerator(loadedData);
-            this.initConsumer();
         }
 
-        private void initConsumer() {
-            consumer.add(new ClientConsumer<ClientReadEpisode>() {
-                @Override
-                public Class<ClientReadEpisode> getType() {
-                    return ClientReadEpisode.class;
-                }
+        @Override
+        public Collection<ClientConsumer<?>> getConsumer() {
+            return Collections.emptyList();
+        }
 
-                @Override
-                public void consume(Collection<ClientReadEpisode> clientEpisodes) {
-                    SqlitePersister.this.persistReadEpisodes(clientEpisodes);
-                }
-            });
-            consumer.add(new ClientConsumer<ClientEpisode>() {
-                @Override
-                public Class<ClientEpisode> getType() {
-                    return ClientEpisode.class;
-                }
+        @Override
+        public ClientModelPersister persistEpisodes(Collection<ClientEpisode> episodes) {
+            LoadWorkGenerator.FilteredEpisodes filteredEpisodes = this.generator.filterEpisodes(episodes);
+            return persist(filteredEpisodes);
+        }
 
-                @Override
-                public void consume(Collection<ClientEpisode> clientEpisodes) {
-                    SqlitePersister.this.persistEpisodes(clientEpisodes);
-                }
-            });
-            consumer.add(new ClientConsumer<ClientPart>() {
-                @Override
-                public Class<ClientPart> getType() {
-                    return ClientPart.class;
-                }
+        @Override
+        public ClientModelPersister persist(LoadWorkGenerator.FilteredEpisodes filteredEpisodes) {
+            List<ClientEpisode> newEpisodes = filteredEpisodes.newEpisodes;
+            List<ClientEpisode> update = filteredEpisodes.updateEpisodes;
 
-                @Override
-                public void consume(Collection<ClientPart> parts) {
-                    SqlitePersister.this.persistParts(parts);
-                }
-            });
-            consumer.add(new ClientConsumer<ClientMedium>() {
-                @Override
-                public Class<ClientMedium> getType() {
-                    return ClientMedium.class;
-                }
+            SqliteStorage.this.episodeTable.insert(newEpisodes);
+            SqliteStorage.this.episodeTable.update(update);
 
-                @Override
-                public void consume(Collection<ClientMedium> media) {
-                    SqlitePersister.this.persistMedia(media);
-                }
-            });
-            consumer.add(new ClientConsumer<ListMediumJoin>() {
-                @Override
-                public Class<ListMediumJoin> getType() {
-                    return ListMediumJoin.class;
-                }
+            for (ClientEpisode episode : newEpisodes) {
+                this.loadedData.getEpisodes().add(episode.getEpisodeId());
+            }
+            SqliteStorage.this.releaseTable.insert(filteredEpisodes.releases);
+            return this;
+        }
 
-                @Override
-                public void consume(Collection<ListMediumJoin> joins) {
-                    Set<ListMediumJoin> internalJoins = new HashSet<>();
-                    Set<ListMediumJoin> externalJoins = new HashSet<>();
+        @Override
+        public ClientModelPersister persistMediaLists(Collection<ClientMediaList> mediaLists) {
+            LoadWorkGenerator.FilteredMediaList filteredMediaList = this.generator.filterMediaLists(mediaLists);
+            return this.persist(filteredMediaList);
+        }
 
-                    for (ListMediumJoin join : joins) {
-                        if (join.isExternal()) {
-                            externalJoins.add(join);
-                        } else {
-                            internalJoins.add(join);
-                        }
-                    }
-                    SqliteStorage.this.listMediumJoinTable.insert(internalJoins);
-                    SqliteStorage.this.externalListMediumJoinTable.insert(externalJoins);
-                }
-            });
-            consumer.add(new ClientConsumer<ClientExternalMediaList>() {
-                @Override
-                public Class<ClientExternalMediaList> getType() {
-                    return ClientExternalMediaList.class;
-                }
+        private ClientModelPersister persistFiltered(LoadWorkGenerator.FilteredMediaList filteredMediaList) {
+            List<ClientMediaList> list = filteredMediaList.newList;
+            List<ClientMediaList> update = filteredMediaList.updateList;
 
-                @Override
-                public void consume(Collection<ClientExternalMediaList> extLists) {
-                    SqlitePersister.this.persistExternalMediaLists(extLists);
-                }
-            });
-            consumer.add(new ClientConsumer<ClientMediaList>() {
-                @Override
-                public Class<ClientMediaList> getType() {
-                    return ClientMediaList.class;
-                }
+            SqliteStorage.this.mediaListTable.insert(list);
+            SqliteStorage.this.mediaListTable.update(update);
 
-                @Override
-                public void consume(Collection<ClientMediaList> lists) {
-                    SqlitePersister.this.persistMediaLists(lists);
-                }
-            });
-            consumer.add(new ClientConsumer<ClientExternalUser>() {
-                @Override
-                public Class<ClientExternalUser> getType() {
-                    return ClientExternalUser.class;
-                }
+            for (ClientMediaList mediaList : list) {
+                this.loadedData.getMediaList().add(mediaList.getId());
+            }
+            return this;
+        }
 
-                @Override
-                public void consume(Collection<ClientExternalUser> extUsers) {
-                    SqlitePersister.this.persistExternalUsers(extUsers);
-                }
-            });
+        @Override
+        public ClientModelPersister persist(LoadWorkGenerator.FilteredMediaList filteredMediaList) {
+            return this.persistFiltered(filteredMediaList);
+        }
+
+        @Override
+        public ClientModelPersister persistExternalMediaLists(Collection<ClientExternalMediaList> externalMediaLists) {
+            LoadWorkGenerator.FilteredExtMediaList filteredExtMediaList = this.generator.filterExternalMediaLists(externalMediaLists);
+            return this.persistFiltered(filteredExtMediaList);
         }
 
         private ClientModelPersister persistFiltered(LoadWorkGenerator.FilteredExtMediaList filteredExtMediaList) {
             List<ClientExternalMediaList> list = filteredExtMediaList.newList;
             List<ClientExternalMediaList> update = filteredExtMediaList.updateList;
 
-            List<ListMediumJoin> joins = filteredExtMediaList.joins;
-            List<Integer> clearListMediumJoin = filteredExtMediaList.clearJoins;
-
             SqliteStorage.this.externalMediaListTable.insert(list);
-            // TODO 16.10.2019: 
-//            SqliteStorage.this.externalMediaListTable.updateBulk(update);
-            // first clear all possible out-of-date joins
-            SqliteStorage.this.externalListMediumJoinTable.delete(clearListMediumJoin);
-            // then add all up-to-date joins
-            SqliteStorage.this.externalListMediumJoinTable.insert(joins);
+            SqliteStorage.this.externalMediaListTable.update(update);
 
             for (ClientExternalMediaList mediaList : list) {
                 this.loadedData.getExternalMediaList().add(mediaList.getId());
@@ -810,24 +847,15 @@ public class SqliteStorage implements DatabaseStorage {
             return this;
         }
 
-        private ClientModelPersister persistFiltered(LoadWorkGenerator.FilteredMediaList filteredMediaList) {
-            List<ClientMediaList> list = filteredMediaList.newList;
-            List<ClientMediaList> update = filteredMediaList.updateList;
-            List<ListMediumJoin> joins = filteredMediaList.joins;
-            List<Integer> clearListMediumJoin = filteredMediaList.clearJoins;
+        @Override
+        public ClientModelPersister persist(LoadWorkGenerator.FilteredExtMediaList filteredExtMediaList) {
+            return this.persistFiltered(filteredExtMediaList);
+        }
 
-            SqliteStorage.this.mediaListTable.insert(list);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.mediaListTable.updateBulk(update);
-            // first clear all possible out-of-date joins
-            SqliteStorage.this.listMediumJoinTable.delete(clearListMediumJoin);
-            // then add all up-to-date joins
-            SqliteStorage.this.listMediumJoinTable.insert(joins);
-
-            for (ClientMediaList mediaList : list) {
-                this.loadedData.getMediaList().add(mediaList.getId());
-            }
-            return this;
+        @Override
+        public ClientModelPersister persistExternalUsers(Collection<ClientExternalUser> externalUsers) {
+            LoadWorkGenerator.FilteredExternalUser filteredExternalUser = this.generator.filterExternalUsers(externalUsers);
+            return this.persist(filteredExternalUser);
         }
 
         private ClientModelPersister persistFiltered(LoadWorkGenerator.FilteredExternalUser filteredExternalUser) {
@@ -837,19 +865,10 @@ public class SqliteStorage implements DatabaseStorage {
             List<ClientExternalMediaList> externalMediaLists = filteredExternalUser.newList;
             List<ClientExternalMediaList> updateExternalMediaLists = filteredExternalUser.updateList;
 
-            List<ListMediumJoin> extListMediaJoin = filteredExternalUser.joins;
-            List<Integer> clearListMediumJoin = filteredExternalUser.clearJoins;
-
             SqliteStorage.this.externalUserTable.insert(list);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.externalUserTable.updateBulk(update);
+            SqliteStorage.this.externalUserTable.update(update);
             SqliteStorage.this.externalMediaListTable.insert(externalMediaLists);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.externalMediaListTable.updateBulk(updateExternalMediaLists);
-            // first clear all possible out-of-date joins
-            SqliteStorage.this.externalListMediumJoinTable.delete(clearListMediumJoin);
-            // then add all up-to-date joins
-            SqliteStorage.this.externalListMediumJoinTable.insert(extListMediaJoin);
+            SqliteStorage.this.externalMediaListTable.update(updateExternalMediaLists);
 
             for (ClientExternalUser user : list) {
                 this.loadedData.getExternalUser().add(user.getUuid());
@@ -862,146 +881,6 @@ public class SqliteStorage implements DatabaseStorage {
         }
 
         @Override
-        public Collection<ClientConsumer<?>> getConsumer() {
-            return consumer;
-        }
-
-        @Override
-        public ClientModelPersister persistEpisodes(Collection<ClientEpisode> episodes) {
-            LoadWorkGenerator.FilteredEpisodes filteredEpisodes = this.generator.filterEpisodes(episodes);
-
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.IntDependency<ClientEpisode> dependency : filteredEpisodes.partDependencies) {
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.EPISODE_LOADER
-                        ),
-                        worker.PART_LOADER
-                );
-            }
-
-            return persist(filteredEpisodes);
-        }
-
-        @Override
-        public ClientModelPersister persist(LoadWorkGenerator.FilteredEpisodes filteredEpisodes) {
-            List<ClientEpisode> newEpisodes = filteredEpisodes.newEpisodes;
-            List<ClientEpisode> update = filteredEpisodes.updateEpisodes;
-
-            List<ClientRelease> releases = filteredEpisodes.releases;
-
-            SqliteStorage.this.episodeTable.insert(newEpisodes);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.episodeTable.update(update);
-            SqliteStorage.this.releaseTable.insert(releases);
-
-            for (ClientEpisode episode : newEpisodes) {
-                this.loadedData.getEpisodes().add(episode.getEpisodeId());
-            }
-            return this;
-        }
-
-        @Override
-        public ClientModelPersister persistMediaLists(Collection<ClientMediaList> mediaLists) {
-            LoadWorkGenerator.FilteredMediaList filteredMediaList = this.generator.filterMediaLists(mediaLists);
-
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.IntDependency<List<ListMediumJoin>> dependency : filteredMediaList.mediumDependencies) {
-                int tmpListId = 0;
-                if (!dependency.dependency.isEmpty()) {
-                    tmpListId = dependency.dependency.get(0).listId;
-                }
-                int listId = tmpListId;
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                () -> SqliteStorage.this.listMediumJoinTable.delete(listId)
-                        ),
-                        worker.MEDIUM_LOADER
-                );
-            }
-
-            return this.persist(filteredMediaList);
-        }
-
-        @Override
-        public ClientModelPersister persist(LoadWorkGenerator.FilteredMediaList filteredMediaList) {
-            return this.persistFiltered(filteredMediaList);
-        }
-
-        @Override
-        public ClientModelPersister persistExternalMediaLists(Collection<ClientExternalMediaList> externalMediaLists) {
-            LoadWorkGenerator.FilteredExtMediaList filteredExtMediaList = this.generator.filterExternalMediaLists(externalMediaLists);
-
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.Dependency<String, ClientExternalMediaList> dependency : filteredExtMediaList.userDependencies) {
-                worker.addStringIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.EXTERNAL_MEDIALIST_LOADER
-                        ),
-                        worker.EXTERNAL_USER_LOADER
-                );
-            }
-            for (LoadWorkGenerator.IntDependency<List<ListMediumJoin>> dependency : filteredExtMediaList.mediumDependencies) {
-                int tmpListId = 0;
-                if (!dependency.dependency.isEmpty()) {
-                    tmpListId = dependency.dependency.get(0).listId;
-                }
-                int listId = tmpListId;
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                () -> SqliteStorage.this.externalListMediumJoinTable.delete(listId)
-                        ),
-                        worker.MEDIUM_LOADER
-                );
-            }
-
-            return this.persistFiltered(filteredExtMediaList);
-        }
-
-        @Override
-        public ClientModelPersister persist(LoadWorkGenerator.FilteredExtMediaList filteredExtMediaList) {
-            return this.persistFiltered(filteredExtMediaList);
-        }
-
-        @Override
-        public ClientModelPersister persistExternalUsers(Collection<ClientExternalUser> externalUsers) {
-            LoadWorkGenerator.FilteredExternalUser filteredExternalUser = this.generator.filterExternalUsers(externalUsers);
-
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.IntDependency<List<ListMediumJoin>> dependency : filteredExternalUser.mediumDependencies) {
-                int tmpListId = 0;
-                if (!dependency.dependency.isEmpty()) {
-                    tmpListId = dependency.dependency.get(0).listId;
-                }
-                int listId = tmpListId;
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                () -> SqliteStorage.this.externalListMediumJoinTable.delete(listId)
-                        ),
-                        worker.MEDIUM_LOADER
-                );
-            }
-
-            return this.persist(filteredExternalUser);
-        }
-
-        @Override
         public ClientModelPersister persist(LoadWorkGenerator.FilteredExternalUser filteredExternalUser) {
             return this.persistFiltered(filteredExternalUser);
         }
@@ -1009,22 +888,6 @@ public class SqliteStorage implements DatabaseStorage {
         @Override
         public ClientModelPersister persistMedia(Collection<ClientMedium> media) {
             LoadWorkGenerator.FilteredMedia filteredMedia = this.generator.filterMedia(media);
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.IntDependency<ClientMedium> dependency : filteredMedia.episodeDependencies) {
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.MEDIUM_LOADER
-                        ),
-                        worker.EPISODE_LOADER
-                );
-            }
-            for (Integer part : filteredMedia.unloadedParts) {
-                worker.addIntegerIdTask(part, null, worker.PART_LOADER);
-            }
             return persist(filteredMedia);
         }
 
@@ -1034,8 +897,7 @@ public class SqliteStorage implements DatabaseStorage {
             List<ClientMedium> update = filteredMedia.updateMedia;
 
             SqliteStorage.this.mediumTable.insert(list);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.mediumTable.updateBulk(update);
+            SqliteStorage.this.mediumTable.update(update);
 
             for (ClientMedium medium : list) {
                 this.loadedData.getMedia().add(medium.getMediumId());
@@ -1056,8 +918,7 @@ public class SqliteStorage implements DatabaseStorage {
                 }
             }
             SqliteStorage.this.newsTable.insert(list);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.newsTable.updateNews(update);
+            SqliteStorage.this.newsTable.update(update);
 
             for (ClientNews clientNews : list) {
                 this.loadedData.getNews().add(clientNews.getId());
@@ -1068,19 +929,6 @@ public class SqliteStorage implements DatabaseStorage {
         @Override
         public ClientModelPersister persistParts(Collection<ClientPart> parts) {
             LoadWorkGenerator.FilteredParts filteredParts = this.generator.filterParts(parts);
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.IntDependency<ClientPart> dependency : filteredParts.mediumDependencies) {
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.PART_LOADER
-                        ),
-                        worker.MEDIUM_LOADER
-                );
-            }
             return persist(filteredParts);
         }
 
@@ -1116,30 +964,6 @@ public class SqliteStorage implements DatabaseStorage {
 
             if (clientUser == null) {
                 return this;
-            }
-
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (int clientReadChapter : clientUser.getUnreadChapter()) {
-                if (!this.generator.isEpisodeLoaded(clientReadChapter)) {
-                    worker.addIntegerIdTask(clientReadChapter, null, worker.EPISODE_LOADER);
-                }
-            }
-
-            for (ClientNews clientNews : clientUser.getUnreadNews()) {
-                int id = clientNews.getId();
-
-                if (!this.generator.isNewsLoaded(id)) {
-                    worker.addIntegerIdTask(id, null, worker.NEWS_LOADER);
-                }
-            }
-
-            for (ClientReadEpisode clientReadEpisode : clientUser.getReadToday()) {
-                int episodeId = clientReadEpisode.getEpisodeId();
-
-                if (!this.generator.isEpisodeLoaded(episodeId)) {
-                    worker.addIntegerIdTask(episodeId, null, worker.EPISODE_LOADER);
-                }
             }
 
             // persistFiltered lists
@@ -1179,34 +1003,22 @@ public class SqliteStorage implements DatabaseStorage {
 
         @Override
         public ClientModelPersister persist(LoadWorkGenerator.FilteredParts filteredParts) {
-            List<ClientEpisode> episodes = filteredParts.episodes;
-
             List<ClientPart> list = filteredParts.newParts;
             List<ClientPart> update = filteredParts.updateParts;
 
             SqliteStorage.this.partTable.insert(list);
-            // TODO 16.10.2019:
-//            SqliteStorage.this.partTable.updateBulk(update);
+            SqliteStorage.this.partTable.update(update);
 
             for (ClientPart part : list) {
                 this.loadedData.getPart().add(part.getId());
             }
-            this.persistEpisodes(episodes);
+            this.persistEpisodes(filteredParts.episodes);
             return this;
         }
 
         @Override
         public ClientModelPersister persistReadEpisodes(Collection<ClientReadEpisode> readEpisodes) {
             LoadWorkGenerator.FilteredReadEpisodes filteredReadEpisodes = this.generator.filterReadEpisodes(readEpisodes);
-            LoadWorker worker = this.repository.getLoadWorker();
-
-            for (LoadWorkGenerator.IntDependency dependency : filteredReadEpisodes.dependencies) {
-                worker.addIntegerIdTask(
-                        dependency.id,
-                        new DependantValue(dependency.dependency),
-                        worker.EPISODE_LOADER
-                );
-            }
             return this.persist(filteredReadEpisodes);
         }
 
@@ -1229,6 +1041,125 @@ public class SqliteStorage implements DatabaseStorage {
         @Override
         public ClientModelPersister persist(ClientSimpleUser user) {
             this.persistUser(user);
+            return this;
+        }
+
+        @Override
+        public ClientModelPersister persist(ClientStat.ParsedStat stat) {
+            /*
+             * Remove any Join not defined in stat.lists
+             * Remove any Join not defined in stat.exLists
+             * Remove any ExList not defined for a user in stat.exUser
+             * Remove any ExList which is not a key in stat.exLists
+             * Remove any List which is not a key in stat.Lists
+             * Remove any ExUser which is not a key in stat.exUser
+             */
+            List<ListMediumJoin> listJoins = SqliteStorage.this.listMediumJoinTable.getListItems();
+            List<ListMediumJoin> exListJoins = SqliteStorage.this.externalListMediumJoinTable.getListItems();
+            List<ListUser> listUser = SqliteStorage.this.externalMediaListTable.getListUser();
+
+            Set<Integer> deletedLists = new HashSet<>();
+            Set<Integer> deletedExLists = new HashSet<>();
+            Set<String> deletedExUser = new HashSet<>();
+
+            listJoins.removeIf(join -> {
+                List<Integer> currentListItems = stat.lists.get(join.listId);
+                if (currentListItems == null) {
+                    deletedLists.add(join.listId);
+                    return true;
+                }
+                return currentListItems.contains(join.mediumId);
+            });
+
+            exListJoins.removeIf(join -> {
+                List<Integer> currentListItems = stat.extLists.get(join.listId);
+                if (currentListItems == null) {
+                    deletedExLists.add(join.listId);
+                    return true;
+                }
+                return currentListItems.contains(join.mediumId);
+            });
+
+            listUser.forEach(user -> {
+                List<Integer> listIds = stat.extUser.get(user.uuid);
+                if (listIds == null) {
+                    deletedExUser.add(user.uuid);
+                    return;
+                }
+                if (!listIds.contains(user.listId)) {
+                    deletedLists.add(user.listId);
+                }
+            });
+
+            SqliteStorage.this.externalListMediumJoinTable.removeJoin(exListJoins);
+            SqliteStorage.this.listMediumJoinTable.removeJoin(listJoins);
+
+            SqliteStorage.this.externalMediaListTable.delete(deletedExLists);
+            SqliteStorage.this.mediaListTable.delete(deletedLists);
+            SqliteStorage.this.externalUserTable.delete(deletedExUser);
+            return this;
+        }
+
+        @Override
+        public void deleteLeftoverEpisodes(Map<Integer, List<Integer>> partEpisodes) {
+            List<PartEpisode> episodes = SqliteStorage.this.episodeTable.getEpisodes(partEpisodes.keySet());
+
+            List<Integer> deleteEpisodes = new LinkedList<>();
+
+            episodes.forEach(roomPartEpisode -> {
+                List<Integer> episodeIds = partEpisodes.get(roomPartEpisode.partId);
+
+                if (episodeIds == null || !episodeIds.contains(roomPartEpisode.episodeId)) {
+                    deleteEpisodes.add(roomPartEpisode.episodeId);
+                }
+            });
+
+            SqliteStorage.this.episodeTable.deletePerId(deleteEpisodes);
+        }
+
+        @Override
+        public Collection<Integer> deleteLeftoverReleases(Map<Integer, List<ClientSimpleRelease>> partReleases) {
+            List<SmallRelease> roomReleases = SqliteStorage.this.episodeTable.getReleases(partReleases.keySet());
+
+            List<SmallRelease> deleteRelease = new LinkedList<>();
+            Collection<ClientSimpleRelease> unmatchedReleases = new HashSet<>();
+
+            for (List<ClientSimpleRelease> list : partReleases.values()) {
+                unmatchedReleases.addAll(list);
+            }
+
+            roomReleases.forEach(release -> {
+                List<ClientSimpleRelease> releases = partReleases.get(release.partId);
+
+                boolean found = false;
+
+                if (releases != null) {
+                    for (ClientSimpleRelease simpleRelease : releases) {
+                        if (simpleRelease.id == release.episodeId && Objects.equals(simpleRelease.url, release.url)) {
+                            found = true;
+                            unmatchedReleases.remove(simpleRelease);
+                            break;
+                        }
+                    }
+                }
+
+                if (!found) {
+                    deleteRelease.add(new SmallRelease(0, release.episodeId, release.url));
+                }
+            });
+            Collection<Integer> episodesToLoad = new HashSet<>();
+
+            for (ClientSimpleRelease release : unmatchedReleases) {
+                episodesToLoad.add(release.id);
+            }
+
+            SqliteStorage.this.releaseTable.delete(deleteRelease);
+            return episodesToLoad;
+        }
+
+        @Override
+        public ClientModelPersister persistReleases(Collection<ClientRelease> releases) {
+            SqliteStorage.this.releaseTable.insert(releases);
             return this;
         }
 

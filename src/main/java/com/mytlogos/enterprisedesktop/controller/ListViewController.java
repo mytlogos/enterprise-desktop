@@ -3,17 +3,10 @@ package com.mytlogos.enterprisedesktop.controller;
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.rxjavafx.observables.JavaFxObservable;
-import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
-import io.reactivex.schedulers.Schedulers;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -24,12 +17,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import org.reactivestreams.Publisher;
 
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  *
@@ -59,12 +53,9 @@ public class ListViewController implements Attachable {
     private ListView<TocEpisode> mediumContentView;
 
     private TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
-    private Disposable mediaDisposable;
-    private Disposable episodeDisposable;
-    private Disposable listsDisposable;
-    private Disposable previousSettingDisposable = null;
     private ObjectBinding<EpisodeFilter> episodeFilterBinding;
     private MediumDisplayController mediumDisplayController = null;
+    private LiveData<Repository> repositoryData;
 
     public void initialize() {
         this.listsView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -169,16 +160,14 @@ public class ListViewController implements Attachable {
             System.err.println("onAttach called before initialize");
             return;
         }
-        final Flowable<Repository> repositorySingle = ApplicationConfig.getFlowableRepository();
+        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
 
-        this.listMediaView.getSelectionModel().selectedItemProperty().addListener(Flowable -> selectMedium(repositorySingle));
+        this.listMediaView.getSelectionModel().selectedItemProperty().addListener(LiveData -> selectMedium(repositorySingle));
 
         final ReadOnlyObjectProperty<EpisodeSorting> selectedEpisodeSorting = this.episodeSorting.getSelectionModel().selectedItemProperty();
-        this.listsDisposable = repositorySingle.flatMap(Repository::getLists)
-                .subscribeOn(JavaFxScheduler.platform())
-                .subscribe(mediaLists -> this.listsView.getItems().setAll(mediaLists), Throwable::printStackTrace);
+        repositorySingle.flatMap(Repository::getLists).observe(mediaLists -> this.listsView.getItems().setAll(mediaLists));
 
-        this.mediaDisposable = subscribePublisher(
+        subscribePublisher(
                 this.listsView.getSelectionModel().selectedItemProperty(),
                 mediaList -> repositorySingle.flatMap(repository ->
                         repository.getMediumItems(
@@ -191,7 +180,7 @@ public class ListViewController implements Attachable {
                     this.listMediaView.getItems().setAll(mediumItems);
                 }
         );
-        this.episodeDisposable = subscribePublisher(
+        subscribePublisher(
                 this.listMediaView.getSelectionModel().selectedItemProperty(),
                 medium -> ControllerUtils.combineLatest(
                         repositorySingle,
@@ -206,65 +195,38 @@ public class ListViewController implements Attachable {
                                     episodeFilter.savedFilter
                             );
                         }
-                ).flatMap(pagedListFlowable -> pagedListFlowable),
+                ).flatMap(pagedListLiveData -> pagedListLiveData),
                 episodes -> this.mediumContentView.getItems().setAll(episodes)
         );
     }
 
-    private void selectMedium(Flowable<Repository> repositorySingle) {
+    private void selectMedium(LiveData<Repository> repositorySingle) {
         final Medium selectedItem = this.listMediaView.getSelectionModel().getSelectedItem();
         if (selectedItem == null) {
             return;
         }
-        if (this.previousSettingDisposable != null) {
-            this.previousSettingDisposable.dispose();
-        }
-        this.previousSettingDisposable = repositorySingle
+        this.repositoryData = repositorySingle;
+        repositorySingle
                 .flatMap(repository -> {
                     final int mediumId = selectedItem.getMediumId();
                     return repository.getMediumSettings(mediumId);
                 })
-                .subscribeOn(JavaFxScheduler.platform())
-                .subscribe(mediumSetting -> {
+                .observe(mediumSetting -> {
                     if (this.mediumDisplayController == null) {
                         this.mediumDisplayController = ControllerUtils.load("/mediumDisplay.fxml");
                     }
                     this.mediumDisplayController.setMedium(mediumSetting);
                     this.detailPane.setContent(this.mediumDisplayController.getRoot());
-                }, Throwable::printStackTrace);
+                });
     }
 
-    private <T, R> Disposable subscribePublisher(ObservableValue<T> value, Function<T, Publisher<R>> mapFunction, Consumer<R> consumer) {
-        return JavaFxObservable
-                .valuesOf(value)
-                .toFlowable(BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .flatMap(t -> {
-                    if (t == null) {
-                        return Flowable.empty();
-                    }
-                    return mapFunction.apply(t);
-                })
-                .subscribeOn(JavaFxScheduler.platform())
-                .subscribe(r -> {
-                    if (r == null) {
-                        return;
-                    }
-                    consumer.accept(r);
-                }, Throwable::printStackTrace);
+    private <T, R> void subscribePublisher(ObservableValue<T> value, Function<T, LiveData<R>> mapFunction, Consumer<R> consumer) {
+        ControllerUtils.fxObservableToLiveData(value).flatMap(mapFunction).observe(consumer::accept);
     }
 
     @Override
     public void onDetach() {
-        if (this.mediaDisposable != null) {
-            this.mediaDisposable.dispose();
-        }
-        if (this.episodeDisposable != null) {
-            this.episodeDisposable.dispose();
-        }
-        if (this.listsDisposable != null) {
-            this.listsDisposable.dispose();
-        }
+
     }
 
     @FXML

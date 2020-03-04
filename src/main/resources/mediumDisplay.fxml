@@ -14,7 +14,7 @@
 <?import javafx.scene.text.Text?>
 
 
-<VBox fx:id="root" maxWidth="1.7976931348623157E308" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MediumDisplayController">
+<VBox fx:id="root" maxWidth="1.7976931348623157E308" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MediumDisplayController">
     <ButtonBar>
         <buttons>
             <Button fx:id="saveMediumBtn" defaultButton="true" mnemonicParsing="false" onAction="#saveMedium" text="Save" />

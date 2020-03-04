@@ -1,10 +1,13 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
+import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
 import com.mytlogos.enterprisedesktop.model.Part;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  *
@@ -20,6 +23,22 @@ class PartTable extends AbstractTable {
         statement.setInt(5, part.getPartialIndex());
         statement.setDouble(6, part.getCombiIndex());
     });
+
+    PartTable() {
+        super("part");
+    }
+
+    public void update(List<ClientPart> update) {
+        final HashMap<String, Function<ClientPart, ?>> attrMap = new HashMap<>();
+        attrMap.put("title", (StringProducer<ClientPart>) ClientPart::getTitle);
+        attrMap.put("totalIndex", (IntProducer<ClientPart>) ClientPart::getTotalIndex);
+        attrMap.put("partialIndex", (IntProducer<ClientPart>) ClientPart::getPartialIndex);
+        attrMap.put("combiIndex", (DoubleProducer<ClientPart>) ClientPart::getCombiIndex);
+
+        final Map<String, Function<ClientPart, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("partId", (IntProducer<ClientPart>) ClientPart::getId);
+        this.update(update, "part", attrMap, keyExtractors);
+    }
 
 
     void insert(Part part) {

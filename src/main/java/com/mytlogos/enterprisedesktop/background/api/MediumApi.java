@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
+import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMediumInWait;
 
@@ -22,6 +23,9 @@ interface MediumApi {
 
     @GET
     Call<List<ClientMedium>> getMedia(@Url String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/allFull")
+    Call<List<ClientMedium>> getAll(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);
 
     @GET("{start}/all")
     Call<List<Integer>> getAllMedia(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);

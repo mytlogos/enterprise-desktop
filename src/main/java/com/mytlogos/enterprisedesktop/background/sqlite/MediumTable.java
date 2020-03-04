@@ -1,13 +1,18 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.Medium;
 import com.mytlogos.enterprisedesktop.model.MediumSetting;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
-import io.reactivex.Flowable;
-
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  *
@@ -99,12 +104,35 @@ class MediumTable extends AbstractTable {
             value.getInt(3)
     ));
 
-    public Flowable<MediumSetting> getSettings(int mediumId) {
-        return this.getSettingsQuery.setValues(value -> value.setInt(1, mediumId)).queryFlowablePassError();
+    MediumTable() {
+        super("medium");
+    }
+
+    public LiveData<MediumSetting> getSettings(int mediumId) {
+        return this.getSettingsQuery.setValues(value -> value.setInt(1, mediumId)).queryLiveDataPassError();
     }
 
     public SimpleMedium getSimpleMedium(int mediumId) {
         return this.getSimpleMediumQuery.setValues(value -> value.setInt(1, mediumId)).query();
+    }
+
+    public void update(List<ClientMedium> update) {
+        final HashMap<String, Function<ClientMedium, ?>> attrMap = new HashMap<>();
+        attrMap.put("title", (StringProducer<ClientMedium>) ClientMedium::getTitle);
+        attrMap.put("medium", (IntProducer<ClientMedium>) ClientMedium::getMedium);
+        attrMap.put("artist", (StringProducer<ClientMedium>) ClientMedium::getArtist);
+        attrMap.put("author", (StringProducer<ClientMedium>) ClientMedium::getAuthor);
+        attrMap.put("countryOfOrigin", (StringProducer<ClientMedium>) ClientMedium::getCountryOfOrigin);
+        attrMap.put("lang", (StringProducer<ClientMedium>) ClientMedium::getLang);
+        attrMap.put("languageOfOrigin", (StringProducer<ClientMedium>) ClientMedium::getLanguageOfOrigin);
+        attrMap.put("series", (StringProducer<ClientMedium>) ClientMedium::getSeries);
+        attrMap.put("stateOrigin", (IntProducer<ClientMedium>) ClientMedium::getStateOrigin);
+        attrMap.put("stateTL", (IntProducer<ClientMedium>) ClientMedium::getStateTL);
+        attrMap.put("universe", (StringProducer<ClientMedium>) ClientMedium::getUniverse);
+
+        final Map<String, Function<ClientMedium, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("mediumId", (IntProducer<ClientMedium>) ClientMedium::getId);
+        this.update(update, "medium", attrMap, keyExtractors);
     }
 
     void insert(Medium medium) {

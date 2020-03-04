@@ -1,25 +1,13 @@
 package com.mytlogos.enterprisedesktop.background;
 
-import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalMediaList;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalUser;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientListQuery;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMediumInWait;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientMultiListQuery;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientNews;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientReadEpisode;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientSimpleUser;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientUpdateUser;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientUser;
+import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
 import com.mytlogos.enterprisedesktop.model.ToDownload;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public interface ClientModelPersister {
     Collection<ClientConsumer<?>> getConsumer();
@@ -103,4 +91,12 @@ public interface ClientModelPersister {
     void persistMediaInWait(List<ClientMediumInWait> medium);
 
     ClientModelPersister persist(ClientSimpleUser user);
+
+    ClientModelPersister persist(ClientStat.ParsedStat parsedStat);
+
+    void deleteLeftoverEpisodes(Map<Integer, List<Integer>> partEpisodes);
+
+    Collection<Integer> deleteLeftoverReleases(Map<Integer, List<ClientSimpleRelease>> partReleases);
+
+    ClientModelPersister persistReleases(Collection<ClientRelease> releases);
 }

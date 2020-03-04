@@ -2,8 +2,9 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.model.ListMediumJoin;
 
-import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  *
@@ -27,20 +28,38 @@ class ExternalListMediumJoinTable extends AbstractTable {
             .setConverter(value -> value.getInt(1));
 
     public Collection<Integer> getMediumItemsIds(Integer externalListId) {
-        try {
-            return this.getMediumItemsIdsQuery.setValue(Collections.singleton(externalListId)).queryList();
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
+        return this.getMediumItemsIdsQuery.setValue(Collections.singleton(externalListId)).queryListIgnoreError();
+    }
+
+    public void delete(int listId) {
+        this.delete(Collections.singletonList(listId));
     }
 
     public void delete(List<Integer> listIds) {
         this.executeDMLQuery(listIds, this.deleteJoinQuery);
     }
 
-    public void delete(int listId) {
-        this.delete(Collections.singletonList(listId));
+    public List<ListMediumJoin> getListItems() {
+        return new QueryBuilder<ListMediumJoin>("SELECT listId, mediumId FROM external_list_medium")
+                .setConverter(value -> new ListMediumJoin(value.getInt(1), value.getInt(2), true))
+                .queryListIgnoreError();
+    }
+
+    public void removeJoin(List<ListMediumJoin> exListJoins) {
+        this.executeDMLQuery(
+                exListJoins,
+                new QueryBuilder<ListMediumJoin>("DELETE FROM external_list_medium WHERE listId = ? and mediumId = ?;")
+                        .setValueSetter((preparedStatement, listMediumJoin) -> {
+                            if (!listMediumJoin.external) {
+                                throw new IllegalArgumentException("Trying to delete a normal ListJoin from an external one");
+                            }
+                            preparedStatement.setInt(1, listMediumJoin.listId);
+                            preparedStatement.setInt(2, listMediumJoin.mediumId);
+                        }));
+    }
+
+    public ExternalListMediumJoinTable() {
+        super("external_list_medium");
     }
 
     void insert(ListMediumJoin join) {

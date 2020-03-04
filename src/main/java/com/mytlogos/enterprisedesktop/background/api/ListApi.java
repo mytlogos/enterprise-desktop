@@ -1,24 +1,23 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
+import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientListQuery;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMultiListQuery;
 
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.DELETE;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Url;
+import retrofit2.http.*;
 
 interface ListApi {
 
     @GET
     Call<ClientListQuery> getList(@Url String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/all")
+    Call<List<ClientMediaList>> getAll(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);
 
     @GET
     Call<ClientMultiListQuery> getLists(@Url String url, @QueryMap Map<String, Object> body);

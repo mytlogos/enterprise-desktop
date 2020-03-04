@@ -1,10 +1,16 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
+import com.mytlogos.enterprisedesktop.background.api.model.ClientNews;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
 import com.mytlogos.enterprisedesktop.model.News;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 /**
  *
@@ -19,6 +25,22 @@ class NewsTable extends AbstractTable {
         statement.setBoolean(4, news.isRead());
         statement.setString(5, news.getUrl());
     });
+
+    NewsTable() {
+        super("news");
+    }
+
+    public void update(List<ClientNews> update) {
+        final HashMap<String, Function<ClientNews, ?>> attrMap = new HashMap<>();
+        attrMap.put("title", (StringProducer<ClientNews>) ClientNews::getTitle);
+        attrMap.put("timeStamp", (StringProducer<ClientNews>) ClientNews::getTimeStampString);
+        attrMap.put("read", (BooleanProducer<ClientNews>) ClientNews::isRead);
+        attrMap.put("link", (StringProducer<ClientNews>) ClientNews::getUrl);
+
+        final Map<String, Function<ClientNews, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("newsId", (IntProducer<ClientNews>) ClientNews::getId);
+        this.update(update, "news", attrMap, keyExtractors);
+    }
 
     void insert(News news) {
         this.executeDMLQuery(news, this.insertNewsQuery);

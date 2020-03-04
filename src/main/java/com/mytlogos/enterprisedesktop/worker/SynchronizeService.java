@@ -21,14 +21,15 @@ public class SynchronizeService extends ScheduledService<Void> {
         return new Task<Void>() {
             @Override
             protected Void call() throws Exception {
-                final Repository repository = ApplicationConfig.getRepository();
+                final Repository repository = ApplicationConfig.getLiveDataRepository().firstElement().get();
 
                 if (!repository.isClientAuthenticated()) {
                     throw new IllegalStateException("Not Authenticated");
                 }
 
-                repository.syncUser();
-                repository.loadAllMedia();
+//                repository.syncWithTime();
+//                repository.syncUser();
+//                repository.loadAllMedia();
                 return null;
             }
         };

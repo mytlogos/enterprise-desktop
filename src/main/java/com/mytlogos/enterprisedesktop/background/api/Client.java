@@ -80,6 +80,36 @@ public class Client {
         }
     }
 
+    public static void main(String[] args) {
+        try {
+//            final URLConnection connection = URI.create("http://localhost:3000/api/user/stats?session=c604a272-4925-4dfa-8d81-802b3d4ce7d7&uuid=3a343e90-00af-11e9-972c-9be323ae4020").toURL().openConnection();
+//            connection.connect();
+//            Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
+//            String result = s.hasNext() ? s.next() : "";
+//            Gson gson = new Gson();
+//            System.out.println(gson.fromJson(result, Map.class));
+            Gson gson = new GsonBuilder()
+                    .registerTypeHierarchyAdapter(LocalDateTime.class, new GsonAdapter.LocalDateTimeAdapter())
+                    .create();
+            final UserApi userApi = new Retrofit.Builder()
+                    .baseUrl("http://localhost:3000/")
+                    .addConverterFactory(GsonConverterFactory.create(gson))
+                    .build().create(UserApi.class);
+            Map<String, Object> body = new HashMap<>();
+
+            body.put("session", "c604a272-4925-4dfa-8d81-802b3d4ce7d7");
+            body.put("uuid", "3a343e90-00af-11e9-972c-9be323ae4020");
+            body.put("date", LocalDateTime.now().minusWeeks(1).toString());
+            final Call<ClientChangedEntities> stats = userApi.getNew("api/user", body);
+            System.out.println(stats.request().url().toString());
+            final Response<ClientChangedEntities> response = stats.execute();
+            System.out.println(gson.toJson(response.body()));
+//            System.out.println(result);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void setAuthentication(String uuid, String session) {
         if (uuid == null || uuid.isEmpty() || session == null || session.isEmpty()) {
             return;
@@ -140,7 +170,7 @@ public class Client {
                     .create();
             OkHttpClient client = new OkHttpClient
                     .Builder()
-                    .readTimeout(20, TimeUnit.SECONDS)
+                    .readTimeout(60, TimeUnit.SECONDS)
                     .build();
 
             retrofit = new Retrofit.Builder()
@@ -192,9 +222,9 @@ public class Client {
         return discovery.discover(this.identificator.getBroadcastAddress());
     }
 
-    public Response<ClientUser> getUser() throws IOException {
+    public Response<ClientStat> getStats() throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
-        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getUser(url, body));
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getStats(url, body));
     }
 
     private Map<String, Object> userAuthenticationMap() {
@@ -207,6 +237,59 @@ public class Client {
         body.put("uuid", this.authentication.getUuid());
         body.put("session", this.authentication.getSession());
         return body;
+    }
+
+    public Response<Map<String, List<Integer>>> getPartEpisodes(Collection<Integer> partIds) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("part", partIds);
+        return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPartItems(url, body));
+    }
+
+    public Response<Map<String, List<ClientSimpleRelease>>> getPartReleases(Collection<Integer> partIds) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("part", partIds);
+        return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPartReleases(url, body));
+    }
+
+    public Response<ClientChangedEntities> getNew(LocalDateTime lastSync) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("date", lastSync);
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getNew(url, body));
+    }
+
+    public Response<List<ClientMedium>> getAllMediaFull() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
+    }
+
+    public Response<List<ClientPart>> getAllParts() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
+    }
+
+    public Response<List<ClientEpisode>> getAllEpisodes() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
+    }
+
+    public Response<List<ClientRelease>> getAllReleases() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.getAllReleases(url, body));
+    }
+
+    public Response<List<ClientMediaList>> getAllLists() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(ListApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
+    }
+
+    public Response<List<ClientExternalUser>> getAllExternalUsers() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(ExternalUserApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
+    }
+
+    public Response<ClientUser> getUser() throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getUser(url, body));
     }
 
     public Response<List<SearchResponse>> searchRequest(SearchRequest searchRequest) throws IOException {

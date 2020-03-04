@@ -31,6 +31,10 @@ class ToDownloadTable extends AbstractTable {
         return new ToDownload(prohibited, mediumId, listId, externalListId);
     });
 
+    ToDownloadTable() {
+        super("todownload");
+    }
+
     public List<ToDownload> getItems() {
         return this.getItemsQuery.queryListIgnoreError();
     }

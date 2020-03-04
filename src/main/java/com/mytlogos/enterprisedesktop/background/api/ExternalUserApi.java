@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
+import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalUser;
 
 import java.util.List;
@@ -18,6 +19,9 @@ interface ExternalUserApi {
 
     @GET("{start}/refresh")
     Call<ClientExternalUser> refreshExternalUser(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+
+    @GET("{start}/all")
+    Call<List<ClientExternalUser>> getAll(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);
 
     @GET
     Call<ClientExternalUser> getExternalUser(@Url String url, @QueryMap Map<String, Object> body);

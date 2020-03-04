@@ -1,9 +1,10 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
+import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalUser;
 import com.mytlogos.enterprisedesktop.model.ExternalUser;
 
-import java.util.Collection;
-import java.util.Collections;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  *
@@ -18,6 +19,28 @@ class ExternalUserTable extends AbstractTable {
         statement.setInt(4, externalUser.getType());
 
     });
+
+    ExternalUserTable() {
+        super("external_user");
+    }
+
+    public void delete(Set<String> deletedExUser) {
+        this.executeDMLQuery(
+                deletedExUser,
+                new QueryBuilder<String>("DELETE FROM external_user WHERE uuid = ?")
+                        .setValueSetter((preparedStatement, uuid) -> preparedStatement.setString(1, uuid))
+        );
+    }
+
+    public void update(List<ClientExternalUser> update) {
+        final HashMap<String, Function<ClientExternalUser, ?>> attrMap = new HashMap<>();
+        attrMap.put("identifier", (StringProducer<ClientExternalUser>) ClientExternalUser::getIdentifier);
+        attrMap.put("type", (IntProducer<ClientExternalUser>) ClientExternalUser::getType);
+
+        final Map<String, Function<ClientExternalUser, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("uuid", (StringProducer<ClientExternalUser>) ClientExternalUser::getUuid);
+        this.update(update, "external_user", attrMap, keyExtractors);
+    }
 
     void insert(ExternalUser externalUser) {
         this.insert(Collections.singleton(externalUser));

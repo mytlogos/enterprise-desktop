@@ -1,15 +1,15 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.MediaList;
 import com.mytlogos.enterprisedesktop.model.MediaListImpl;
 import com.mytlogos.enterprisedesktop.model.MediumItem;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  *
@@ -95,19 +95,38 @@ class MediaListTable extends AbstractTable {
 
     });
 
-    public Flowable<List<MediaList>> getLists() {
-        return Flowable.create(emitter -> {
-            final List<MediaList> lists = this.getListsQuery.queryList();
-            emitter.onNext(lists);
-        }, BackpressureStrategy.LATEST);
+    MediaListTable() {
+        super("media_list");
+    }
+
+    public LiveData<List<MediaList>> getLists() {
+        return LiveData.create(this.getListsQuery::queryList);
     }
 
     public Collection<Integer> getMediumItemsIds(Integer listId) {
         return this.getMediumItemsIdsQuery.setValues(value -> value.setInt(1, listId)).queryListIgnoreError();
     }
 
-    Flowable<List<MediumItem>> getMediumItems(int listId) {
-        return this.getMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryFlowableListPassError();
+    public void delete(Set<Integer> deletedLists) {
+        this.executeDMLQuery(
+                deletedLists,
+                new QueryBuilder<Integer>("DELETE FROM media_list WHERE listId = ?")
+                        .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
+        );
+    }
+
+    public void update(List<ClientMediaList> update) {
+        final HashMap<String, Function<ClientMediaList, ?>> attrMap = new HashMap<>();
+        attrMap.put("name", (StringProducer<ClientMediaList>) ClientMediaList::getName);
+        attrMap.put("medium", (IntProducer<ClientMediaList>) ClientMediaList::getMedium);
+
+        final Map<String, Function<ClientMediaList, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("listId", (IntProducer<ClientMediaList>) ClientMediaList::getId);
+        this.update(update, "media_list", attrMap, keyExtractors);
+    }
+
+    LiveData<List<MediumItem>> getMediumItems(int listId) {
+        return this.getMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
 
     void insert(MediaList mediaList) {

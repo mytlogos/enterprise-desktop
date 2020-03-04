@@ -3,10 +3,9 @@ package com.mytlogos.enterprisedesktop.background;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
-import io.reactivex.Flowable;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -22,9 +21,9 @@ public interface Repository {
 
     LoadWorker getLoadWorker();
 
-    Flowable<HomeStats> getHomeStats();
+    LiveData<HomeStats> getHomeStats();
 
-    Flowable<User> getUser();
+    LiveData<User> getUser();
 
     void updateUser(UpdateUser updateUser);
 
@@ -66,7 +65,7 @@ public interface Repository {
 
     List<ClientNews> loadNewsSync(Collection<Integer> newsIds);
 
-    Flowable<PagedList<News>> getNews();
+    LiveData<PagedList<News>> getNews();
 
     void removeOldNews();
 
@@ -100,13 +99,13 @@ public interface Repository {
 
     List<Integer> getDownloadableEpisodes(Integer mediumId, int limit);
 
-    Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
+    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
 
-    Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
+    LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
 
-    Flowable<List<MediaList>> getLists();
+    LiveData<List<MediaList>> getLists();
 
-    Flowable<? extends MediaListSetting> getListSettings(int id, boolean isExternal);
+    LiveData<? extends MediaListSetting> getListSettings(int id, boolean isExternal);
 
     CompletableFuture<String> updateListName(MediaListSetting listSetting, String text);
 
@@ -114,15 +113,15 @@ public interface Repository {
 
     void updateToDownload(boolean add, ToDownload toDownload);
 
-    Flowable<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
+    LiveData<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
 
-    Flowable<MediumSetting> getMediumSettings(int mediumId);
+    LiveData<MediumSetting> getMediumSettings(int mediumId);
 
     CompletableFuture<String> updateMedium(MediumSetting mediumSettings);
 
-    Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved);
+    LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved);
 
-    Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
+    LiveData<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
 
     void loadMediaInWaitSync() throws IOException;
 
@@ -138,19 +137,19 @@ public interface Repository {
 
     List<SimpleEpisode> getSimpleEpisodes(Collection<Integer> ids);
 
-    Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes();
+    LiveData<PagedList<ReadEpisode>> getReadTodayEpisodes();
 
-    Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings);
+    LiveData<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings);
 
-    Flowable<List<MediaList>> getInternLists();
+    LiveData<List<MediaList>> getInternLists();
 
     CompletableFuture<Boolean> moveMediaToList(int oldListId, int listId, Collection<Integer> ids);
 
-    Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
+    LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
 
-    Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
+    LiveData<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
 
-    Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium);
+    LiveData<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium);
 
     CompletableFuture<Boolean> consumeMediumInWait(SimpleMedium selectedMedium, List<MediumInWait> mediumInWaits);
 
@@ -162,17 +161,17 @@ public interface Repository {
 
     CompletableFuture<Boolean> moveItemFromList(int oldListId, int newListId, int mediumId);
 
-    Flowable<List<MediaList>> getListSuggestion(String name);
+    LiveData<List<MediaList>> getListSuggestion(String name);
 
-    Flowable<Boolean> onDownloadable();
+    LiveData<Boolean> onDownloadable();
 
     void removeDanglingMedia(Collection<Integer> mediaIds);
 
-    Flowable<List<MediumItem>> getAllDanglingMedia();
+    LiveData<List<MediumItem>> getAllDanglingMedia();
 
     CompletableFuture<Boolean> addMediumToList(int listId, Collection<Integer> ids);
 
-    Flowable<PagedList<DisplayExternalUser>> getExternalUser();
+    LiveData<PagedList<DisplayExternalUser>> getExternalUser();
 
     SpaceMedium getSpaceMedium(int mediumId);
 
@@ -180,11 +179,13 @@ public interface Repository {
 
     List<String> getReleaseLinks(int episodeId);
 
+    void syncWithTime() throws IOException;
+
     void syncUser() throws IOException;
 
     void clearLocalMediaData();
 
-    Flowable<PagedList<NotificationItem>> getNotifications();
+    LiveData<PagedList<NotificationItem>> getNotifications();
 
     void updateFailedDownloads(int episodeId);
 

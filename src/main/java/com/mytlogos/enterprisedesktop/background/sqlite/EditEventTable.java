@@ -21,6 +21,10 @@ class EditEventTable extends AbstractTable {
                 preparedStatement.setString(6, editEvent.getSecondValue());
             });
 
+    EditEventTable() {
+        super("edit_event");
+    }
+
     void insert(EditEvent value) {
         this.executeDMLQuery(value, this.insertEditEventQuery);
     }

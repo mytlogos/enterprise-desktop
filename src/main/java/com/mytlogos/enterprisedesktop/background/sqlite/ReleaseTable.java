@@ -1,12 +1,14 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.background.SmallRelease;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.Release;
-import io.reactivex.Flowable;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -56,7 +58,22 @@ class ReleaseTable extends AbstractTable {
         return new DisplayRelease(episodeId, mediumId, mediumTitle, totalIndex, partialIndex, dbSaved, dbRead, episodeTitle, url, releaseDate, locked);
     });
 
-    Flowable<PagedList<DisplayRelease>> getReleases(int saved, int medium, int read, int minIndex, int maxIndex) {
+    ReleaseTable() {
+        super("episode_release");
+    }
+
+    public void delete(List<SmallRelease> releases) {
+        this.executeDMLQuery(
+                releases,
+                new QueryBuilder<SmallRelease>("DELETE FROM episode_release WHERE episodeId = ? AND url = ?")
+                        .setValueSetter((preparedStatement, smallRelease) -> {
+                            preparedStatement.setInt(1, smallRelease.episodeId);
+                            preparedStatement.setString(2, smallRelease.url);
+                        })
+        );
+    }
+
+    LiveData<PagedList<DisplayRelease>> getReleases(int saved, int medium, int read, int minIndex, int maxIndex) {
         return this.getReleasesQuery
                 .setValues(value -> {
                     value.setInt(1, read);
@@ -69,7 +86,7 @@ class ReleaseTable extends AbstractTable {
                     value.setInt(8, maxIndex);
                     value.setInt(9, maxIndex);
                 })
-                .queryFlowableListPassError()
+                .queryLiveDataList()
                 .map(PagedList::new);
     }
 

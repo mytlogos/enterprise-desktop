@@ -2,7 +2,7 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.model.*;
-import io.reactivex.Flowable;
+import com.mytlogos.enterprisedesktop.tools.Utils;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,7 +40,6 @@ public class SearchMediumController implements Attachable {
     @FXML
     private ChoiceBox<Integer> mediumChoiceBox;
     private Disposable debouncedRequest;
-    private Disposable addDisposable;
 
     public void initialize() {
         this.resultsView.setCellFactory(param -> new ResultCell());
@@ -56,43 +56,44 @@ public class SearchMediumController implements Attachable {
             }
         });
         final MenuItem addItem = new MenuItem("Add Selected");
-        addItem.setOnAction(event -> {
-            //noinspection ResultOfMethodCallIgnored
-            ApplicationConfig.getRepository().getInternLists()
-                    .map(mediaLists -> {
-                        for (MediaList mediaList : mediaLists) {
-                            if (Objects.equals(mediaList.getName(), "Standard")) {
-                                return mediaList;
-                            }
+        addItem.setOnAction(event -> ApplicationConfig.getRepository().getInternLists()
+                .firstElement()
+                .thenCompose(mediaLists -> {
+                    MediaList list = null;
+                    for (MediaList mediaList : mediaLists) {
+                        if (Objects.equals(mediaList.getName(), "Standard")) {
+                            list = mediaList;
+                            break;
                         }
-                        return mediaLists.get(0);
-                    })
-                    .map(mediaList -> {
-                        List<Flowable<Boolean>> list = new ArrayList<>();
-                        for (SearchResponse item : this.resultsView.getSelectionModel().getSelectedItems()) {
-                            final MediumInWaitImpl mediumInWait = new MediumInWaitImpl(item.title, this.mediumChoiceBox.getValue(), item.coverUrl);
-                            list.add(Flowable.fromFuture(ApplicationConfig.getRepository().createMedium(mediumInWait, Collections.emptyList(), mediaList)));
+                    }
+
+                    if (list == null) {
+                        return CompletableFuture.completedFuture(Collections.emptyList());
+                    }
+                    List<CompletableFuture<Boolean>> futures = new ArrayList<>();
+                    for (SearchResponse item : this.resultsView.getSelectionModel().getSelectedItems()) {
+                        final MediumInWaitImpl mediumInWait = new MediumInWaitImpl(item.title, this.mediumChoiceBox.getValue(), item.coverUrl);
+                        futures.add(ApplicationConfig.getRepository().createMedium(mediumInWait, Collections.emptyList(), list));
+                    }
+                    return Utils.finishAll(futures);
+                })
+                .whenComplete((booleans, throwable) -> {
+                    if (throwable != null) {
+                        throwable.printStackTrace();
+                        return;
+                    }
+                    int failCount = 0;
+                    for (Boolean aBoolean : booleans) {
+                        if (aBoolean == null || !aBoolean) {
+                            failCount++;
                         }
-                        return Flowable.fromIterable(list).flatMap(booleanFlowable -> booleanFlowable).toList().toFlowable();
-                    })
-                    .flatMap(listFlowable -> listFlowable)
-                    .observeOn(JavaFxScheduler.platform())
-                    .subscribeOn(Schedulers.io())
-                    .firstElement()
-                    .subscribe(booleans -> {
-                        int failCount = 0;
-                        for (Boolean aBoolean : booleans) {
-                            if (aBoolean == null || !aBoolean) {
-                                failCount++;
-                            }
-                        }
-                        if (failCount > 1) {
-                            System.out.printf("%d failed Additions%n", failCount);
-                        } else {
-                            System.out.println("Successfully added all Items");
-                        }
-                    }, Throwable::printStackTrace);
-        });
+                    }
+                    if (failCount > 1) {
+                        System.out.printf("%d failed Additions%n", failCount);
+                    } else {
+                        System.out.println("Successfully added all Items");
+                    }
+                }));
         value.getItems().addAll(openItem, addItem);
         this.resultsView.setContextMenu(value);
 

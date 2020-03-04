@@ -18,6 +18,10 @@ class MediumInWaitTable extends AbstractTable {
         statement.setString(3, mediumInWait.getLink());
     });
 
+    MediumInWaitTable() {
+        super("medium_in_wait");
+    }
+
     void insert(MediumInWait mediumInWait) {
         this.executeDMLQuery(mediumInWait, this.insertMediumInWaitQuery);
     }

@@ -7,8 +7,15 @@
     <groupId>com.mytlogos</groupId>
     <artifactId>enterprise-desktop</artifactId>
     <version>1.0</version>
-
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.*</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <!-- we want JDK 1.8 source and binary compatiblility -->
             <plugin>

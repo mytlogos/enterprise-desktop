@@ -1,11 +1,9 @@
 package com.mytlogos.enterprisedesktop.controller;
 
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.MediatorLiveData;
 import com.mytlogos.enterprisedesktop.model.MediumType;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.functions.BiFunction;
-import io.reactivex.functions.Function3;
-import io.reactivex.rxjavafx.observables.JavaFxObservable;
+import com.mytlogos.enterprisedesktop.tools.TriFunction;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -15,6 +13,7 @@ import javafx.scene.control.TextFormatter;
 import javafx.util.StringConverter;
 
 import java.io.IOException;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.UnaryOperator;
 
@@ -22,27 +21,25 @@ import java.util.function.UnaryOperator;
  *
  */
 public class ControllerUtils {
-    public static <R> Flowable<R> fxObservableToFlowable(ObservableValue<R> ObservableValue) {
-        return JavaFxObservable.valuesOf(ObservableValue).toFlowable(BackpressureStrategy.LATEST);
+    public static <R> LiveData<R> fxObservableToLiveData(ObservableValue<R> value) {
+        MediatorLiveData<R> mediatorLiveData = new MediatorLiveData<>();
+        value.addListener(observable -> mediatorLiveData.postValue(value.getValue()));
+        return mediatorLiveData;
     }
 
-    static <R, T1, T2> Flowable<R> combineLatest(Flowable<T1> t1Observable, ObservableValue<T2> t2Observable, BiFunction<T1, T2, R> combiner) {
-        return Flowable.combineLatest(
-                t1Observable,
-                JavaFxObservable.valuesOf(t2Observable).toFlowable(BackpressureStrategy.LATEST),
-                combiner
-        );
+    static <R, T1, T2> LiveData<R> combineLatest(LiveData<T1> t1Observable, ObservableValue<T2> t2Observable, BiFunction<T1, T2, R> combiner) {
+        MediatorLiveData<R> mediatorLiveData = new MediatorLiveData<>();
+        t2Observable.addListener(observable -> mediatorLiveData.postValue(combiner.apply(t1Observable.getValue(), t2Observable.getValue())));
+        mediatorLiveData.addSource(t1Observable, t1 -> mediatorLiveData.postValue(combiner.apply(t1, t2Observable.getValue())));
+        return mediatorLiveData;
     }
 
-    static <R, T1, T2, T3> Flowable<R> combineLatest(Flowable<T1> t1Flowable, ObservableValue<T2> t2Observable, ObservableValue<T3> t3Observable, Function3<T1, T2, T3, R> combiner) {
-        final Flowable<T2> t2Flowable = JavaFxObservable.valuesOf(t2Observable).toFlowable(BackpressureStrategy.LATEST);
-        final Flowable<T3> t3Flowable = JavaFxObservable.valuesOf(t3Observable).toFlowable(BackpressureStrategy.LATEST);
-        return Flowable.combineLatest(
-                t1Flowable,
-                t2Flowable,
-                t3Flowable,
-                combiner
-        );
+    static <R, T1, T2, T3> LiveData<R> combineLatest(LiveData<T1> t1LiveData, ObservableValue<T2> t2Observable, ObservableValue<T3> t3Observable, TriFunction<T1, T2, T3, R> combiner) {
+        MediatorLiveData<R> mediatorLiveData = new MediatorLiveData<>();
+        t2Observable.addListener(observable -> mediatorLiveData.postValue(combiner.apply(t1LiveData.getValue(), t2Observable.getValue(), t3Observable.getValue())));
+        t3Observable.addListener(observable -> mediatorLiveData.postValue(combiner.apply(t1LiveData.getValue(), t2Observable.getValue(), t3Observable.getValue())));
+        mediatorLiveData.addSource(t1LiveData, t1 -> combiner.apply(t1, t2Observable.getValue(), t3Observable.getValue()));
+        return mediatorLiveData;
     }
 
     public static <T> T load(String fxmlFile) {

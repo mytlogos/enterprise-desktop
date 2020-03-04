@@ -198,7 +198,7 @@ class ServerDiscovery {
     }
 
     private void sendUDPPacket(DatagramSocket c, byte[] data, int port, InetAddress address) throws IOException {
-        System.out.println("Sending Msg to " + address.getHostAddress() + ":" + port);
+//        System.out.println("Sending Msg to " + address.getHostAddress() + ":" + port);
         try {
             c.send(new DatagramPacket(data, data.length, address, port));
         } catch (SocketException ignored) {

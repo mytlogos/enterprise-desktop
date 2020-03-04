@@ -3,18 +3,14 @@ package com.mytlogos.enterprisedesktop.controller;
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.EpisodeFilter;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
+import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.functions.Function;
-import io.reactivex.rxjavafx.observables.JavaFxObservable;
-import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
-import io.reactivex.schedulers.Schedulers;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ObservableValue;
@@ -24,16 +20,15 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import org.reactivestreams.Publisher;
 
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  *
  */
 public class EpisodeViewController implements Attachable {
-    private Disposable episodeDisposable;
     @FXML
     private ListView<DisplayRelease> episodes;
     @FXML
@@ -56,8 +51,11 @@ public class EpisodeViewController implements Attachable {
     private CheckBox latestOnly;
 
     private ObjectBinding<ReleaseFilter> episodeFilterBinding;
+    private Observer<PagedList<DisplayRelease>> pagedListObserver;
+    private LiveData<PagedList<DisplayRelease>> episodesLiveData;
 
     public void initialize() {
+        System.out.println("episodeview initialize");
         this.savedFilter.setConverter(new MainController.DisplayConverter<>(SavedFilter.values()));
         this.readFilter.setConverter(new MainController.DisplayConverter<>(ReadFilter.values()));
         this.minEpisodeIndex.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(-1, 99999, -1));
@@ -154,66 +152,50 @@ public class EpisodeViewController implements Attachable {
 
     @Override
     public void onAttach() {
-        final Flowable<Repository> repositorySingle = ApplicationConfig.getFlowableRepository();
+        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
 
-        this.episodeDisposable = repositorySingle
-                .subscribeOn(Schedulers.io())
-                .flatMap(t -> {
-                    if (t == null) {
-                        return Flowable.empty();
-                    }
+        pagedListObserver = releases -> {
+            Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
+            if (releases == null) {
+                this.episodes.getItems().clear();
+                return;
+            }
+            this.episodes.getItems().setAll(releases);
+        };
+        this.episodesLiveData = repositorySingle.flatMap(t -> {
+            if (t == null) {
+                return LiveData.empty();
+            }
 
-                    return ControllerUtils.combineLatest(
-                            repositorySingle,
-                            this.episodeFilterBinding,
-                            (repository, episodeFilter) -> {
-                                System.out.println("fetching all episodes");
-                                return repository.getDisplayEpisodes(
-                                        episodeFilter.savedFilter,
-                                        episodeFilter.medium,
-                                        episodeFilter.readFilter,
-                                        episodeFilter.minEpisodeIndex,
-                                        episodeFilter.maxEpisodeIndex,
-                                        episodeFilter.selected
-                                );
-                            });
-                })
-                .flatMap(pagedListFlowable -> pagedListFlowable)
-                .subscribeOn(JavaFxScheduler.platform())
-                .subscribe(releases -> {
-                    if (releases == null) {
-                        this.episodes.getItems().clear();
-                        return;
-                    }
-                    this.episodes.getItems().setAll(releases);
-                }, Throwable::printStackTrace);
+            return ControllerUtils.combineLatest(
+                    repositorySingle,
+                    this.episodeFilterBinding,
+                    (repository, episodeFilter) -> {
+                        Log.info("fetching all episodes");
+                        return repository.getDisplayEpisodes(
+                                episodeFilter.savedFilter,
+                                episodeFilter.medium,
+                                episodeFilter.readFilter,
+                                episodeFilter.minEpisodeIndex,
+                                episodeFilter.maxEpisodeIndex,
+                                episodeFilter.selected
+                        );
+                    });
+        }).flatMap(pagedListLiveData -> pagedListLiveData);
+        this.episodesLiveData.observe(this.pagedListObserver);
     }
 
     @Override
     public void onDetach() {
-        if (this.episodeDisposable != null) {
-            this.episodeDisposable.dispose();
+        if (this.episodesLiveData != null) {
+            this.episodesLiveData.removeObserver(this.pagedListObserver);
         }
     }
 
-    private <T, R> Disposable subscribePublisher(ObservableValue<T> value, Function<T, Publisher<R>> mapFunction, Consumer<R> consumer) {
-        return JavaFxObservable
-                .valuesOf(value)
-                .toFlowable(BackpressureStrategy.LATEST)
-                .subscribeOn(Schedulers.io())
-                .flatMap(t -> {
-                    if (t == null) {
-                        return Flowable.empty();
-                    }
-                    return mapFunction.apply(t);
-                })
-                .subscribeOn(JavaFxScheduler.platform())
-                .subscribe(r -> {
-                    if (r == null) {
-                        return;
-                    }
-                    consumer.accept(r);
-                }, Throwable::printStackTrace);
+    private <T, R> void subscribePublisher(ObservableValue<T> value, Function<T, LiveData<R>> mapFunction, Consumer<R> consumer) {
+        ControllerUtils.fxObservableToLiveData(value)
+                .flatMap(mapFunction)
+                .observe(consumer::accept);
     }
 
     private static class DisplayReleaseCell extends ListCell<DisplayRelease> {

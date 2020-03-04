@@ -9,7 +9,6 @@ import javafx.scene.control.*;
  *
  */
 public class MediaInWaitController implements Attachable {
-    private Disposable mediumInWaitDisposable;
     @FXML
     private ListView<MediumInWait> mediumInWaitListView;
     @FXML

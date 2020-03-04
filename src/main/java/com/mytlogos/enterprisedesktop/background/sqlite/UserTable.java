@@ -26,6 +26,10 @@ class UserTable extends AbstractTable {
                 return new UserImpl(uuid, session, name);
             });
 
+    UserTable() {
+        super("user");
+    }
+
     public void update(User user) {
         System.out.println("updating user");
     }

@@ -41,7 +41,7 @@ public class MainController {
 
     public void initialize() {
         this.taskController.setInfoTextProperty(this.infoText.textProperty());
-        this.tabPane.getSelectionModel().selectedItemProperty().addListener((Flowable, oldValue, newValue) -> {
+        this.tabPane.getSelectionModel().selectedItemProperty().addListener((LiveData, oldValue, newValue) -> {
             detachTab(oldValue);
             attachTab(newValue);
         });

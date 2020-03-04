@@ -9,12 +9,10 @@ import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerato
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.SqliteStorage;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
-import com.mytlogos.enterprisedesktop.tools.ContentTool;
-import com.mytlogos.enterprisedesktop.tools.FileTools;
-import com.mytlogos.enterprisedesktop.tools.Sorting;
-import com.mytlogos.enterprisedesktop.tools.Utils;
-import io.reactivex.Flowable;
+import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
+import com.mytlogos.enterprisedesktop.tools.*;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -31,7 +29,7 @@ class RepositoryImpl implements Repository {
     private final Client client;
     private final DatabaseStorage storage;
     private final ClientModelPersister persister;
-    private final Flowable<User> storageUserLiveData;
+    private final LiveData<User> storageUserLiveData;
     private final LoadData loadedData;
     private final LoadWorker loadWorker;
     private final EditService editService;
@@ -77,12 +75,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<HomeStats> getHomeStats() {
+    public LiveData<HomeStats> getHomeStats() {
         return this.storage.getHomeStats();
     }
 
     @Override
-    public Flowable<User> getUser() {
+    public LiveData<User> getUser() {
         return this.storageUserLiveData;
     }
 
@@ -112,6 +110,8 @@ class RepositoryImpl implements Repository {
             // set authentication in client before persisting user,
             // as it may load data which requires authentication
             this.client.setAuthentication(user.getUuid(), user.getSession());
+        } else if (!response.isSuccessful()) {
+            checkAndGetBody(response);
         }
         persister.persist(user);
     }
@@ -131,6 +131,8 @@ class RepositoryImpl implements Repository {
             // set authentication in client before persisting user,
             // as it may load data which requires authentication
             this.client.setAuthentication(user.getUuid(), user.getSession());
+        } else if (!response.isSuccessful()) {
+            checkAndGetBody(response);
         }
         persister.persist(user).finish();
     }
@@ -285,7 +287,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<News>> getNews() {
+    public LiveData<PagedList<News>> getNews() {
         return this.storage.getNews();
     }
 
@@ -423,22 +425,22 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
+    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
         return this.storage.getDisplayEpisodes(saved, medium, read, minIndex, maxIndex, latestOnly);
     }
 
     @Override
-    public Flowable<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
+    public LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
         return this.storage.getDisplayEpisodesGrouped(saved, medium);
     }
 
     @Override
-    public Flowable<List<MediaList>> getLists() {
+    public LiveData<List<MediaList>> getLists() {
         return this.storage.getLists();
     }
 
     @Override
-    public Flowable<? extends MediaListSetting> getListSettings(int id, boolean isExternal) {
+    public LiveData<? extends MediaListSetting> getListSettings(int id, boolean isExternal) {
         return this.storage.getListSetting(id, isExternal);
     }
 
@@ -458,12 +460,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
+    public LiveData<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
         return this.storage.getAllMedia(sortings, title, medium, author, lastUpdate, minCountEpisodes, minCountReadEpisodes);
     }
 
     @Override
-    public Flowable<MediumSetting> getMediumSettings(int mediumId) {
+    public LiveData<MediumSetting> getMediumSettings(int mediumId) {
         return this.storage.getMediumSettings(mediumId);
     }
 
@@ -473,12 +475,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
+    public LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
         return this.storage.getToc(mediumId, sortings, read, saved);
     }
 
     @Override
-    public Flowable<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
+    public LiveData<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
         return this.storage.getMediumItems(listId, isExternal);
     }
 
@@ -494,7 +496,7 @@ class RepositoryImpl implements Repository {
 
     @Override
     public void addList(MediaList list, boolean autoDownload) throws IOException {
-        User value = this.storageUserLiveData.blockingLast(null);
+        User value = this.storageUserLiveData.getValue();
 
         if (value == null || value.getUuid().isEmpty()) {
             throw new IllegalStateException("user is not authenticated");
@@ -548,17 +550,17 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<ReadEpisode>> getReadTodayEpisodes() {
+    public LiveData<PagedList<ReadEpisode>> getReadTodayEpisodes() {
         return this.storage.getReadTodayEpisodes();
     }
 
     @Override
-    public Flowable<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
+    public LiveData<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
         return this.storage.getMediaInWaitBy(filter, mediumFilter, hostFilter, sortings);
     }
 
     @Override
-    public Flowable<List<MediaList>> getInternLists() {
+    public LiveData<List<MediaList>> getInternLists() {
         return this.storage.getInternLists();
     }
 
@@ -568,17 +570,17 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
+    public LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
         return this.storage.getSimilarMediaInWait(mediumInWait);
     }
 
     @Override
-    public Flowable<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
+    public LiveData<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
         return this.storage.getMediaSuggestions(title, medium);
     }
 
     @Override
-    public Flowable<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
+    public LiveData<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
         return this.storage.getMediaInWaitSuggestions(title, medium);
     }
 
@@ -675,12 +677,12 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<List<MediaList>> getListSuggestion(String name) {
+    public LiveData<List<MediaList>> getListSuggestion(String name) {
         return this.storage.getListSuggestion(name);
     }
 
     @Override
-    public Flowable<Boolean> onDownloadable() {
+    public LiveData<Boolean> onDownloadable() {
         return this.storage.onDownloadAble();
     }
 
@@ -690,7 +692,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<List<MediumItem>> getAllDanglingMedia() {
+    public LiveData<List<MediumItem>> getAllDanglingMedia() {
         return this.storage.getAllDanglingMedia();
     }
 
@@ -700,7 +702,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<DisplayExternalUser>> getExternalUser() {
+    public LiveData<PagedList<DisplayExternalUser>> getExternalUser() {
         return this.storage.getExternalUser();
     }
 
@@ -717,6 +719,14 @@ class RepositoryImpl implements Repository {
     @Override
     public List<String> getReleaseLinks(int episodeId) {
         return this.storage.getReleaseLinks(episodeId);
+    }
+
+    @Override
+    public void syncWithTime() throws IOException {
+        LocalDateTime lastSync = MainPreferences.getLastSync();
+        syncChanged(lastSync);
+        MainPreferences.setLastSync(LocalDateTime.now());
+        syncDeleted();
     }
 
     @Override
@@ -746,7 +756,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public Flowable<PagedList<NotificationItem>> getNotifications() {
+    public LiveData<PagedList<NotificationItem>> getNotifications() {
         return this.storage.getNotifications();
     }
 
@@ -997,6 +1007,16 @@ class RepositoryImpl implements Repository {
         });
     }
 
+    private <T> T checkAndGetBody(Response<T> response) throws IOException {
+        T body = response.body();
+
+        if (body == null) {
+            String errorMsg = response.errorBody() != null ? response.errorBody().string() : null;
+            throw new IOException(String.format("No Body, Http-Code %d, ErrorBody: %s", response.code(), errorMsg));
+        }
+        return body;
+    }
+
     void initialize() {
         TaskManager.runTask(() -> {
             try {
@@ -1028,5 +1048,352 @@ class RepositoryImpl implements Repository {
         this.loadedData.getMediaList().addAll(loadData.getMediaList());
         this.loadedData.getExternalUser().addAll(loadData.getExternalUser());
         this.loadedData.getExternalMediaList().addAll(loadData.getExternalMediaList());
+    }
+
+    private <T> Map<Integer, T> mapStringToInt(Map<String, T> map) {
+        Map<Integer, T> result = new HashMap<>();
+
+        for (Map.Entry<String, T> entry : map.entrySet()) {
+            result.put(Integer.parseInt(entry.getKey()), entry.getValue());
+        }
+        return result;
+    }
+
+    private void firstSync() throws IOException {
+        this.storage.clearAll();
+        final List<ClientMedium> clientMedia = checkAndGetBody(this.client.getAllMediaFull());
+        this.persister.persistMedia(clientMedia);
+        clientMedia.clear();
+        Log.info("First sync, loaded all Media");
+
+        final List<ClientPart> clientParts = checkAndGetBody(this.client.getAllParts());
+        this.persister.persistParts(clientParts);
+        clientParts.clear();
+        Log.info("First sync, loaded all Parts");
+
+        final List<ClientEpisode> clientEpisodes = checkAndGetBody(this.client.getAllEpisodes());
+        this.persister.persistEpisodes(clientEpisodes);
+        clientEpisodes.clear();
+        Log.info("First sync, loaded all Episodes");
+
+        final List<ClientRelease> clientReleases = checkAndGetBody(this.client.getAllReleases());
+        this.persister.persistReleases(clientReleases);
+        clientReleases.clear();
+        Log.info("First sync, loaded all Releases");
+
+        final List<ClientMediaList> clientMediaLists = checkAndGetBody(this.client.getAllLists());
+        this.persister.persistMediaLists(clientMediaLists);
+        clientMediaLists.clear();
+        Log.info("First sync, loaded all MediaLists");
+
+        final List<ClientExternalUser> clientExternalUsers = checkAndGetBody(this.client.getAllExternalUsers());
+        this.persister.persistExternalUsers(clientExternalUsers);
+        clientExternalUsers.clear();
+        Log.info("First sync, loaded all ExternalUsers");
+
+        final List<ClientMediumInWait> clientMediumInWaits = checkAndGetBody(this.client.getMediumInWait());
+        this.persister.persistMediaInWait(clientMediumInWaits);
+        clientMediumInWaits.clear();
+        Log.info("First sync, loaded all MediumInWaits");
+    }
+
+    private void syncChanged(LocalDateTime lastSync) throws IOException {
+        if (lastSync == null) {
+            Log.info("First sync, start loading all");
+            this.firstSync();
+            return;
+        }
+        Log.info("request changedEntities on ThreadId-%d: %s", Thread.currentThread().getId(), Thread.currentThread().getName());
+        Response<ClientChangedEntities> changedEntitiesResponse = this.client.getNew(lastSync);
+        ClientChangedEntities changedEntities = checkAndGetBody(changedEntitiesResponse);
+        Log.info(
+                "received changedEntities: %d media, %d parts, %d episodes, %d releases, %d lists, %d extUser, %d extLists, %d mediaInWait, %d news on ThreadId-%d: %s",
+                () -> new Object[]{
+                        changedEntities.media.size(),
+                        changedEntities.parts.size(),
+                        changedEntities.episodes.size(),
+                        changedEntities.releases.size(),
+                        changedEntities.lists.size(),
+                        changedEntities.extUser.size(),
+                        changedEntities.extLists.size(),
+                        changedEntities.mediaInWait.size(),
+                        changedEntities.news.size(),
+                        Thread.currentThread().getId(),
+                        Thread.currentThread().getName()
+                }
+        );
+
+        // persist all new or updated entities, media to releases needs to be in this order
+        this.persister.persistMedia(changedEntities.media);
+        this.persistParts(changedEntities.parts);
+        this.persistEpisodes(changedEntities.episodes);
+        this.persistReleases(changedEntities.releases);
+        this.persister.persistMediaLists(changedEntities.lists);
+        this.persister.persistExternalUsers(changedEntities.extUser);
+        this.persistExternalLists(changedEntities.extLists);
+        this.persister.persistMediaInWait(changedEntities.mediaInWait);
+        this.persister.persistNews(changedEntities.news);
+    }
+
+    private void persistParts(Collection<ClientPart> parts) throws IOException {
+        Collection<Integer> missingIds = new HashSet<>();
+        Collection<ClientPart> loadingParts = new HashSet<>();
+
+        parts.removeIf(part -> {
+            if (!this.loadedData.getMedia().contains(part.getMediumId())) {
+                missingIds.add(part.getMediumId());
+                loadingParts.add(part);
+                return true;
+            }
+            return false;
+        });
+
+        this.persister.persistParts(parts);
+        if (missingIds.isEmpty()) {
+            return;
+        }
+        try {
+            Utils.doPartitionedAsync(missingIds, parentIds -> {
+                Log.info("loading %d media", parentIds.size());
+                final Response<List<ClientMedium>> media = this.client.getMedia(parentIds);
+                List<ClientMedium> parents = checkAndGetBody(media);
+                this.persister.persistMedia(parents);
+                return false;
+            });
+        } catch (Exception e) {
+            if (e instanceof IOException) {
+                throw new IOException(e);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+        this.persister.persistParts(loadingParts);
+    }
+
+    private void persistEpisodes(Collection<ClientEpisode> episodes) throws IOException {
+        Collection<Integer> missingIds = new HashSet<>();
+        Collection<ClientEpisode> loading = new HashSet<>();
+
+        episodes.removeIf(value -> {
+            if (!this.loadedData.getMedia().contains(value.getPartId())) {
+                missingIds.add(value.getPartId());
+                loading.add(value);
+                return true;
+            }
+            return false;
+        });
+
+        this.persister.persistEpisodes(episodes);
+
+        if (missingIds.isEmpty()) {
+            return;
+        }
+        try {
+            Utils.doPartitionedAsync(missingIds, partIds -> {
+                Log.info("loading %d parts", partIds.size());
+                final Response<List<ClientPart>> parts = this.client.getParts(partIds);
+                List<ClientPart> parents = checkAndGetBody(parts);
+                this.persistParts(parents);
+                return false;
+            });
+        } catch (Exception e) {
+            if (e instanceof IOException) {
+                throw new IOException(e);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+        this.persister.persistEpisodes(loading);
+    }
+
+    private void persistReleases(Collection<ClientRelease> releases) throws IOException {
+        Collection<Integer> missingIds = new HashSet<>();
+        Collection<ClientRelease> loading = new HashSet<>();
+
+        releases.removeIf(value -> {
+            if (!this.loadedData.getMedia().contains(value.getEpisodeId())) {
+                missingIds.add(value.getEpisodeId());
+                loading.add(value);
+                return true;
+            }
+            return false;
+        });
+
+        this.persister.persistReleases(releases);
+        if (missingIds.isEmpty()) {
+            return;
+        }
+        try {
+            Utils.doPartitionedAsync(missingIds, parentIds -> {
+                Log.info("loading %d episodes", parentIds.size());
+                final Response<List<ClientEpisode>> episodes = this.client.getEpisodes(parentIds);
+                List<ClientEpisode> parents = checkAndGetBody(episodes);
+                this.persistEpisodes(parents);
+                return false;
+            });
+        } catch (Exception e) {
+            if (e instanceof IOException) {
+                throw new IOException(e);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+        this.persister.persistReleases(loading);
+    }
+
+    private void persistExternalLists(Collection<ClientExternalMediaList> externalMediaLists) throws IOException {
+        Collection<String> missingIds = new HashSet<>();
+        Collection<ClientExternalMediaList> loading = new HashSet<>();
+
+        externalMediaLists.removeIf(value -> {
+            if (!this.loadedData.getExternalUser().contains(value.getUuid())) {
+                missingIds.add(value.getUuid());
+                loading.add(value);
+                return true;
+            }
+            return false;
+        });
+
+        this.persister.persistExternalMediaLists(externalMediaLists);
+        if (missingIds.isEmpty()) {
+            return;
+        }
+        try {
+            Utils.doPartitionedAsync(missingIds, parentIds -> {
+                Log.info("loading %d externalUser", parentIds.size());
+                final Response<List<ClientExternalUser>> externalUser = this.client.getExternalUser(parentIds);
+                List<ClientExternalUser> parents = checkAndGetBody(externalUser);
+                this.persister.persistExternalUsers(parents);
+                return false;
+            });
+        } catch (Exception e) {
+            if (e instanceof IOException) {
+                throw new IOException(e);
+            } else {
+                throw new RuntimeException(e);
+            }
+        }
+        this.persister.persistExternalMediaLists(loading);
+    }
+
+    private void syncDeleted() throws IOException {
+        Response<ClientStat> statResponse = this.client.getStats();
+        ClientStat statBody = checkAndGetBody(statResponse);
+
+        ClientStat.ParsedStat parsedStat = statBody.parse();
+        this.persister.persist(parsedStat);
+
+        ReloadPart reloadPart = this.storage.checkReload(parsedStat);
+
+        if (!reloadPart.loadPartEpisodes.isEmpty()) {
+            Response<Map<String, List<Integer>>> partEpisodesResponse = this.client.getPartEpisodes(reloadPart.loadPartEpisodes);
+            Map<String, List<Integer>> partStringEpisodes = checkAndGetBody(partEpisodesResponse);
+
+            Map<Integer, List<Integer>> partEpisodes = mapStringToInt(partStringEpisodes);
+
+            Collection<Integer> missingEpisodes = new HashSet<>();
+
+            for (Map.Entry<Integer, List<Integer>> entry : partEpisodes.entrySet()) {
+                for (Integer episodeId : entry.getValue()) {
+                    if (!this.loadedData.getEpisodes().contains(episodeId)) {
+                        missingEpisodes.add(episodeId);
+                    }
+                }
+            }
+            if (!missingEpisodes.isEmpty()) {
+                final Response<List<ClientEpisode>> clientEpisodes = this.client.getEpisodes(missingEpisodes);
+                List<ClientEpisode> episodes = checkAndGetBody(clientEpisodes);
+                this.persistEpisodes(episodes);
+            }
+
+            this.persister.deleteLeftoverEpisodes(partEpisodes);
+
+            reloadPart = this.storage.checkReload(parsedStat);
+        }
+
+
+        if (!reloadPart.loadPartReleases.isEmpty()) {
+            Response<Map<String, List<ClientSimpleRelease>>> partReleasesResponse = this.client.getPartReleases(reloadPart.loadPartReleases);
+
+            Map<String, List<ClientSimpleRelease>> partStringReleases = checkAndGetBody(partReleasesResponse);
+
+            Map<Integer, List<ClientSimpleRelease>> partReleases = mapStringToInt(partStringReleases);
+
+            Collection<Integer> missingEpisodes = new HashSet<>();
+
+            for (Map.Entry<Integer, List<ClientSimpleRelease>> entry : partReleases.entrySet()) {
+                for (ClientSimpleRelease release : entry.getValue()) {
+                    if (!this.loadedData.getEpisodes().contains(release.id)) {
+                        missingEpisodes.add(release.id);
+                    }
+                }
+            }
+            if (!missingEpisodes.isEmpty()) {
+                final Response<List<ClientEpisode>> clientEpisodes = this.client.getEpisodes(missingEpisodes);
+                List<ClientEpisode> episodes = checkAndGetBody(clientEpisodes);
+                this.persistEpisodes(episodes);
+            }
+            Collection<Integer> episodesToLoad = this.persister.deleteLeftoverReleases(partReleases);
+
+            if (!episodesToLoad.isEmpty()) {
+                try {
+                    Utils.doPartitionedAsync(episodesToLoad, ids -> {
+                        Log.info("loading %d episodes for syncDelete", ids.size());
+                        final Response<List<ClientEpisode>> clientEpisodes = this.client.getEpisodes(ids);
+                        List<ClientEpisode> episodes = checkAndGetBody(clientEpisodes);
+                        this.persistEpisodes(episodes);
+                        return false;
+                    });
+                } catch (Exception e) {
+                    if (e instanceof IOException) {
+                        throw new IOException(e);
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            reloadPart = this.storage.checkReload(parsedStat);
+        }
+
+        // as even now some errors crop up, just load all this shit and dump it in 100er steps
+        if (!reloadPart.loadPartEpisodes.isEmpty() || !reloadPart.loadPartReleases.isEmpty()) {
+            Collection<Integer> partsToLoad = new HashSet<>();
+            partsToLoad.addAll(reloadPart.loadPartEpisodes);
+            partsToLoad.addAll(reloadPart.loadPartReleases);
+
+            try {
+                Utils.doPartitionedAsync(partsToLoad, ids -> {
+                    Log.info("loading %d parts for syncDelete", ids.size());
+                    final Response<List<ClientPart>> clientParts = this.client.getParts(ids);
+                    List<ClientPart> parts = checkAndGetBody(clientParts);
+                    this.persistParts(parts);
+                    return false;
+                });
+            } catch (Exception e) {
+                if (e instanceof IOException) {
+                    throw new IOException(e);
+                } else {
+                    e.printStackTrace();
+                }
+            }
+            reloadPart = this.storage.checkReload(parsedStat);
+        }
+
+        if (!reloadPart.loadPartEpisodes.isEmpty()) {
+            String msg = String.format(
+                    "Episodes of %d Parts to load even after running once",
+                    reloadPart.loadPartEpisodes.size()
+            );
+            System.out.println(msg);
+        }
+
+        if (!reloadPart.loadPartReleases.isEmpty()) {
+            String msg = String.format(
+                    "Releases of %d Parts to load even after running once",
+                    reloadPart.loadPartReleases.size()
+            );
+            System.out.println(msg);
+        }
     }
 }

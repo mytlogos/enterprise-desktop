@@ -1,17 +1,16 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.background.ListUser;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalMediaList;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.ExternalMediaList;
 import com.mytlogos.enterprisedesktop.model.ExternalMediaListImpl;
 import com.mytlogos.enterprisedesktop.model.MediumItem;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
 
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 
 /**
  *
@@ -95,26 +94,41 @@ class ExternalMediaListTable extends AbstractTable {
         return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
     });
 
-    public Flowable<List<ExternalMediaList>> getLists() {
-        try {
-            return this.getListsQuery.queryFlowableList();
-        } catch (SQLException e) {
-            return Flowable.create(emitter -> {
-                emitter.onError(e);
-                emitter.onComplete();
-            }, BackpressureStrategy.LATEST);
-        }
+    ExternalMediaListTable() {
+        super("external_media_list");
     }
 
-    Flowable<List<MediumItem>> getMediumItems(int listId) {
-        try {
-            return this.getMediumItems.setValues(value -> value.setInt(1, listId)).queryFlowableList();
-        } catch (SQLException e) {
-            return Flowable.create(emitter -> {
-                emitter.onError(e);
-                emitter.onComplete();
-            }, BackpressureStrategy.LATEST);
-        }
+    public LiveData<List<ExternalMediaList>> getLists() {
+        return this.getListsQuery.queryLiveDataList();
+    }
+
+    public List<ListUser> getListUser() {
+        return new QueryBuilder<ListUser>("SELECT externalListId as listId, uuid FROM external_media_list")
+                .setConverter(value -> new ListUser(value.getInt(1), value.getString(2)))
+                .queryListIgnoreError();
+    }
+
+    public void delete(Set<Integer> deletedExLists) {
+        this.executeDMLQuery(
+                deletedExLists,
+                new QueryBuilder<Integer>("DELETE FROM external_media_list WHERE externalListId = ?")
+                        .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
+        );
+    }
+
+    public void update(List<ClientExternalMediaList> update) {
+        final HashMap<String, Function<ClientExternalMediaList, ?>> attrMap = new HashMap<>();
+        attrMap.put("url", (StringProducer<ClientExternalMediaList>) ClientExternalMediaList::getUrl);
+        attrMap.put("name", (StringProducer<ClientExternalMediaList>) ClientExternalMediaList::getName);
+        attrMap.put("medium", (IntProducer<ClientExternalMediaList>) ClientExternalMediaList::getMedium);
+
+        final Map<String, Function<ClientExternalMediaList, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("externalListId", (IntProducer<ClientExternalMediaList>) ClientExternalMediaList::getId);
+        this.update(update, "external_media_list", attrMap, keyExtractors);
+    }
+
+    LiveData<List<MediumItem>> getMediumItems(int listId) {
+        return this.getMediumItems.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
 
     void insert(ExternalMediaList externalMediaList) {

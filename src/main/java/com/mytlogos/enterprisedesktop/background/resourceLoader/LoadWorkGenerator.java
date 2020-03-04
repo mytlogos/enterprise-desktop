@@ -52,7 +52,9 @@ public class LoadWorkGenerator {
                 } else {
                     filteredParts.newParts.add(part);
                 }
-                Collections.addAll(episodes, part.getClientEpisodes());
+                if (part.getClientEpisodes() != null) {
+                    Collections.addAll(episodes, part.getClientEpisodes());
+                }
             } else {
                 filteredParts.mediumDependencies.add(new IntDependency<>(part.getMediumId(), part));
             }
@@ -77,7 +79,9 @@ public class LoadWorkGenerator {
             } else {
                 filteredEpisodes.newEpisodes.add(episode);
             }
-            Collections.addAll(filteredEpisodes.releases, episode.getReleases());
+            if (episode.getReleases() != null) {
+                Collections.addAll(filteredEpisodes.releases, episode.getReleases());
+            }
         }
 
         return filteredEpisodes;
@@ -98,10 +102,12 @@ public class LoadWorkGenerator {
             } else {
                 filteredMedia.newMedia.add(medium);
             }
-            for (int part : medium.getParts()) {
-                // todo check if it should be checked that medium is loaded
-                if (!this.isPartLoaded(part)) {
-                    filteredMedia.unloadedParts.add(part);
+            if (medium.getParts() != null) {
+                for (int part : medium.getParts()) {
+                    // todo check if it should be checked that medium is loaded
+                    if (!this.isPartLoaded(part)) {
+                        filteredMedia.unloadedParts.add(part);
+                    }
                 }
             }
         }
@@ -121,13 +127,15 @@ public class LoadWorkGenerator {
             Set<Integer> missingMedia = new HashSet<>();
             List<ListMediumJoin> currentJoins = new ArrayList<>();
 
-            for (int item : mediaList.getItems()) {
-                ListMediumJoin join = new ListMediumJoin(mediaList.getId(), item, false);
+            if (mediaList.getItems() != null) {
+                for (int item : mediaList.getItems()) {
+                    ListMediumJoin join = new ListMediumJoin(mediaList.getId(), item, false);
 
-                if (!this.isMediumLoaded(item)) {
-                    missingMedia.add(item);
+                    if (!this.isMediumLoaded(item)) {
+                        missingMedia.add(item);
+                    }
+                    currentJoins.add(join);
                 }
-                currentJoins.add(join);
             }
 
             // if none medium is missing, just clear and add like normal
@@ -165,13 +173,15 @@ public class LoadWorkGenerator {
             Set<Integer> missingMedia = new HashSet<>();
             List<ListMediumJoin> currentJoins = new ArrayList<>();
 
-            for (int item : externalMediaList.getItems()) {
-                ListMediumJoin join = new ListMediumJoin(externalMediaList.getId(), item, true);
+            if (externalMediaList.getItems() != null) {
+                for (int item : externalMediaList.getItems()) {
+                    ListMediumJoin join = new ListMediumJoin(externalMediaList.getId(), item, true);
 
-                if (!this.isMediumLoaded(item)) {
-                    missingMedia.add(item);
+                    if (!this.isMediumLoaded(item)) {
+                        missingMedia.add(item);
+                    }
+                    currentJoins.add(join);
                 }
-                currentJoins.add(join);
             }
 
             // if none medium is missing, just clear and add like normal
@@ -200,7 +210,9 @@ public class LoadWorkGenerator {
             } else {
                 filteredExternalUser.newUser.add(externalUser);
             }
-
+            if (externalUser.getLists() == null) {
+                continue;
+            }
             for (ClientExternalMediaList userList : externalUser.getLists()) {
                 if (this.isExternalMediaListLoaded(userList.getId())) {
                     filteredExternalUser.updateList.add(userList);

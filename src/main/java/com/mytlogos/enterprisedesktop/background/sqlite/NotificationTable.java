@@ -19,6 +19,10 @@ class NotificationTable extends AbstractTable {
         statement.setString(3, Formatter.isoFormat(notificationItem.getDatetime()));
     });
 
+    NotificationTable() {
+        super("notification");
+    }
+
     void insert(NotificationItem item) {
         this.executeDMLQuery(item, this.insertNotificationItemQuery);
     }
