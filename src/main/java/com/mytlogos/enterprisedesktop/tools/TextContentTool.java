@@ -72,8 +72,8 @@ public class TextContentTool extends ContentTool {
 
     @Override
     public Map<Integer, String> getEpisodePaths(String mediumPath) {
-        if (mediumPath == null || !mediumPath.endsWith(".epub")) {
-            throw new IllegalArgumentException(String.format("'%s' is not a epub", mediumPath));
+        if (mediumPath == null) {
+            throw new NullPointerException("expected path string, got: null");
         }
         final File file = new File(mediumPath);
         final File[] files = file.listFiles();
