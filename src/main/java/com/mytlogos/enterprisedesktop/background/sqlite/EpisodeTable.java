@@ -157,7 +157,7 @@ class EpisodeTable extends AbstractTable {
                     .setQueryIn(episodeIds, QueryBuilder.Type.INT)
                     .executeIn(
                             SqlUtils.update(value -> value.setBoolean(1, saved)),
-                            (o, o1) -> o || o1
+                            (o, o1) -> o == null ? o1 : o || o1
                     );
             if (update != null && update) {
                 this.setInvalidated();
