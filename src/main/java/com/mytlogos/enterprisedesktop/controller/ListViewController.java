@@ -3,14 +3,15 @@ package com.mytlogos.enterprisedesktop.controller;
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -18,12 +19,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -55,7 +53,41 @@ public class ListViewController implements Attachable {
     private TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private ObjectBinding<EpisodeFilter> episodeFilterBinding;
     private MediumDisplayController mediumDisplayController = null;
-    private LiveData<Repository> repositoryData;
+    private Observer<PagedList<TocEpisode>> episodesObserver = episodes -> this.mediumContentView.getItems().setAll(episodes == null ? Collections.emptyList() : episodes);
+    private LiveData<PagedList<TocEpisode>> episodesLiveData;
+    private LiveData<MediumSetting> mediumSettingLiveData;
+    private Observer<MediumSetting> settingObserver = mediumSetting -> {
+        if (this.mediumDisplayController == null) {
+            this.mediumDisplayController = ControllerUtils.load("/mediumDisplay.fxml");
+            this.detailPane.setContent(this.mediumDisplayController.getRoot());
+        }
+        this.mediumDisplayController.setMedium(mediumSetting);
+    };
+    private LiveData<List<MediumItem>> listItemsLiveData;
+    private Observer<List<MediumItem>> listItemsObserver = mediumItems -> {
+        this.mediumContentView.getItems().clear();
+        this.listMediaView.getItems().setAll(mediumItems == null ? Collections.emptyList() : mediumItems);
+    };
+    private LiveData<List<MediaList>> listLiveData;
+    private Observer<List<MediaList>> listObserver = mediaLists -> this.listsView.getItems().setAll(mediaLists == null ? Collections.emptyList() : mediaLists);
+    private InvalidationListener mediumListener = observable -> selectMedium();
+    private InvalidationListener listsListener = observable -> {
+        final MediaList item = this.listsView.getSelectionModel().getSelectedItem();
+
+        if (item == null) {
+            return;
+        }
+        if (this.listItemsLiveData != null) {
+            this.listItemsLiveData.removeObserver(this.listItemsObserver);
+        }
+        this.listItemsLiveData = ApplicationConfig
+                .getLiveDataRepository()
+                .flatMap(repository -> repository.getMediumItems(
+                        item.getListId(),
+                        item instanceof ExternalMediaList
+                ));
+        this.listItemsLiveData.observe(this.listItemsObserver);
+    };
 
     public void initialize() {
         this.listsView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -162,71 +194,68 @@ public class ListViewController implements Attachable {
         }
         final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
 
-        this.listMediaView.getSelectionModel().selectedItemProperty().addListener(LiveData -> selectMedium(repositorySingle));
+        this.listLiveData = repositorySingle.flatMap(Repository::getLists);
+        this.listLiveData.observe(this.listObserver);
 
-        final ReadOnlyObjectProperty<EpisodeSorting> selectedEpisodeSorting = this.episodeSorting.getSelectionModel().selectedItemProperty();
-        repositorySingle.flatMap(Repository::getLists).observe(mediaLists -> this.listsView.getItems().setAll(mediaLists));
+        // first remove, then add to ensure that it is registered only once
+        this.listMediaView.getSelectionModel().selectedItemProperty().removeListener(this.mediumListener);
+        this.listMediaView.getSelectionModel().selectedItemProperty().addListener(this.mediumListener);
 
-        subscribePublisher(
-                this.listsView.getSelectionModel().selectedItemProperty(),
-                mediaList -> repositorySingle.flatMap(repository ->
-                        repository.getMediumItems(
-                                mediaList.getListId(),
-                                mediaList instanceof ExternalMediaList
-                        )
-                ),
-                mediumItems -> {
-                    this.mediumContentView.getItems().clear();
-                    this.listMediaView.getItems().setAll(mediumItems);
-                }
-        );
-        subscribePublisher(
-                this.listMediaView.getSelectionModel().selectedItemProperty(),
-                medium -> ControllerUtils.combineLatest(
-                        repositorySingle,
-                        this.episodeFilterBinding,
-                        selectedEpisodeSorting,
-                        (repository, episodeFilter, episodeSorting) -> {
-                            System.out.println("fetching new episodes");
-                            return repository.getToc(
-                                    medium.getMediumId(),
-                                    episodeSorting,
-                                    episodeFilter.readFilter,
-                                    episodeFilter.savedFilter
-                            );
-                        }
-                ).flatMap(pagedListLiveData -> pagedListLiveData),
-                episodes -> this.mediumContentView.getItems().setAll(episodes)
-        );
-    }
-
-    private void selectMedium(LiveData<Repository> repositorySingle) {
-        final Medium selectedItem = this.listMediaView.getSelectionModel().getSelectedItem();
-        if (selectedItem == null) {
-            return;
-        }
-        this.repositoryData = repositorySingle;
-        repositorySingle
-                .flatMap(repository -> {
-                    final int mediumId = selectedItem.getMediumId();
-                    return repository.getMediumSettings(mediumId);
-                })
-                .observe(mediumSetting -> {
-                    if (this.mediumDisplayController == null) {
-                        this.mediumDisplayController = ControllerUtils.load("/mediumDisplay.fxml");
-                    }
-                    this.mediumDisplayController.setMedium(mediumSetting);
-                    this.detailPane.setContent(this.mediumDisplayController.getRoot());
-                });
-    }
-
-    private <T, R> void subscribePublisher(ObservableValue<T> value, Function<T, LiveData<R>> mapFunction, Consumer<R> consumer) {
-        ControllerUtils.fxObservableToLiveData(value).flatMap(mapFunction).observe(consumer::accept);
+        this.listsView.getSelectionModel().selectedItemProperty().removeListener(this.listsListener);
+        this.listsView.getSelectionModel().selectedItemProperty().addListener(this.listsListener);
     }
 
     @Override
     public void onDetach() {
+        if (this.episodesLiveData != null) {
+            this.episodesLiveData.removeObserver(this.episodesObserver);
+        }
+        if (this.mediumSettingLiveData != null) {
+            this.mediumSettingLiveData.removeObserver(this.settingObserver);
+        }
+        if (this.listLiveData != null) {
+            this.listLiveData.removeObserver(this.listObserver);
+        }
+        if (this.listItemsLiveData != null) {
+            this.listItemsLiveData.removeObserver(this.listItemsObserver);
+        }
+        this.listsView.getSelectionModel().selectedItemProperty().removeListener(this.listsListener);
+        this.listMediaView.getSelectionModel().selectedItemProperty().removeListener(this.mediumListener);
+    }
 
+    private void selectMedium() {
+        LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
+        final Medium selectedItem = this.listMediaView.getSelectionModel().getSelectedItem();
+        if (selectedItem == null) {
+            return;
+        }
+        if (this.episodesLiveData != null) {
+            this.episodesLiveData.removeObserver(this.episodesObserver);
+        }
+        if (this.mediumSettingLiveData != null) {
+            this.mediumSettingLiveData.removeObserver(this.settingObserver);
+        }
+        this.episodesLiveData = ControllerUtils.combineLatest(
+                repositorySingle,
+                this.episodeFilterBinding,
+                this.episodeSorting.getSelectionModel().selectedItemProperty(),
+                (repository, episodeFilter, episodeSorting) -> {
+                    System.out.println("fetching new episodes");
+                    return repository.getToc(
+                            selectedItem.getMediumId(),
+                            episodeSorting,
+                            episodeFilter.readFilter,
+                            episodeFilter.savedFilter
+                    );
+                }
+        ).flatMap(pagedListLiveData -> pagedListLiveData);
+        this.episodesLiveData.observe(this.episodesObserver);
+
+        this.mediumSettingLiveData = repositorySingle.flatMap(repository -> {
+            final int mediumId = selectedItem.getMediumId();
+            return repository.getMediumSettings(mediumId);
+        });
+        this.mediumSettingLiveData.observe(this.settingObserver);
     }
 
     @FXML
@@ -238,6 +267,8 @@ public class ListViewController implements Attachable {
     }
 
     private static class MediaListCell extends ListCell<MediaList> {
+        private static Pattern urlPattern = Pattern.compile("^https?://(www\\.)?(.+?)\\.\\w+/?.+$");
+
         @Override
         protected void updateItem(MediaList item, boolean empty) {
             super.updateItem(item, empty);
@@ -246,11 +277,20 @@ public class ListViewController implements Attachable {
                 setText(null);
                 setGraphic(null);
             } else {
-                String url = "Internal";
+                String prefix = "Internal";
                 if (item instanceof ExternalMediaList) {
-                    url = ((ExternalMediaList) item).getUrl();
+                    prefix = ((ExternalMediaList) item).getUrl();
+                    final Matcher matcher = urlPattern.matcher(prefix);
+
+                    if (matcher.matches()) {
+                        prefix = matcher.group(2);
+
+                        if (prefix.length() > 1) {
+                            prefix = Character.toUpperCase(prefix.charAt(0)) + prefix.substring(1);
+                        }
+                    }
                 }
-                setText(url + " - " + item.getName());
+                setText(prefix + " - " + item.getName());
             }
         }
     }
