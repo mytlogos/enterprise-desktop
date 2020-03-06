@@ -102,15 +102,14 @@ public class Utils {
                 maxItem = list.size();
             }
         } while (minItem < list.size() && maxItem <= list.size());
-        sequence(futures).get();
+        finishAll(futures).get();
     }
 
-    public static <T> CompletableFuture<List<T>> sequence(List<CompletableFuture<T>> futures) {
-        CompletableFuture<Void> allDoneFuture = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
-        return allDoneFuture.thenApply(v -> futures
-                .stream()
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList())
+    public static <T> CompletableFuture<List<T>> finishAll(Collection<CompletableFuture<T>> futuresList) {
+        CompletableFuture<Void> allFuturesResult = CompletableFuture.allOf(futuresList.toArray(new CompletableFuture[0]));
+        return allFuturesResult.thenApply(v -> futuresList.stream().
+                map(CompletableFuture::join).
+                collect(Collectors.toList())
         );
     }
 
@@ -124,15 +123,5 @@ public class Utils {
         }
 
         return count;
-    }
-
-    public static <T> CompletableFuture<List<T>> finishAll(Collection<CompletableFuture<T>> futuresList) {
-        CompletableFuture<Void> allFuturesResult =
-                CompletableFuture.allOf((CompletableFuture<?>[]) futuresList.toArray());
-        return allFuturesResult.thenApply(v ->
-                futuresList.stream().
-                        map(CompletableFuture::join).
-                        collect(Collectors.toList())
-        );
     }
 }
