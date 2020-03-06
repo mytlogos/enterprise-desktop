@@ -51,7 +51,14 @@ public class EpisodeViewController implements Attachable {
     private CheckBox latestOnly;
 
     private ObjectBinding<ReleaseFilter> episodeFilterBinding;
-    private Observer<PagedList<DisplayRelease>> pagedListObserver;
+    private Observer<PagedList<DisplayRelease>> pagedListObserver = releases -> {
+        Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
+        if (releases == null) {
+            this.episodes.getItems().clear();
+            return;
+        }
+        this.episodes.getItems().setAll(releases);
+    };
     private LiveData<PagedList<DisplayRelease>> episodesLiveData;
 
     public void initialize() {
@@ -87,6 +94,28 @@ public class EpisodeViewController implements Attachable {
                 this.maxEpisodeIndex.valueProperty()
         );
         this.episodes.setCellFactory(param -> new DisplayReleaseCell(lockedImage, readImage, onlineImage, localImage));
+
+        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
+        this.episodesLiveData = repositorySingle.flatMap(t -> {
+            if (t == null) {
+                return LiveData.empty();
+            }
+
+            return ControllerUtils.combineLatest(
+                    repositorySingle,
+                    this.episodeFilterBinding,
+                    (repository, episodeFilter) -> {
+                        Log.info("fetching all episodes");
+                        return repository.getDisplayEpisodes(
+                                episodeFilter.savedFilter,
+                                episodeFilter.medium,
+                                episodeFilter.readFilter,
+                                episodeFilter.minEpisodeIndex,
+                                episodeFilter.maxEpisodeIndex,
+                                episodeFilter.selected
+                        );
+                    });
+        }).flatMap(pagedListLiveData -> pagedListLiveData);
     }
 
     private void setEpisodeViewContextMenu() {
@@ -152,37 +181,10 @@ public class EpisodeViewController implements Attachable {
 
     @Override
     public void onAttach() {
-        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
-
-        pagedListObserver = releases -> {
-            Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
-            if (releases == null) {
-                this.episodes.getItems().clear();
-                return;
-            }
-            this.episodes.getItems().setAll(releases);
-        };
-        this.episodesLiveData = repositorySingle.flatMap(t -> {
-            if (t == null) {
-                return LiveData.empty();
-            }
-
-            return ControllerUtils.combineLatest(
-                    repositorySingle,
-                    this.episodeFilterBinding,
-                    (repository, episodeFilter) -> {
-                        Log.info("fetching all episodes");
-                        return repository.getDisplayEpisodes(
-                                episodeFilter.savedFilter,
-                                episodeFilter.medium,
-                                episodeFilter.readFilter,
-                                episodeFilter.minEpisodeIndex,
-                                episodeFilter.maxEpisodeIndex,
-                                episodeFilter.selected
-                        );
-                    });
-        }).flatMap(pagedListLiveData -> pagedListLiveData);
-        this.episodesLiveData.observe(this.pagedListObserver);
+        if (this.episodesLiveData != null) {
+            this.episodesLiveData.removeObserver(this.pagedListObserver);
+            this.episodesLiveData.observe(this.pagedListObserver);
+        }
     }
 
     @Override
@@ -190,12 +192,6 @@ public class EpisodeViewController implements Attachable {
         if (this.episodesLiveData != null) {
             this.episodesLiveData.removeObserver(this.pagedListObserver);
         }
-    }
-
-    private <T, R> void subscribePublisher(ObservableValue<T> value, Function<T, LiveData<R>> mapFunction, Consumer<R> consumer) {
-        ControllerUtils.fxObservableToLiveData(value)
-                .flatMap(mapFunction)
-                .observe(consumer::accept);
     }
 
     private static class DisplayReleaseCell extends ListCell<DisplayRelease> {
