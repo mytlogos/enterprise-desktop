@@ -18,8 +18,10 @@ package com.mytlogos.enterprisedesktop.background.sqlite.life;
 import io.reactivex.annotations.NonNull;
 import javafx.application.Platform;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -241,7 +243,8 @@ public abstract class LiveData<T> {
                 considerNotify(initiator);
                 initiator = null;
             } else {
-                for (Map.Entry<Observer<? super T>, ObserverWrapper> observerObserverWrapperEntry : mObservers.entrySet()) {
+                final Set<Map.Entry<Observer<? super T>, ObserverWrapper>> set = new HashSet<>(mObservers.entrySet());
+                for (Map.Entry<Observer<? super T>, ObserverWrapper> observerObserverWrapperEntry : set) {
                     considerNotify(observerObserverWrapperEntry.getValue());
                     if (mDispatchInvalidated) {
                         break;
@@ -271,6 +274,10 @@ public abstract class LiveData<T> {
         }
         observer.mLastVersion = mVersion;
         observer.mObserver.onChanged((T) mData);
+    }
+
+    public void refresh() {
+
     }
 
     int getVersion() {

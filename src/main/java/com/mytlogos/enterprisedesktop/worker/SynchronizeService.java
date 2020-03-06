@@ -27,7 +27,7 @@ public class SynchronizeService extends ScheduledService<Void> {
                     throw new IllegalStateException("Not Authenticated");
                 }
 
-//                repository.syncWithTime();
+                repository.syncWithTime();
 //                repository.syncUser();
 //                repository.loadAllMedia();
                 return null;

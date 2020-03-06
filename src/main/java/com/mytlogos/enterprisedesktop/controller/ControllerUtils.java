@@ -38,7 +38,7 @@ public class ControllerUtils {
         MediatorLiveData<R> mediatorLiveData = new MediatorLiveData<>();
         t2Observable.addListener(observable -> mediatorLiveData.postValue(combiner.apply(t1LiveData.getValue(), t2Observable.getValue(), t3Observable.getValue())));
         t3Observable.addListener(observable -> mediatorLiveData.postValue(combiner.apply(t1LiveData.getValue(), t2Observable.getValue(), t3Observable.getValue())));
-        mediatorLiveData.addSource(t1LiveData, t1 -> combiner.apply(t1, t2Observable.getValue(), t3Observable.getValue()));
+        mediatorLiveData.addSource(t1LiveData, t1 -> mediatorLiveData.postValue(combiner.apply(t1, t2Observable.getValue(), t3Observable.getValue())));
         return mediatorLiveData;
     }
 

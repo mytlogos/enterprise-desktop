@@ -6,7 +6,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 
 /**
  *
@@ -72,15 +71,15 @@ public class LiveDataImpl<T> extends LiveData<T> {
         this(null, mInTransaction, mComputeFunction, null);
     }
 
-    public LiveDataImpl(Callable<T> mComputeFunction) {
-        this(null, false, mComputeFunction, null);
-    }
-
     public LiveDataImpl(T value, boolean mInTransaction, Callable<T> mComputeFunction, InvalidationTracker.Observer mObserver) {
         super(value);
         this.mInTransaction = mInTransaction;
         this.mComputeFunction = mComputeFunction;
         this.mObserver = mObserver;
+    }
+
+    public LiveDataImpl(Callable<T> mComputeFunction) {
+        this(null, false, mComputeFunction, null);
     }
 
     public void refresh() {
