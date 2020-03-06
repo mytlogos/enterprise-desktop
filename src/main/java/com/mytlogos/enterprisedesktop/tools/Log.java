@@ -21,9 +21,44 @@ public class Log {
         this.logger.setUseParentHandlers(false);
         final ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new Formatter() {
+            public static final String ANSI_RESET = "\u001B[0m";
+            public static final String ANSI_BLACK = "\u001B[30m";
+            public static final String ANSI_RED = "\u001B[31m";
+            public static final String ANSI_GREEN = "\u001B[32m";
+            public static final String ANSI_YELLOW = "\u001B[33m";
+            public static final String ANSI_BLUE = "\u001B[34m";
+            public static final String ANSI_PURPLE = "\u001B[35m";
+            public static final String ANSI_CYAN = "\u001B[36m";
+            public static final String ANSI_WHITE = "\u001B[37m";
+
             @Override
             public String format(LogRecord record) {
-                return String.format("%s %s: %s%n", LocalDateTime.now().toString(), record.getLevel(), record.getMessage());
+                return String.format(
+                        "%s%s %s%s: %s%s%s%n",
+                        ANSI_WHITE,
+                        LocalDateTime.now().toString(),
+                        getLevelColor(record.getLevel()),
+                        record.getLevel(),
+                        ANSI_WHITE,
+                        record.getMessage(),
+                        ANSI_RESET
+                );
+            }
+
+            private String getLevelColor(Level level) {
+                if (level == Level.SEVERE) {
+                    return ANSI_RED;
+                } else if (level == Level.WARNING) {
+                    return ANSI_YELLOW;
+                } else if (level == Level.INFO) {
+                    return ANSI_GREEN;
+                } else if (level == Level.CONFIG) {
+                    return ANSI_BLUE;
+                } else if (level == Level.FINE || level == Level.FINER || level == Level.FINEST) {
+                    return ANSI_CYAN;
+                } else {
+                    return ANSI_WHITE;
+                }
             }
         });
         this.logger.addHandler(handler);
@@ -67,7 +102,7 @@ public class Log {
 
     public static void log(Level level, String msg, Object... supplier) {
         if (log.logger.isLoggable(level)) {
-            log.logger.log(level, String.format(msg, supplier) );
+            log.logger.log(level, String.format(msg, supplier));
         }
     }
 

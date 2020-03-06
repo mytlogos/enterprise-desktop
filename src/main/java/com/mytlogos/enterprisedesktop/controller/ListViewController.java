@@ -8,6 +8,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
+import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -189,7 +190,7 @@ public class ListViewController implements Attachable {
     @Override
     public void onAttach() {
         if (this.episodeFilterBinding == null) {
-            System.err.println("onAttach called before initialize");
+            Log.severe("onAttach called before initialize");
             return;
         }
         final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
