@@ -4,6 +4,7 @@ package com.mytlogos.enterprisedesktop.background;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientStat;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
@@ -67,7 +68,7 @@ public interface DatabaseStorage {
 
     List<Integer> getDownloadableEpisodes(Collection<Integer> mediumId);
 
-    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
+    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter);
 
     LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
 
@@ -210,4 +211,8 @@ public interface DatabaseStorage {
     void deleteExternalUser(Collection<Integer> toDelete);
 
     void clearAll();
+
+    LiveData<List<SimpleMedium>> getSimpleMedium();
+
+    LiveData<List<Integer>> getListItems(Collection<Integer> listIds);
 }

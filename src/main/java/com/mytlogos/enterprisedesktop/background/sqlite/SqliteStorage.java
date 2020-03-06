@@ -7,6 +7,7 @@ import com.mytlogos.enterprisedesktop.background.resourceLoader.DependencyTask;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
@@ -183,8 +184,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
-        return this.releaseTable.getReleases(saved, medium, read, minIndex, maxIndex);
+    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter) {
+        return this.releaseTable.getReleases(filter);
     }
 
     @Override
@@ -302,7 +303,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<List<MediaList>> getInternLists() {
-        return LiveData.empty();
+        return this.mediaListTable.getLists();
     }
 
     @Override
@@ -595,6 +596,16 @@ public class SqliteStorage implements DatabaseStorage {
         this.externalUserTable.deleteAll();
         this.mediumInWaitTable.deleteAll();
         this.newsTable.deleteAll();
+    }
+
+    @Override
+    public LiveData<List<SimpleMedium>> getSimpleMedium() {
+        return this.mediumTable.getSimpleMedium();
+    }
+
+    @Override
+    public LiveData<List<Integer>> getListItems(Collection<Integer> listIds) {
+        return this.mediaListTable.getMediumItemsIds(listIds);
     }
 
     private class SqliteDependantGenerator implements DependantGenerator {

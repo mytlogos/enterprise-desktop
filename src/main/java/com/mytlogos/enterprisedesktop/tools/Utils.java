@@ -1,5 +1,7 @@
 package com.mytlogos.enterprisedesktop.tools;
 
+import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
+
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +75,11 @@ public class Utils {
                 maxItem = list.size();
             }
         } while (minItem < list.size() && maxItem <= list.size());
+    }
+
+    public static <E> Observer<E> emptyObserver() {
+        return e -> {
+        };
     }
 
     public static <E> void doPartitionedAsync(Collection<E> collection, FunctionEx<List<E>, Boolean> consumer) throws Exception {

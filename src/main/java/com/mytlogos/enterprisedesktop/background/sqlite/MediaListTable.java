@@ -2,11 +2,11 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.MediaList;
 import com.mytlogos.enterprisedesktop.model.MediaListImpl;
 import com.mytlogos.enterprisedesktop.model.MediumItem;
+
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -36,10 +36,16 @@ class MediaListTable extends AbstractTable {
     });
 
     private final QueryBuilder<Integer> getMediumItemsIdsQuery = new QueryBuilder<Integer>(
-            "SELECT medium.mediumId FROM medium INNER JOIN media_list_medium " +
-                    "ON media_list.mediumId=medium.mediumId " +
+            "SELECT medium.mediumId FROM medium INNER JOIN list_medium " +
+                    "ON list_medium.mediumId=medium.mediumId " +
                     "WHERE listId=?"
     ).setConverter(value -> value.getInt(1));
+
+    private final QueryBuilder<Integer> getListsMediaItemsIdsQuery = new QueryBuilder<>(
+            "SELECT medium.mediumId FROM medium INNER JOIN list_medium " +
+                    "ON list_medium.mediumId=medium.mediumId " +
+                    "WHERE listId $?"
+    );
 
     private final QueryBuilder<MediumItem> getMediumItemsQuery = new QueryBuilder<MediumItem>(
             "SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, " +
@@ -123,6 +129,10 @@ class MediaListTable extends AbstractTable {
         final Map<String, Function<ClientMediaList, ?>> keyExtractors = new HashMap<>();
         keyExtractors.put("listId", (IntProducer<ClientMediaList>) ClientMediaList::getId);
         this.update(update, "media_list", attrMap, keyExtractors);
+    }
+
+    public LiveData<List<Integer>> getMediumItemsIds(Collection<Integer> listIds) {
+        return this.getListsMediaItemsIdsQuery.setQueryIn(listIds, QueryBuilder.Type.INT).selectInLiveDataList(value -> value.getInt(1));
     }
 
     LiveData<List<MediumItem>> getMediumItems(int listId) {

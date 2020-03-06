@@ -1,26 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.mytlogos.enterprisedesktop.controller.EpisodeViewController">
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Text?>
+
+<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.EpisodeViewController">
     <FlowPane hgap="5.0" vgap="5.0" VBox.vgrow="SOMETIMES">
         <padding>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
         </padding>
-        <ChoiceBox fx:id="readFilter" prefWidth="150.0"/>
-        <ChoiceBox fx:id="savedFilter" prefWidth="150.0"/>
-        <Spinner fx:id="minEpisodeIndex" editable="true"/>
-        <Spinner fx:id="maxEpisodeIndex" editable="true"/>
-        <CheckBox fx:id="showTextBox" mnemonicParsing="false" text="Text"/>
-        <CheckBox fx:id="showImageBox" mnemonicParsing="false" text="Image"/>
-        <CheckBox fx:id="showVideoBox" mnemonicParsing="false" text="Video"/>
-        <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio"/>
-        <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only"/>
+        <HBox alignment="CENTER" spacing="5.0">
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Read" />
+            <RadioButton fx:id="readOnly" mnemonicParsing="false" text="Yes">
+                <toggleGroup>
+                    <ToggleGroup fx:id="readFilter" />
+                </toggleGroup>
+            </RadioButton>
+            <RadioButton fx:id="notReadOnly" layoutX="37.0" layoutY="10.0" mnemonicParsing="false" text="No" toggleGroup="$readFilter" />
+            <RadioButton fx:id="ignoreRead" layoutX="257.0" layoutY="10.0" mnemonicParsing="false" selected="true" text="Ignore" toggleGroup="$readFilter" />
+        </HBox>
+        <HBox alignment="CENTER" layoutX="15.0" layoutY="15.0" spacing="5.0">
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+            <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Saved" />
+            <RadioButton fx:id="savedOnly" mnemonicParsing="false" text="Yes">
+                <toggleGroup>
+                    <ToggleGroup fx:id="savedFilter" />
+                </toggleGroup>
+            </RadioButton>
+            <RadioButton fx:id="notSavedOnly" layoutX="37.0" layoutY="10.0" mnemonicParsing="false" text="No" toggleGroup="$savedFilter" />
+            <RadioButton fx:id="ignoreSaved" layoutX="257.0" layoutY="10.0" mnemonicParsing="false" selected="true" text="Ignore" toggleGroup="$savedFilter" />
+        </HBox>
+        <Spinner fx:id="minEpisodeIndex" editable="true" />
+        <Spinner fx:id="maxEpisodeIndex" editable="true" />
+        <CheckBox fx:id="showTextBox" mnemonicParsing="false" text="Text" />
+        <CheckBox fx:id="showImageBox" mnemonicParsing="false" text="Image" />
+        <CheckBox fx:id="showVideoBox" mnemonicParsing="false" text="Video" />
+        <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio" />
+        <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only" />
     </FlowPane>
+    <HBox spacing="5.0">
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+        <VBox spacing="5.0">
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+            <HBox spacing="5.0">
+                <TextField fx:id="listFilter" promptText="List Name" />
+                <ToggleButton fx:id="ignoreLists" mnemonicParsing="false" text="Ignore" />
+            </HBox>
+            <ListView fx:id="listFilterView" maxHeight="-Infinity" prefHeight="100.0" prefWidth="200.0" />
+        </VBox>
+        <VBox layoutX="10.0" layoutY="10.0" spacing="5.0">
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </padding>
+            <HBox spacing="5.0">
+                <TextField fx:id="mediumFilter" promptText="Medium Name" />
+                <ToggleButton fx:id="ignoreMedium" mnemonicParsing="false" text="Ignore" />
+            </HBox>
+            <ListView fx:id="mediumFilterView" maxHeight="-Infinity" prefHeight="100.0" prefWidth="200.0" />
+        </VBox>
+    </HBox>
     <StackPane VBox.vgrow="ALWAYS">
-        <ListView fx:id="episodes"/>
+        <ListView fx:id="episodes" />
     </StackPane>
 </VBox>

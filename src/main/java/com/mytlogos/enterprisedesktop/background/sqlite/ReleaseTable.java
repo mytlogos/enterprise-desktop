@@ -3,6 +3,7 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.SmallRelease;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.Release;
 
@@ -33,6 +34,7 @@ class ReleaseTable extends AbstractTable {
                     "INNER JOIN episode ON episode_release.episodeId = episode.episodeId \n" +
                     "INNER JOIN part ON episode.partId = part.partId \n" +
                     "INNER JOIN medium ON part.mediumId = medium.mediumId \n" +
+//                    "LEFT JOIN list_medium ON medium.mediumId = list_medium.mediumId \n" +
                     "WHERE CASE ? " +
                     "WHEN 0 THEN progress < 1\n" +
                     "WHEN 1 THEN progress = 1\n" +
@@ -41,6 +43,8 @@ class ReleaseTable extends AbstractTable {
                     "AND (? < 0 OR saved=?)\n" +
                     "AND (? < 0 OR episode.combiIndex >= ?)\n" +
                     "AND (? < 0 OR episode.combiIndex <= ?)\n" +
+//                    "AND (? = 1 OR (list_medium.listId $? AND NOT ?))" +
+//                    "AND (? = 1 OR medium.mediumId $? AND NOT ?)" +
                     "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC"
     ).setConverter(value -> {
         final int episodeId = value.getInt(1);
@@ -73,18 +77,22 @@ class ReleaseTable extends AbstractTable {
         );
     }
 
-    LiveData<PagedList<DisplayRelease>> getReleases(int saved, int medium, int read, int minIndex, int maxIndex) {
+    LiveData<PagedList<DisplayRelease>> getReleases(ReleaseFilter filter) {
         return this.getReleasesQuery
                 .setValues(value -> {
-                    value.setInt(1, read);
-                    value.setInt(2, medium);
-                    value.setInt(3, medium);
-                    value.setInt(4, saved);
-                    value.setInt(5, saved);
-                    value.setInt(6, minIndex);
-                    value.setInt(7, minIndex);
-                    value.setInt(8, maxIndex);
-                    value.setInt(9, maxIndex);
+                    value.setInt(1, filter.readFilter);
+                    value.setInt(2, filter.medium);
+                    value.setInt(3, filter.medium);
+                    value.setInt(4, filter.savedFilter);
+                    value.setInt(5, filter.savedFilter);
+                    value.setInt(6, filter.minEpisodeIndex);
+                    value.setInt(7, filter.minEpisodeIndex);
+                    value.setInt(8, filter.maxEpisodeIndex);
+                    value.setInt(9, filter.maxEpisodeIndex);
+//                    value.setBoolean(10, filter.listsIds.isEmpty());
+//                    value.setBoolean(11, filter.ignoreLists);
+//                    value.setBoolean(12, filter.mediumIds.isEmpty());
+//                    value.setBoolean(13, filter.ignoreMedia);
                 })
                 .queryLiveDataList()
                 .map(PagedList::new);

@@ -10,6 +10,7 @@ import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.SqliteStorage;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
 import com.mytlogos.enterprisedesktop.tools.*;
@@ -425,8 +426,8 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly) {
-        return this.storage.getDisplayEpisodes(saved, medium, read, minIndex, maxIndex, latestOnly);
+    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter) {
+        return this.storage.getDisplayEpisodes(filter);
     }
 
     @Override
@@ -786,6 +787,11 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
+    public LiveData<List<SimpleMedium>> getSimpleMedium() {
+        return this.storage.getSimpleMedium();
+    }
+
+    @Override
     public void clearNotifications() {
         this.storage.clearNotifications();
     }
@@ -982,6 +988,11 @@ class RepositoryImpl implements Repository {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    @Override
+    public LiveData<List<Integer>> getListItems(Collection<Integer> listIds) {
+        return this.storage.getListItems(listIds);
     }
 
     private void reloadEpisodes(Collection<Integer> episodeIds) throws Exception {

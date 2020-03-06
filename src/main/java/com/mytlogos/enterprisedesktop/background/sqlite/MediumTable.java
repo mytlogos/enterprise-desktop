@@ -103,6 +103,13 @@ class MediumTable extends AbstractTable {
             value.getString(2),
             value.getInt(3)
     ));
+    private final QueryBuilder<SimpleMedium> getAllSimpleMediumQuery = new QueryBuilder<SimpleMedium>(
+            "SELECT mediumId, title, medium FROM medium"
+    ).setConverter(value -> new SimpleMedium(
+            value.getInt(1),
+            value.getString(2),
+            value.getInt(3)
+    ));
 
     MediumTable() {
         super("medium");
@@ -133,6 +140,10 @@ class MediumTable extends AbstractTable {
         final Map<String, Function<ClientMedium, ?>> keyExtractors = new HashMap<>();
         keyExtractors.put("mediumId", (IntProducer<ClientMedium>) ClientMedium::getId);
         this.update(update, "medium", attrMap, keyExtractors);
+    }
+
+    public LiveData<List<SimpleMedium>> getSimpleMedium() {
+        return this.getAllSimpleMediumQuery.queryLiveDataList();
     }
 
     void insert(Medium medium) {

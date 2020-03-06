@@ -4,6 +4,7 @@ import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 import java.io.IOException;
@@ -99,7 +100,7 @@ public interface Repository {
 
     List<Integer> getDownloadableEpisodes(Integer mediumId, int limit);
 
-    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(int saved, int medium, int read, int minIndex, int maxIndex, boolean latestOnly);
+    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter);
 
     LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
 
@@ -197,6 +198,8 @@ public interface Repository {
 
     SimpleMedium getSimpleMedium(Integer mediumId);
 
+    LiveData<List<SimpleMedium>> getSimpleMedium();
+
     void clearNotifications();
 
     void clearFailEpisodes();
@@ -254,4 +257,6 @@ public interface Repository {
     void updateProgress(int episodeId, float progress);
 
     List<SearchResponse> requestSearch(SearchRequest searchRequest);
+
+    LiveData<List<Integer>> getListItems(Collection<Integer> listIds);
 }
