@@ -7,6 +7,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
 import io.reactivex.rxjavafx.schedulers.JavaFxScheduler;
 import io.reactivex.schedulers.Schedulers;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.fxml.FXML;
@@ -20,6 +21,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
+import org.controlsfx.control.Notifications;
 
 import java.awt.*;
 import java.io.IOException;
@@ -82,17 +84,18 @@ public class SearchMediumController implements Attachable {
                         throwable.printStackTrace();
                         return;
                     }
-                    int failCount = 0;
-                    for (Boolean aBoolean : booleans) {
-                        if (aBoolean == null || !aBoolean) {
-                            failCount++;
-                        }
-                    }
-                    if (failCount > 1) {
-                        System.out.printf("%d failed Additions%n", failCount);
+                    final long succeeded = booleans.stream().filter(success -> success != null && success).count();
+                    final long failed = booleans.size() - succeeded;
+
+                    final String title;
+                    if (failed > 0 && succeeded > 0) {
+                        title = String.format("Add Selected: %d succeeded, %d failed", succeeded, failed);
+                    } else if (failed > 0) {
+                        title = "Add Selected: all failed";
                     } else {
-                        System.out.println("Successfully added all Items");
+                        title = "Add Selected: all succeeded";
                     }
+                    Platform.runLater(() -> Notifications.create().title(title).show());
                 }));
         value.getItems().addAll(openItem, addItem);
         this.resultsView.setContextMenu(value);
@@ -135,16 +138,32 @@ public class SearchMediumController implements Attachable {
         );
         this.debouncedRequest = JavaFxObservable.valuesOf(requestBinding)
                 .debounce(2, TimeUnit.SECONDS)
-                .subscribeOn(Schedulers.io())
-                .observeOn(JavaFxScheduler.platform())
+                .observeOn(Schedulers.io())
                 .map(searchRequest -> {
                     if (searchRequest.title.isEmpty()) {
                         return Collections.<SearchResponse>emptyList();
                     } else {
+                        final Thread thread = Thread.currentThread();
+                        System.out.printf(
+                                "Request Searching on Fx Thread: %b, Thread Id %d, Thread Name: %s%n",
+                                Platform.isFxApplicationThread(),
+                                thread.getId(),
+                                thread.getName()
+                        );
                         return ApplicationConfig.getRepository().requestSearch(searchRequest);
                     }
                 })
-                .subscribe(list -> this.resultsView.getItems().setAll(list), Throwable::printStackTrace);
+                .observeOn(JavaFxScheduler.platform())
+                .subscribe(list -> {
+                    final Thread thread = Thread.currentThread();
+                    System.out.printf(
+                            "Finished Searching on Fx Thread: %b, Thread Id %d, Thread Name: %s%n",
+                            Platform.isFxApplicationThread(),
+                            thread.getId(),
+                            thread.getName()
+                    );
+                    this.resultsView.getItems().setAll(list);
+                }, Throwable::printStackTrace);
     }
 
     @Override

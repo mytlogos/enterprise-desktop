@@ -11,19 +11,20 @@ import com.mytlogos.enterprisedesktop.model.EpisodeFilter;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
+import com.mytlogos.enterprisedesktop.tools.Utils;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import org.controlsfx.control.Notifications;
 
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.concurrent.CompletableFuture;
 
 /**
  *
@@ -123,6 +124,7 @@ public class EpisodeViewController implements Attachable {
         MenuItem setReadItem = new MenuItem();
         setReadItem.setText("Set Read");
         setReadItem.setOnAction(event -> doEpisodeRepoAction(
+                "Set Read",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, true),
                 (repository, ids, mediumId) -> repository.updateRead(mediumId, true))
         );
@@ -130,21 +132,23 @@ public class EpisodeViewController implements Attachable {
         MenuItem setUnreadItem = new MenuItem();
         setUnreadItem.setText("Set Unread");
         setUnreadItem.setOnAction(event -> doEpisodeRepoAction(
+                "Set Unread",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, false),
                 (repository, ids, mediumId) -> repository.updateRead(mediumId, false))
         );
 
         MenuItem downloadItem = new MenuItem();
         downloadItem.setText("Download");
-        downloadItem.setOnAction(event -> doEpisodeRepoAction(Repository::downloadAll, Repository::download));
+        downloadItem.setOnAction(event -> doEpisodeRepoAction("Download", Repository::downloadAll, Repository::download));
 
         MenuItem deleteItem = new MenuItem();
         deleteItem.setText("Delete local");
-        deleteItem.setOnAction(event -> doEpisodeRepoAction(Repository::deleteAllLocalEpisodes, Repository::deleteLocalEpisodes));
+        deleteItem.setOnAction(event -> doEpisodeRepoAction("Delete local", Repository::deleteAllLocalEpisodes, Repository::deleteLocalEpisodes));
 
         MenuItem reloadItem = new MenuItem();
         reloadItem.setText("Reload");
         reloadItem.setOnAction(event -> doEpisodeRepoAction(
+                "Reload",
                 Repository::reloadAll,
                 (repository, ids, mediumId) -> repository.reload(ids)
         ));
@@ -153,7 +157,7 @@ public class EpisodeViewController implements Attachable {
         this.episodes.setContextMenu(contextMenu);
     }
 
-    private void doEpisodeRepoAction(BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {
+    private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {
         final Repository repository = ApplicationConfig.getRepository();
         List<DisplayRelease> selectedItems = this.episodes.getSelectionModel().getSelectedItems();
 
@@ -162,21 +166,50 @@ public class EpisodeViewController implements Attachable {
         for (DisplayRelease item : selectedItems) {
             mediumEpisodeIds.computeIfAbsent(item.getMediumId(), integer -> new HashSet<>()).add(item.getEpisodeId());
         }
+        List<CompletableFuture<Boolean>> futures = new LinkedList<>();
         for (Map.Entry<Integer, Set<Integer>> entry : mediumEpisodeIds.entrySet()) {
-            if (entry.getValue().size() == this.episodes.getItems().size()) {
-                try {
-                    allConsumer.accept(repository, entry.getKey());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else {
+            // TODO 06.3.2020: for now disable actions for a whole medium
+//            if (entry.getValue().size() == this.episodes.getItems().size()) {
+//                try {
+//                    allConsumer.accept(repository, entry.getKey());
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            } else {
+            futures.add(CompletableFuture.runAsync(() -> {
                 try {
                     idsConsumer.accept(repository, entry.getValue(), entry.getKey());
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    throw new RuntimeException(e);
                 }
-            }
+            }).handle((aVoid, throwable) -> {
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                    return false;
+                }
+                return true;
+            }));
+//            }
         }
+        Utils.finishAll(futures).whenComplete((booleans, throwable) -> {
+            if (throwable != null) {
+                throwable.printStackTrace();
+            }
+            if (booleans != null) {
+                final long succeeded = booleans.stream().filter(Boolean::booleanValue).count();
+                final long failed = booleans.size() - succeeded;
+
+                final String title;
+                if (failed > 0 && succeeded > 0) {
+                    title = String.format("%s: %d succeeded, %d failed", description, succeeded, failed);
+                } else if (failed > 0) {
+                    title = String.format("%s: all failed", description);
+                } else {
+                    title = String.format("%s: all succeeded", description);
+                }
+                Platform.runLater(() -> Notifications.create().title(title).show());
+            }
+        });
     }
 
     @Override

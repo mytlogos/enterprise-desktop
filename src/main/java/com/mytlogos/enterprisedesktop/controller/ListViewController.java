@@ -10,6 +10,7 @@ import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -19,8 +20,10 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import org.controlsfx.control.Notifications;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -133,6 +136,7 @@ public class ListViewController implements Attachable {
         MenuItem setReadItem = new MenuItem();
         setReadItem.setText("Set Read");
         setReadItem.setOnAction(event -> doEpisodeRepoAction(
+                "Set Read",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, true),
                 (repository, ids, mediumId) -> repository.updateRead(mediumId, true))
         );
@@ -140,21 +144,23 @@ public class ListViewController implements Attachable {
         MenuItem setUnreadItem = new MenuItem();
         setUnreadItem.setText("Set Unread");
         setUnreadItem.setOnAction(event -> doEpisodeRepoAction(
+                "Set Unread",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, false),
                 (repository, ids, mediumId) -> repository.updateRead(mediumId, false))
         );
 
         MenuItem downloadItem = new MenuItem();
         downloadItem.setText("Download");
-        downloadItem.setOnAction(event -> doEpisodeRepoAction(Repository::downloadAll, Repository::download));
+        downloadItem.setOnAction(event -> doEpisodeRepoAction("Download", Repository::downloadAll, Repository::download));
 
         MenuItem deleteItem = new MenuItem();
         deleteItem.setText("Delete local");
-        deleteItem.setOnAction(event -> doEpisodeRepoAction(Repository::deleteAllLocalEpisodes, Repository::deleteLocalEpisodes));
+        deleteItem.setOnAction(event -> doEpisodeRepoAction("Delete local", Repository::deleteAllLocalEpisodes, Repository::deleteLocalEpisodes));
 
         MenuItem reloadItem = new MenuItem();
         reloadItem.setText("Reload");
         reloadItem.setOnAction(event -> doEpisodeRepoAction(
+                "Reload",
                 Repository::reloadAll,
                 (repository, ids, mediumId) -> repository.reload(ids)
         ));
@@ -163,28 +169,39 @@ public class ListViewController implements Attachable {
         this.mediumContentView.setContextMenu(contextMenu);
     }
 
-    private void doEpisodeRepoAction(BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {
+    private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {
         final Repository repository = ApplicationConfig.getRepository();
         List<TocEpisode> selectedItems = this.mediumContentView.getSelectionModel().getSelectedItems();
 
         final int mediumId = this.listMediaView.getSelectionModel().getSelectedItem().getMediumId();
-        if (selectedItems.size() == this.mediumContentView.getItems().size()) {
-            try {
-                allConsumer.accept(repository, mediumId);
-            } catch (Exception e) {
-                e.printStackTrace();
+        CompletableFuture.runAsync(() -> {
+            if (selectedItems.size() == this.mediumContentView.getItems().size()) {
+                try {
+                    allConsumer.accept(repository, mediumId);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                Set<Integer> ids = new HashSet<>();
+                for (TocEpisode item : selectedItems) {
+                    ids.add(item.getEpisodeId());
+                }
+                try {
+                    idsConsumer.accept(repository, ids, mediumId);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             }
-        } else {
-            Set<Integer> ids = new HashSet<>();
-            for (TocEpisode item : selectedItems) {
-                ids.add(item.getEpisodeId());
+        }).whenComplete((aVoid, throwable) -> {
+            if (throwable != null) {
+                throwable.printStackTrace();
             }
-            try {
-                idsConsumer.accept(repository, ids, mediumId);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+            Platform.runLater(() -> Notifications
+                    .create()
+                    .title(description + (throwable == null ? "failed" : " succeeded"))
+                    .show()
+            );
+        });
     }
 
     @Override

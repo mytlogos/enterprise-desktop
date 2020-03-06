@@ -228,6 +228,7 @@ class EditService {
         Response<Boolean> response = this.client.addProgress(ids, progress);
 
         if (!response.isSuccessful() || response.body() == null || !response.body()) {
+            // TODO 06.3.2020: better error handling
             return false;
         }
         this.storage.updateProgress(ids, progress);
