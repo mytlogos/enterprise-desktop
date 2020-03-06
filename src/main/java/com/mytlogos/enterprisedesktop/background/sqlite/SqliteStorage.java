@@ -1054,31 +1054,15 @@ public class SqliteStorage implements DatabaseStorage {
              * Remove any List which is not a key in stat.Lists
              * Remove any ExUser which is not a key in stat.exUser
              */
-            List<ListMediumJoin> listJoins = SqliteStorage.this.listMediumJoinTable.getListItems();
-            List<ListMediumJoin> exListJoins = SqliteStorage.this.externalListMediumJoinTable.getListItems();
             List<ListUser> listUser = SqliteStorage.this.externalMediaListTable.getListUser();
 
-            Set<Integer> deletedLists = new HashSet<>();
             Set<Integer> deletedExLists = new HashSet<>();
             Set<String> deletedExUser = new HashSet<>();
-
-            listJoins.removeIf(join -> {
-                List<Integer> currentListItems = stat.lists.get(join.listId);
-                if (currentListItems == null) {
-                    deletedLists.add(join.listId);
-                    return true;
-                }
-                return currentListItems.contains(join.mediumId);
-            });
-
-            exListJoins.removeIf(join -> {
-                List<Integer> currentListItems = stat.extLists.get(join.listId);
-                if (currentListItems == null) {
-                    deletedExLists.add(join.listId);
-                    return true;
-                }
-                return currentListItems.contains(join.mediumId);
-            });
+            Set<Integer> deletedLists = new HashSet<>();
+            List<ListMediumJoin> newInternalJoins = new LinkedList<>();
+            List<ListMediumJoin> toDeleteInternalJoins = this.filterListMediumJoins(stat, deletedLists, newInternalJoins, false);
+            List<ListMediumJoin> newExternalJoins = new LinkedList<>();
+            List<ListMediumJoin> toDeleteExternalJoins = this.filterListMediumJoins(stat, deletedLists, newInternalJoins, true);
 
             listUser.forEach(user -> {
                 List<Integer> listIds = stat.extUser.get(user.uuid);
@@ -1091,13 +1075,51 @@ public class SqliteStorage implements DatabaseStorage {
                 }
             });
 
-            SqliteStorage.this.externalListMediumJoinTable.removeJoin(exListJoins);
-            SqliteStorage.this.listMediumJoinTable.removeJoin(listJoins);
+            SqliteStorage.this.externalListMediumJoinTable.removeJoin(toDeleteExternalJoins);
+            SqliteStorage.this.externalListMediumJoinTable.insert(newExternalJoins);
+            SqliteStorage.this.listMediumJoinTable.removeJoin(toDeleteInternalJoins);
+            SqliteStorage.this.listMediumJoinTable.insert(newInternalJoins);
 
             SqliteStorage.this.externalMediaListTable.delete(deletedExLists);
             SqliteStorage.this.mediaListTable.delete(deletedLists);
             SqliteStorage.this.externalUserTable.delete(deletedExUser);
             return this;
+        }
+
+        private List<ListMediumJoin> filterListMediumJoins(final ClientStat.ParsedStat stat, final Set<Integer> deletedLists, final List<ListMediumJoin> newJoins, final boolean external) {
+            final List<ListMediumJoin> previousListJoins;
+            final Map<Integer, List<Integer>> currentJoins;
+            if (external) {
+                currentJoins = stat.extLists;
+                previousListJoins = SqliteStorage.this.externalListMediumJoinTable.getListItems();
+            } else {
+                currentJoins = stat.lists;
+                previousListJoins = SqliteStorage.this.listMediumJoinTable.getListItems();
+            }
+            final Map<Integer, Set<Integer>> previousListJoinMap = new HashMap<>();
+
+
+            previousListJoins.removeIf(join -> {
+                previousListJoinMap.computeIfAbsent(join.listId, integer -> new HashSet<>()).add(join.mediumId);
+                final List<Integer> currentListItems = currentJoins.get(join.listId);
+                if (currentListItems == null) {
+                    deletedLists.add(join.listId);
+                    return true;
+                }
+                return currentListItems.contains(join.mediumId);
+            });
+
+            // every join that is not in previousListJoin is added to newJoins
+            for (Map.Entry<Integer, List<Integer>> entry : currentJoins.entrySet()) {
+                final Set<Integer> previousItems = previousListJoinMap.getOrDefault(entry.getKey(), Collections.emptySet());
+
+                for (Integer mediumId : entry.getValue()) {
+                    if (!previousItems.contains(mediumId)) {
+                        newJoins.add(new ListMediumJoin(entry.getKey(), mediumId, external));
+                    }
+                }
+            }
+            return previousListJoins;
         }
 
         @Override
