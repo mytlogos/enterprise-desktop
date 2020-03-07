@@ -46,6 +46,11 @@ class ReleaseTable extends AbstractTable {
 //                    "AND (? = 1 OR (list_medium.listId $? AND NOT ?))" +
 //                    "AND (? = 1 OR medium.mediumId $? AND NOT ?)" +
                     "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC"
+    ).setDependencies(
+            EpisodeTable.class,
+            PartTable.class,
+            ReleaseTable.class,
+            MediumTable.class
     ).setConverter(value -> {
         final int episodeId = value.getInt(1);
         final boolean dbSaved = value.getBoolean(2);

@@ -31,6 +31,8 @@ class ExternalMediaListTable extends AbstractTable {
                     "(SELECT COUNT(listId) FROM external_list_medium WHERE external_list_medium.listId=external_media_list.externalListId) " +
                     "as count " +
                     "FROM external_media_list"
+    ).setDependencies(
+            ExternalMediaListTable.class, ExternalListMediumJoinTable.class
     ).setConverter(value -> {
         final int listId = value.getInt("externalListId");
         final String uuid = value.getString("uuid");
@@ -74,6 +76,12 @@ class ExternalMediaListTable extends AbstractTable {
                     "ON external_list_medium.mediumId=medium.mediumId " +
                     "WHERE listId=? " +
                     "ORDER BY title"
+    ).setDependencies(
+            EpisodeTable.class,
+            PartTable.class,
+            ReleaseTable.class,
+            MediumTable.class,
+            ExternalListMediumJoinTable.class
     ).setConverter(value -> {
         final String title = value.getString(1);
         final int mediumId = value.getInt(2);

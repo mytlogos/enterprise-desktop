@@ -15,13 +15,11 @@ package com.mytlogos.enterprisedesktop.background.sqlite.life;
  * limitations under the License.
  */
 
+import com.mytlogos.enterprisedesktop.background.sqlite.AbstractTable;
 import io.reactivex.annotations.NonNull;
 import javafx.application.Platform;
 
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
@@ -53,17 +51,14 @@ public abstract class LiveData<T> {
     private boolean mDispatchingValue;
     @SuppressWarnings("FieldCanBeLocal")
     private boolean mDispatchInvalidated;
-    private final Runnable mPostValueRunnable = new Runnable() {
-        @SuppressWarnings("unchecked")
-        @Override
-        public void run() {
-            Object newValue;
-            synchronized (mDataLock) {
-                newValue = mPendingData;
-                mPendingData = NOT_SET;
-            }
-            setValue((T) newValue);
+    private final Runnable mPostValueRunnable = () -> {
+        Object newValue;
+        synchronized (mDataLock) {
+            newValue = mPendingData;
+            mPendingData = NOT_SET;
         }
+        //noinspection unchecked
+        setValue((T) newValue);
     };
 
     /**
@@ -86,6 +81,10 @@ public abstract class LiveData<T> {
 
     public static <T> LiveData<T> create(Callable<T> callable) {
         return new LiveDataImpl<>(callable);
+    }
+
+    public static <T> LiveData<T> create(Callable<T> callable, Collection<Class<? extends AbstractTable>> tables) {
+        return new LiveDataImpl<>(callable, tables);
     }
 
     public static <T> LiveData<T> empty() {

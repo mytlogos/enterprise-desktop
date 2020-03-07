@@ -18,22 +18,22 @@ import java.util.*;
  *
  */
 public class SqliteStorage implements DatabaseStorage {
-    private final UserTable userTable;
-    private final EditEventTable editEventTable;
-    private final EpisodeTable episodeTable;
-    private final ExternalListMediumJoinTable externalListMediumJoinTable;
-    private final ExternalMediaListTable externalMediaListTable;
-    private final ExternalUserTable externalUserTable;
-    private final MediaListTable mediaListTable;
-    private final ListMediumJoinTable listMediumJoinTable;
-    private final FailedEpisodeTable failedEpisodeTable;
-    private final MediumInWaitTable mediumInWaitTable;
-    private final NewsTable newsTable;
-    private final MediumTable mediumTable;
-    private final NotificationTable notificationTable;
-    private final PartTable partTable;
-    private final ReleaseTable releaseTable;
-    private final ToDownloadTable toDownloadTable;
+    final UserTable userTable;
+    final EditEventTable editEventTable;
+    final EpisodeTable episodeTable;
+    final ExternalListMediumJoinTable externalListMediumJoinTable;
+    final ExternalMediaListTable externalMediaListTable;
+    final ExternalUserTable externalUserTable;
+    final MediaListTable mediaListTable;
+    final ListMediumJoinTable listMediumJoinTable;
+    final FailedEpisodeTable failedEpisodeTable;
+    final MediumInWaitTable mediumInWaitTable;
+    final NewsTable newsTable;
+    final MediumTable mediumTable;
+    final NotificationTable notificationTable;
+    final PartTable partTable;
+    final ReleaseTable releaseTable;
+    final ToDownloadTable toDownloadTable;
 
     public SqliteStorage() {
         this.userTable = this.initTable(new UserTable());
@@ -293,7 +293,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<PagedList<MediumInWait>> getMediaInWaitBy(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
-        return LiveData.empty();
+        return this.mediumInWaitTable.get(filter, mediumFilter, hostFilter, sortings);
     }
 
     @Override
@@ -312,8 +312,8 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
-        return LiveData.empty();
+    public List<MediumInWait> getSimilarMediaInWait(MediumInWait mediumInWait) {
+        return this.mediumInWaitTable.getSimilar(mediumInWait);
     }
 
     @Override

@@ -269,7 +269,7 @@ class EpisodeTable extends AbstractTable {
                 episode.getReleases().add(release);
             }
             return new PagedList<>(tocEpisodes);
-        });
+        }, Arrays.asList(EpisodeTable.class, ReleaseTable.class, PartTable.class, MediumTable.class));
     }
 
     void insert(Episode episode) {

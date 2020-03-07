@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 /**
  *
  */
-abstract class AbstractTable {
+public abstract class AbstractTable {
     private final MutableLiveData<Boolean> invalidated = new MutableLiveData<>();
     private final String table;
 

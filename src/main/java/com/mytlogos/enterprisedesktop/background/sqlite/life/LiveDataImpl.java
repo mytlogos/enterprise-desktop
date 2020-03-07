@@ -1,7 +1,13 @@
 package com.mytlogos.enterprisedesktop.background.sqlite.life;
 
+import com.mytlogos.enterprisedesktop.background.sqlite.AbstractTable;
+import com.mytlogos.enterprisedesktop.background.sqlite.InvalidationManager;
 import com.mytlogos.enterprisedesktop.tools.SafeRunnable;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,15 +20,16 @@ public class LiveDataImpl<T> extends LiveData<T> {
     final static ExecutorService executor = Executors.newCachedThreadPool();
     final boolean mInTransaction;
     final Callable<T> mComputeFunction;
-    final InvalidationTracker.Observer mObserver;
+    final Runnable mObserver;
     final AtomicBoolean mInvalid = new AtomicBoolean(true);
     final AtomicBoolean mComputing = new AtomicBoolean(false);
     final AtomicBoolean mRegisteredObserver = new AtomicBoolean(false);
+    final Set<Class<? extends AbstractTable>> dependents = Collections.newSetFromMap(new WeakHashMap<>());
     final Runnable mRefreshRunnable = new SafeRunnable(new Runnable() {
         @Override
         public void run() {
             if (mRegisteredObserver.compareAndSet(false, true)) {
-//                mDatabase.getInvalidationTracker().addWeakObserver(mObserver);
+                InvalidationManager.get().addWeakObserver(mObserver, dependents);
             }
             boolean computed;
             do {
@@ -67,19 +74,19 @@ public class LiveDataImpl<T> extends LiveData<T> {
         }
     });
 
-    public LiveDataImpl(boolean mInTransaction, Callable<T> mComputeFunction) {
+    LiveDataImpl(boolean mInTransaction, Callable<T> mComputeFunction) {
         this(null, mInTransaction, mComputeFunction, null);
     }
 
-    public LiveDataImpl(T value, boolean mInTransaction, Callable<T> mComputeFunction, InvalidationTracker.Observer mObserver) {
+    LiveDataImpl(T value, boolean mInTransaction, Callable<T> mComputeFunction, Collection<Class<? extends AbstractTable>> tables) {
         super(value);
         this.mInTransaction = mInTransaction;
         this.mComputeFunction = mComputeFunction;
-        this.mObserver = mObserver;
-    }
+        this.mObserver = this::refresh;
 
-    public LiveDataImpl(Callable<T> mComputeFunction) {
-        this(null, false, mComputeFunction, null);
+        if (tables != null) {
+            this.dependents.addAll(tables);
+        }
     }
 
     public void refresh() {
@@ -90,6 +97,22 @@ public class LiveDataImpl<T> extends LiveData<T> {
     protected void onActive() {
         super.onActive();
         executor.execute(mRefreshRunnable);
+    }
+
+    LiveDataImpl(Callable<T> mComputeFunction) {
+        this(null, mComputeFunction, null);
+    }
+
+    LiveDataImpl(T value, Callable<T> mComputeFunction, Collection<Class<? extends AbstractTable>> tables) {
+        this(value, false, mComputeFunction, tables);
+    }
+
+    LiveDataImpl(T value, Callable<T> mComputeFunction) {
+        this(value, false, mComputeFunction, null);
+    }
+
+    LiveDataImpl(Callable<T> mComputeFunction, Collection<Class<? extends AbstractTable>> tables) {
+        this(null, mComputeFunction, tables);
     }
 
 }

@@ -9,10 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
@@ -27,10 +24,9 @@ class QueryBuilder<R> {
     private Collection<Object> values;
     private SqlBiConsumer<PreparedStatement, Object> multiQuerySetter;
     private SqlFunction<ResultSet, R> converter;
-    @SuppressWarnings("unchecked")
-    private Class<? extends AbstractTable>[] tables = new Class[0];
     private Type type;
     private List<?> queryInValues;
+    private Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
 
     QueryBuilder(String query) {
         this.query = query;
@@ -68,7 +64,7 @@ class QueryBuilder<R> {
 
     QueryBuilder<R> setDependencies(Class<?>... tables) {
         //noinspection unchecked
-        this.tables = (Class<? extends AbstractTable>[]) tables;
+        Collections.addAll(this.tables, ((Class<? extends AbstractTable>[]) tables));
         return this;
     }
 
@@ -173,9 +169,7 @@ class QueryBuilder<R> {
     }
 
     private <T> LiveData<T> createLiveData(Callable<T> supplier) {
-        LiveData<T> liveData = LiveData.create(supplier);
-//        InvalidationManager.get().observeInvalidatedTables(liveData, Arrays.asList(this.tables));
-        return liveData;
+        return LiveData.create(supplier, this.tables);
     }
 
     LiveData<List<R>> queryLiveDataList() {

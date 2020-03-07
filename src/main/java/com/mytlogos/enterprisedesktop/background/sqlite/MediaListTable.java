@@ -41,11 +41,11 @@ class MediaListTable extends AbstractTable {
                     "WHERE listId=?"
     ).setConverter(value -> value.getInt(1));
 
-    private final QueryBuilder<Integer> getListsMediaItemsIdsQuery = new QueryBuilder<>(
+    private final QueryBuilder<Integer> getListsMediaItemsIdsQuery = new QueryBuilder<Integer>(
             "SELECT medium.mediumId FROM medium INNER JOIN list_medium " +
                     "ON list_medium.mediumId=medium.mediumId " +
                     "WHERE listId $?"
-    );
+    ).setDependencies(MediumTable.class, ListMediumJoinTable.class);
 
     private final QueryBuilder<MediumItem> getMediumItemsQuery = new QueryBuilder<MediumItem>(
             "SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, " +
@@ -80,6 +80,12 @@ class MediaListTable extends AbstractTable {
                     "ON list_medium.mediumId=medium.mediumId " +
                     "WHERE listId=? " +
                     "ORDER BY title"
+    ).setDependencies(
+            EpisodeTable.class,
+            PartTable.class,
+            ReleaseTable.class,
+            MediumTable.class,
+            ListMediumJoinTable.class
     ).setConverter(value -> {
         final String title = value.getString(1);
         final int mediumId = value.getInt(2);
@@ -106,7 +112,7 @@ class MediaListTable extends AbstractTable {
     }
 
     public LiveData<List<MediaList>> getLists() {
-        return LiveData.create(this.getListsQuery::queryList);
+        return LiveData.create(this.getListsQuery::queryList, Arrays.asList(ListMediumJoinTable.class, MediaListTable.class));
     }
 
     public Collection<Integer> getMediumItemsIds(Integer listId) {

@@ -1,15 +1,21 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-import java.sql.SQLException;
+import com.mytlogos.enterprisedesktop.background.TaskManager;
+import com.mytlogos.enterprisedesktop.tools.Log;
+
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  *
  */
 public class InvalidationManager {
     private static InvalidationManager INSTANCE = new InvalidationManager();
-    private Map<AbstractTable, Set<SqlRunnable>> tableRunnable = Collections.synchronizedMap(new HashMap<>());
-    private Map<AbstractTable, Boolean> tableInvalidationRunning = Collections.synchronizedMap(new HashMap<>());
+    private Map<AbstractTable, Set<Runnable>> tableRunnable = Collections.synchronizedMap(new HashMap<>());
+    private Map<AbstractTable, AtomicBoolean> tableInvalidationRunning = Collections.synchronizedMap(new HashMap<>());
+    private ExecutorService service = Executors.newFixedThreadPool(5);
 
     private InvalidationManager() {
         if (INSTANCE != null) {
@@ -22,37 +28,33 @@ public class InvalidationManager {
     }
 
     public void registerTable(AbstractTable table) {
-        final Set<SqlRunnable> values = Collections.synchronizedSet(new HashSet<>());
+        final Set<Runnable> values = Collections.newSetFromMap(new WeakHashMap<>());
         this.tableRunnable.put(table, values);
+        this.tableInvalidationRunning.put(table, new AtomicBoolean(false));
         table.getInvalidated().observe(invalidated -> {
-            final Boolean invalidationRunning = this.tableInvalidationRunning.get(table);
+            final AtomicBoolean invalidationRunning = this.tableInvalidationRunning.get(table);
 
-            if (!invalidated || (invalidationRunning != null && invalidationRunning)) {
+            if (!invalidated || !invalidationRunning.compareAndSet(false, true)) {
                 return;
             }
-            this.tableInvalidationRunning.put(table, true);
             System.out.println("Invalidated: " + table.getClass().getName());
-
-            // TODO 01.3.2020: this may be/is a (potential) pitfall, executing SqlRunnable on Main? Thread
-            for (SqlRunnable runnable : values) {
-                try {
+            TaskManager.runTask(() -> {
+                for (Runnable runnable : values) {
                     runnable.run();
-                } catch (SQLException e) {
-                    e.printStackTrace();
                 }
-            }
-            this.tableInvalidationRunning.put(table, false);
-            table.clearInvalidated();
+                invalidationRunning.set(false);
+                table.clearInvalidated();
+            });
         });
     }
 
-    public void removeObserver(SqlRunnable runnable) {
-        for (Set<SqlRunnable> runnables : this.tableRunnable.values()) {
+    public void removeObserver(Runnable runnable) {
+        for (Set<Runnable> runnables : this.tableRunnable.values()) {
             runnables.remove(runnable);
         }
     }
 
-    public void observeInvalidatedTables(SqlRunnable runnable, List<Class<? extends AbstractTable>> tablesToObserve) {
+    public void observeInvalidatedTables(Runnable runnable, List<Class<? extends AbstractTable>> tablesToObserve) {
         final Set<AbstractTable> tables = this.tableRunnable.keySet();
         for (Class<? extends AbstractTable> aClass : tablesToObserve) {
             AbstractTable matchingTable = null;
@@ -68,6 +70,31 @@ public class InvalidationManager {
                 throw new IllegalStateException("Trying to observe unknown Table: " + aClass.getName());
             }
             this.tableRunnable.get(matchingTable).add(runnable);
+        }
+    }
+
+    public void addWeakObserver(Runnable runnable, Set<Class<? extends AbstractTable>> dependents) {
+        final Set<AbstractTable> tables = this.tableRunnable.keySet();
+        for (Class<? extends AbstractTable> tableClass : dependents) {
+            AbstractTable matchingTable = null;
+
+            for (AbstractTable table : tables) {
+                if (tableClass.isAssignableFrom(table.getClass())) {
+                    matchingTable = table;
+                    break;
+                }
+            }
+
+            if (matchingTable == null) {
+                Log.warning("Trying to observe unknown Table: " + tableClass.getSimpleName());
+                continue;
+            }
+            final Set<Runnable> runnables = this.tableRunnable.get(matchingTable);
+            if (runnable == null) {
+                Log.warning("Observing on an unregistered Table: %s", matchingTable.getClass().getSimpleName());
+                continue;
+            }
+            runnables.add(runnable);
         }
     }
 }
