@@ -275,12 +275,20 @@ public class ImageContentTool extends ContentTool {
             HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
             httpURLConnection.setDoInput(true);
             httpURLConnection.setRequestProperty("Referer", referer);
+            httpURLConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.2; rv:67.0) Gecko/20100101 Firefox/67.0");
             httpURLConnection.connect();
             int responseCode = httpURLConnection.getResponseCode();
 
             if (responseCode != HttpURLConnection.HTTP_OK) {
-                System.err.println("invalid response for " + link);
-                return;
+                httpURLConnection = (HttpURLConnection) url.openConnection();
+                httpURLConnection.setDoInput(true);
+                httpURLConnection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.2; rv:67.0) Gecko/20100101 Firefox/67.0");
+                httpURLConnection.connect();
+                responseCode = httpURLConnection.getResponseCode();
+
+                if (responseCode != HttpURLConnection.HTTP_OK) {
+                    throw new IOException("could not get resource successfully: " + link);
+                }
             }
 
             try (BufferedInputStream in = new BufferedInputStream(httpURLConnection.getInputStream())) {

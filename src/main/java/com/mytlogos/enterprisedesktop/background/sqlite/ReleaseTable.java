@@ -82,6 +82,13 @@ class ReleaseTable extends AbstractTable {
         );
     }
 
+    public List<String> getLinks(int episodeId) {
+        return new QueryBuilder<String>("SELECT url FROM episode_release WHERE episodeId=?")
+                .setValues(value -> value.setInt(1, episodeId))
+                .setConverter(value -> value.getString(1))
+                .queryListIgnoreError();
+    }
+
     LiveData<PagedList<DisplayRelease>> getReleases(ReleaseFilter filter) {
         return this.getReleasesQuery
                 .setValues(value -> {

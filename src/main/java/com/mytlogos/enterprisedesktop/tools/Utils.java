@@ -60,7 +60,9 @@ public class Utils {
             if (maxItem > list.size()) {
                 maxItem = list.size();
             }
-
+            if (list.isEmpty()) {
+                break;
+            }
             List<E> subList = list.subList(minItem, maxItem);
 
             Boolean result = consumer.apply(subList);

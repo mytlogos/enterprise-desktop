@@ -383,7 +383,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public List<String> getReleaseLinks(int episodeId) {
-        return null;
+        return this.releaseTable.getLinks(episodeId);
     }
 
     @Override
