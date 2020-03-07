@@ -17,6 +17,8 @@ import java.util.Objects;
  */
 public class MainController {
     @FXML
+    private Tab mediaTab;
+    @FXML
     private Tab mediumInWaitTab;
     @FXML
     private Tab episodeTab;
@@ -60,6 +62,8 @@ public class MainController {
             this.detachTab(this.mediaInWaitController);
         } else if (oldValue == this.searchTab) {
             this.detachTab(this.searchController);
+        } else if (oldValue == this.statisticsTab) {
+            this.detachTab((Attachable) null);
         } else if (oldValue == this.statisticsTab) {
             this.detachTab((Attachable) null);
         }

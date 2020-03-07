@@ -23,9 +23,6 @@ import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
 
-import java.awt.*;
-import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -50,11 +47,7 @@ public class SearchMediumController implements Attachable {
         final MenuItem openItem = new MenuItem("Open Selected");
         openItem.setOnAction(event -> {
             for (SearchResponse item : this.resultsView.getSelectionModel().getSelectedItems()) {
-                try {
-                    Desktop.getDesktop().browse(URI.create(item.link));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                ControllerUtils.openUrl(item.link);
             }
         });
         final MenuItem addItem = new MenuItem("Add Selected");

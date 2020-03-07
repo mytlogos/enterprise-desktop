@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.121"
+           xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.mytlogos.enterprisedesktop.controller.MediaController">
+    <SplitPane dividerPositions="0.6">
+        <VBox>
+            <FlowPane hgap="5.0" vgap="5.0">
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                </padding>
+                <TextField fx:id="nameFilter"/>
+                <Spinner fx:id="minEpisodeIndex" editable="true"/>
+                <Spinner fx:id="maxEpisodeIndex" editable="true"/>
+                <CheckBox fx:id="showTextBox" mnemonicParsing="false" text="Text"/>
+                <CheckBox fx:id="showImageBox" mnemonicParsing="false" text="Image"/>
+                <CheckBox fx:id="showVideoBox" mnemonicParsing="false" text="Video"/>
+                <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio"/>
+                <ChoiceBox fx:id="mediumSorting" prefWidth="150.0"/>
+                <ToggleButton fx:id="mediumAscendingBtn" mnemonicParsing="false" text="Ascending"/>
+            </FlowPane>
+            <ListView fx:id="mediaView" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <VBox>
+            <FlowPane hgap="5.0" vgap="5.0">
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                </padding>
+                <ChoiceBox fx:id="episodeSorting" prefWidth="150.0"/>
+                <ToggleButton fx:id="episodeAscendingBtn" mnemonicParsing="false" text="Ascending"/>
+                <TextField fx:id="scrollToEpisodeField" onAction="#scrollToEpisode" promptText="Scroll To"/>
+                <HBox alignment="CENTER" spacing="5.0">
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    </padding>
+                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Read"/>
+                    <RadioButton fx:id="readOnly" mnemonicParsing="false" text="Yes">
+                        <toggleGroup>
+                            <ToggleGroup fx:id="readFilter"/>
+                        </toggleGroup>
+                    </RadioButton>
+                    <RadioButton fx:id="notReadOnly" layoutX="37.0" layoutY="10.0" mnemonicParsing="false" text="No"
+                                 toggleGroup="$readFilter"/>
+                    <RadioButton fx:id="ignoreRead" layoutX="257.0" layoutY="10.0" mnemonicParsing="false"
+                                 selected="true" text="Ignore" toggleGroup="$readFilter"/>
+                </HBox>
+                <HBox alignment="CENTER" layoutX="15.0" layoutY="15.0" spacing="5.0">
+                    <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                    </padding>
+                    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Saved"/>
+                    <RadioButton fx:id="savedOnly" mnemonicParsing="false" text="Yes">
+                        <toggleGroup>
+                            <ToggleGroup fx:id="savedFilter"/>
+                        </toggleGroup>
+                    </RadioButton>
+                    <RadioButton fx:id="notSavedOnly" layoutX="37.0" layoutY="10.0" mnemonicParsing="false" text="No"
+                                 toggleGroup="$savedFilter"/>
+                    <RadioButton fx:id="ignoreSaved" layoutX="257.0" layoutY="10.0" mnemonicParsing="false"
+                                 selected="true" text="Ignore" toggleGroup="$savedFilter"/>
+                </HBox>
+            </FlowPane>
+            <ListView fx:id="mediumContentView" VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </SplitPane>
+    <ScrollPane fx:id="detailPane" fitToHeight="true" fitToWidth="true">
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+        </padding>
+        <fx:include source="mediumDisplay.fxml" fx:id="mediumDisplayController"/>
+    </ScrollPane>
+</SplitPane>

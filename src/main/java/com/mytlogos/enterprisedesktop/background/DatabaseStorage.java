@@ -114,7 +114,7 @@ public interface DatabaseStorage {
 
     void addItemsToList(int listId, Collection<Integer> ids);
 
-    LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
+    List<MediumInWait> getSimilarMediaInWait(MediumInWait mediumInWait);
 
     LiveData<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
 

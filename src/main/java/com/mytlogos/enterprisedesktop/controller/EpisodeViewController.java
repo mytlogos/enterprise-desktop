@@ -13,7 +13,6 @@ import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Utils;
-import impl.org.controlsfx.autocompletion.AutoCompletionTextFieldBinding;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -30,13 +29,10 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -265,8 +261,8 @@ public class EpisodeViewController implements Attachable {
         mediumObserver = simpleMedia -> {
         };
         this.mediumLiveData.observe(this.mediumObserver);
-        addAutoCompletionBinding(this.listFilter, this.listLiveData, MediaList::getName, mediaList -> this.listFilterView.getItems().add(mediaList));
-        addAutoCompletionBinding(this.mediumFilter, this.mediumLiveData, SimpleMedium::getTitle, simpleMedium -> this.mediumFilterView.getItems().add(simpleMedium));
+        ControllerUtils.addAutoCompletionBinding(this.listFilter, this.listLiveData, MediaList::getName, mediaList -> this.listFilterView.getItems().add(mediaList));
+        ControllerUtils.addAutoCompletionBinding(this.mediumFilter, this.mediumLiveData, SimpleMedium::getTitle, simpleMedium -> this.mediumFilterView.getItems().add(simpleMedium));
     }
 
     private void setEpisodeViewContextMenu() {
@@ -305,69 +301,6 @@ public class EpisodeViewController implements Attachable {
 
         contextMenu.getItems().addAll(setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
         this.episodes.setContextMenu(contextMenu);
-    }
-
-    private <T> void addAutoCompletionBinding(TextField mediumFilter, LiveData<List<T>> liveData, Function<T, String> stringFunction, Consumer<T> completed) {
-        new AutoCompletionTextFieldBinding<>(
-                mediumFilter,
-                param -> {
-                    if (param.isCancelled()) {
-                        return Collections.emptyList();
-                    }
-
-                    final String[] simpleWords = param.getUserText().toLowerCase().split("\\W");
-                    final List<T> values = liveData.getValue();
-
-                    if (values == null) {
-                        return Collections.emptyList();
-                    }
-
-                    TreeMap<Integer, List<T>> countMatched = new TreeMap<>();
-
-                    for (T value : values) {
-                        final String title = stringFunction.apply(value).toLowerCase();
-                        int match = 0;
-                        int count = 0;
-                        for (String word : simpleWords) {
-                            if (title.contains(word)) {
-                                match += word.length();
-                                count++;
-                            }
-                        }
-                        if (count > 0) {
-                            countMatched.computeIfAbsent(match * count, integer -> new LinkedList<>()).add(value);
-                        }
-                    }
-                    List<T> suggestions = new LinkedList<>();
-
-                    for (Integer match : countMatched.descendingKeySet()) {
-                        suggestions.addAll(countMatched.get(match));
-                    }
-                    return suggestions;
-                },
-                new StringConverter<T>() {
-                    @Override
-                    public String toString(T object) {
-                        return stringFunction.apply(object);
-                    }
-
-                    @Override
-                    public T fromString(String string) {
-                        final List<T> values = liveData.getValue();
-                        if (values == null || values.isEmpty()) {
-                            return null;
-                        }
-                        for (T value : values) {
-                            if (stringFunction.apply(value).equals(string)) {
-                                return value;
-                            }
-                        }
-                        return null;
-                    }
-                }).setOnAutoCompleted(event -> {
-            final T t = event.getCompletion();
-            completed.accept(t);
-        });
     }
 
     private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {
