@@ -362,6 +362,14 @@ class QueryBuilder<R> {
             return new ArrayList<>();
         }
     }
+    List<R> selectInListIgnoreError() {
+        try {
+            return this.selectInList(this.converter);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
 
     enum Type {
         BOOLEAN {

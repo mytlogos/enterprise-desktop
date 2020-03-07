@@ -40,6 +40,14 @@ class EpisodeTable extends AbstractTable {
                             value.getFloat(4)
                     )
             );
+    private QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, partialIndex, totalIndex, progress FROM episode WHERE episodeId $?")
+            .setConverter(value -> new SimpleEpisode(
+                            value.getInt(1),
+                            value.getInt(2),
+                            value.getInt(3),
+                            value.getFloat(4)
+                    )
+            );
 
     private QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("UPDATE episode SET saved=? WHERE episodeId $?");
     private QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
@@ -145,6 +153,10 @@ class EpisodeTable extends AbstractTable {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public List<SimpleEpisode> getSimpleEpisodes(Collection<Integer> episodeIds) {
+        return this.simpleEpisodesQuery.setQueryIn(episodeIds, QueryBuilder.Type.INT).selectInListIgnoreError();
     }
 
     public void updateSaved(Collection<Integer> episodeIds) {

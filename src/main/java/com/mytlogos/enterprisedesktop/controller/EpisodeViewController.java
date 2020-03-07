@@ -23,12 +23,16 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.Stage;
 import org.controlsfx.control.Notifications;
 
 import java.util.*;
@@ -414,6 +418,22 @@ public class EpisodeViewController implements Attachable {
             this.readImage = readImage;
             this.onlineImage = onlineImage;
             this.localImage = localImage;
+            this.setOnMouseClicked(event -> {
+                final DisplayRelease item = this.getItem();
+                if (item == null || !item.isSaved() || !event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {
+                    return;
+                }
+                final ImageViewController controller = new ImageViewController(item.getMediumId(), item.getEpisodeId());
+                final Parent load = ControllerUtils.load("/images.fxml", controller);
+
+                if (load == null) {
+                    Notifications.create().title("Could not open Image View").show();
+                    return;
+                }
+                Stage stage = new Stage();
+                stage.setScene(new Scene(load));
+                stage.show();
+            });
         }
 
         public void initialize() {

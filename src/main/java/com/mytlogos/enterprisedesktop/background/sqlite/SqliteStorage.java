@@ -273,7 +273,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public List<Integer> getSavedEpisodes(int mediumId) {
-        return null;
+        return this.episodeTable.getSavedEpisodes();
     }
 
     @Override
@@ -283,7 +283,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public List<SimpleEpisode> getSimpleEpisodes(Collection<Integer> ids) {
-        return null;
+        return this.episodeTable.getSimpleEpisodes(ids);
     }
 
     @Override
