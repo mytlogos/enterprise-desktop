@@ -146,7 +146,7 @@ public interface Repository {
 
     CompletableFuture<Boolean> moveMediaToList(int oldListId, int listId, Collection<Integer> ids);
 
-    LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait);
+    List<MediumInWait> getSimilarMediaInWait(MediumInWait mediumInWait);
 
     LiveData<List<SimpleMedium>> getMediaSuggestions(String title, int medium);
 

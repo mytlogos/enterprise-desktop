@@ -4,17 +4,27 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.MediatorLiveData;
 import com.mytlogos.enterprisedesktop.model.MediumType;
 import com.mytlogos.enterprisedesktop.tools.TriFunction;
+import impl.org.controlsfx.autocompletion.AutoCompletionTextFieldBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextFormatter;
+import javafx.scene.Scene;
+import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.util.StringConverter;
 
+import java.awt.*;
 import java.io.IOException;
+import java.net.URI;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.TreeMap;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -104,7 +114,6 @@ public class ControllerUtils {
         audio.setSelected(MediumType.is(medium, MediumType.AUDIO));
     }
 
-
     public static void setMedium(int medium, RadioButton text, RadioButton image, RadioButton video, RadioButton audio) {
         text.setSelected(MediumType.is(medium, MediumType.TEXT));
         image.setSelected(MediumType.is(medium, MediumType.IMAGE));
@@ -160,5 +169,102 @@ public class ControllerUtils {
             return change;
         };
         return new TextFormatter<>(stringConverter, 0d, changeUnaryOperator);
+    }
+
+    public static <T> void addDeleteHandler(ListView<T> listView) {
+        listView.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.DELETE) {
+                listView.getItems().removeAll(listView.getSelectionModel().getSelectedItems());
+            }
+        });
+    }
+
+    static <T> void addAutoCompletionBinding(TextField mediumFilter, LiveData<List<T>> liveData, Function<T, String> stringFunction, Consumer<T> completed) {
+        new AutoCompletionTextFieldBinding<>(
+                mediumFilter,
+                param -> {
+                    if (param.isCancelled()) {
+                        return Collections.emptyList();
+                    }
+
+                    final String[] simpleWords = param.getUserText().toLowerCase().split("\\W");
+                    final List<T> values = liveData.getValue();
+
+                    if (values == null) {
+                        return Collections.emptyList();
+                    }
+
+                    TreeMap<Integer, List<T>> countMatched = new TreeMap<>();
+
+                    for (T value : values) {
+                        final String title = stringFunction.apply(value).toLowerCase();
+                        int match = 0;
+                        int count = 0;
+                        for (String word : simpleWords) {
+                            if (title.contains(word)) {
+                                match += word.length();
+                                count++;
+                            }
+                        }
+                        if (count > 0) {
+                            countMatched.computeIfAbsent(match * count, integer -> new LinkedList<>()).add(value);
+                        }
+                    }
+                    List<T> suggestions = new LinkedList<>();
+
+                    for (Integer match : countMatched.descendingKeySet()) {
+                        suggestions.addAll(countMatched.get(match));
+                    }
+                    return suggestions;
+                },
+                new StringConverter<T>() {
+                    @Override
+                    public String toString(T object) {
+                        return stringFunction.apply(object);
+                    }
+
+                    @Override
+                    public T fromString(String string) {
+                        final List<T> values = liveData.getValue();
+                        if (values == null || values.isEmpty()) {
+                            return null;
+                        }
+                        for (T value : values) {
+                            if (stringFunction.apply(value).equals(string)) {
+                                return value;
+                            }
+                        }
+                        return null;
+                    }
+                }).setOnAutoCompleted(event -> {
+            final T t = event.getCompletion();
+            completed.accept(t);
+        });
+    }
+
+    /**
+     * Call only when Control is associated with an Scene and Window.
+     */
+    static void showTooltip(Control control, String tooltipText) {
+        Point2D p = control.localToScene(0.0, 0.0);
+        final Tooltip customTooltip = new Tooltip();
+        customTooltip.setText(tooltipText);
+
+        control.setTooltip(customTooltip);
+        customTooltip.setAutoHide(true);
+        final Scene scene = control.getScene();
+        customTooltip.show(
+                scene.getWindow(),
+                p.getX() + scene.getX() + scene.getWindow().getX(),
+                p.getY() + scene.getY() + scene.getWindow().getY()
+        );
+    }
+
+    static void openUrl(String link) {
+        try {
+            Desktop.getDesktop().browse(URI.create(link));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

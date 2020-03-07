@@ -1,6 +1,7 @@
 package com.mytlogos.enterprisedesktop.tools;
 
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
+import com.mytlogos.enterprisedesktop.model.MediumType;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -130,5 +131,20 @@ public class Utils {
         }
 
         return count;
+    }
+
+    public static String mediumToString(int medium) {
+        switch (medium) {
+            case MediumType.TEXT:
+                return "Text";
+            case MediumType.VIDEO:
+                return "Video";
+            case MediumType.IMAGE:
+                return "Image";
+            case MediumType.AUDIO:
+                return "Audio";
+            default:
+                return "Unknown Medium";
+        }
     }
 }

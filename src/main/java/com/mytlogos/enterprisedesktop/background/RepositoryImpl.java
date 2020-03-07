@@ -571,7 +571,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public LiveData<List<MediumInWait>> getSimilarMediaInWait(MediumInWait mediumInWait) {
+    public List<MediumInWait> getSimilarMediaInWait(MediumInWait mediumInWait) {
         return this.storage.getSimilarMediaInWait(mediumInWait);
     }
 
