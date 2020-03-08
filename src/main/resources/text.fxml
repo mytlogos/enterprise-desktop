@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.WebView?>
+<VBox maxHeight="1.7976931348623157E308" prefHeight="800.0" prefWidth="650.0" xmlns="http://javafx.com/javafx/8.0.121"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.TextViewController">
+    <GridPane>
+        <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" percentWidth="30.0" prefWidth="100.0"/>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0"/>
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES"/>
+        </rowConstraints>
+        <HBox alignment="CENTER_LEFT" maxWidth="1.7976931348623157E308" spacing="5.0" GridPane.columnIndex="1">
+            <padding>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+            </padding>
+            <ChoiceBox fx:id="episodeBox" prefWidth="150.0"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Spinner fx:id="zoom" editable="true" prefWidth="80.0"/>
+            <ToggleButton fx:id="fitToPageBtn" mnemonicParsing="false" text="Fit to Window"/>
+            <Button fx:id="previousBtn" mnemonicParsing="false" text="Previous Episode"/>
+            <Button fx:id="nextBtn" layoutX="248.0" layoutY="15.0" mnemonicParsing="false" text="Next Episode"/>
+        </HBox>
+        <Label fx:id="title">
+            <padding>
+                <Insets left="5.0"/>
+            </padding>
+        </Label>
+    </GridPane>
+    <WebView fx:id="browser" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS"/>
+</VBox>

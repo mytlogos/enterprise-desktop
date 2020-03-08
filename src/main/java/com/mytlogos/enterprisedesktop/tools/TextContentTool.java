@@ -199,6 +199,6 @@ public class TextContentTool extends ContentTool {
         if (content.matches("\\s*<html.*>(<head>.*</head>)?<body>.+</body></html>\\s*")) {
             return content;
         }
-        return "<html><head></head><body>" + content + "</body></html>";
+        return "<html><head><meta charset=\"UTF-8\"></head><body>" + content + "</body></html>";
     }
 }

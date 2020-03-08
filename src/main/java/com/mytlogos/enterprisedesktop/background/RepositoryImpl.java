@@ -975,7 +975,16 @@ class RepositoryImpl implements Repository {
 
     @Override
     public void updateProgress(int episodeId, float progress) {
-        TaskManager.runTask(() -> this.storage.updateProgress(Collections.singleton(episodeId), progress));
+        TaskManager.runTask(() -> {
+            try {
+                final Boolean success = checkAndGetBody(this.client.updateProgress(episodeId, progress));
+                if (success) {
+                    this.storage.updateProgress(Collections.singleton(episodeId), progress);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     @Override

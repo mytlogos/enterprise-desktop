@@ -8,6 +8,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.MediaList;
+import com.mytlogos.enterprisedesktop.model.MediumType;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
@@ -37,6 +38,7 @@ import org.controlsfx.control.Notifications;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -423,15 +425,31 @@ public class EpisodeViewController implements Attachable {
                 if (item == null || !item.isSaved() || !event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {
                     return;
                 }
-                final ImageViewController controller = new ImageViewController(item.getMediumId(), item.getEpisodeId());
-                final Parent load = ControllerUtils.load("/images.fxml", controller);
+                final Parent parent;
+                if (MediumType.is(item.getMedium(), MediumType.AUDIO)) {
+                    parent = null;
+                } else if (MediumType.is(item.getMedium(), MediumType.TEXT)) {
+                    parent = ControllerUtils.loadNode(
+                            "/text.fxml",
+                            (Consumer<TextViewController>) controller -> controller.open(item.getMediumId(), item.getEpisodeId())
+                    );
+                } else if (MediumType.is(item.getMedium(), MediumType.IMAGE)) {
+                    parent = ControllerUtils.loadNode(
+                            "/images.fxml",
+                            (Consumer<ImageViewController>) controller -> controller.open(item.getMediumId(), item.getEpisodeId())
+                    );
+                } else if (MediumType.is(item.getMedium(), MediumType.VIDEO)) {
+                    parent = null;
+                } else {
+                    parent = null;
+                }
 
-                if (load == null) {
-                    Notifications.create().title("Could not open Image View").show();
+                if (parent == null) {
+                    Notifications.create().title("Could not open EpisodeView").show();
                     return;
                 }
                 Stage stage = new Stage();
-                stage.setScene(new Scene(load));
+                stage.setScene(new Scene(parent));
                 stage.show();
             });
         }

@@ -27,7 +27,7 @@ class ReleaseTable extends AbstractTable {
 
     private final QueryBuilder<DisplayRelease> getReleasesQuery = new QueryBuilder<DisplayRelease>(
             "SELECT episode.episodeId, episode.saved, episode.partialIndex, episode.totalIndex, \n" +
-                    "medium.mediumId, medium.title as mediumTitle, \n" +
+                    "medium.mediumId, medium.title as mediumTitle, medium.medium, \n" +
                     "CASE episode.progress WHEN 1 THEN 1 ELSE 0 END as read, \n " +
                     "episode_release.releaseDate, episode_release.title, episode_release.url, episode_release.locked " +
                     "FROM episode_release \n" +
@@ -58,13 +58,14 @@ class ReleaseTable extends AbstractTable {
         final int totalIndex = value.getInt(4);
         final int mediumId = value.getInt(5);
         final String mediumTitle = value.getString(6);
-        final boolean dbRead = value.getBoolean(7);
-        final LocalDateTime releaseDate = Formatter.parseLocalDateTime(value.getString(8));
-        final String episodeTitle = value.getString(9);
-        final String url = value.getString(10);
-        final boolean locked = value.getBoolean(11);
+        final int medium = value.getInt(7);
+        final boolean dbRead = value.getBoolean(8);
+        final LocalDateTime releaseDate = Formatter.parseLocalDateTime(value.getString(9));
+        final String episodeTitle = value.getString(10);
+        final String url = value.getString(11);
+        final boolean locked = value.getBoolean(12);
 
-        return new DisplayRelease(episodeId, mediumId, mediumTitle, totalIndex, partialIndex, dbSaved, dbRead, episodeTitle, url, releaseDate, locked);
+        return new DisplayRelease(episodeId, mediumId, mediumTitle, totalIndex, partialIndex, dbSaved, dbRead, medium, episodeTitle, url, releaseDate, locked);
     });
 
     ReleaseTable() {

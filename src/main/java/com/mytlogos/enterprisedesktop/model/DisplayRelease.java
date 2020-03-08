@@ -11,6 +11,7 @@ public class DisplayRelease implements Indexable {
     private final int partialIndex;
     private final boolean saved;
     private final boolean read;
+    private final int medium;
 
     private final String title;
 
@@ -19,7 +20,7 @@ public class DisplayRelease implements Indexable {
     private final LocalDateTime releaseDate;
     private final boolean locked;
 
-    public DisplayRelease(int episodeId, int mediumId, String mediumTitle, int totalIndex, int partialIndex, boolean saved, boolean read, String title, String url, LocalDateTime releaseDate, boolean locked) {
+    public DisplayRelease(int episodeId, int mediumId, String mediumTitle, int totalIndex, int partialIndex, boolean saved, boolean read, int medium, String title, String url, LocalDateTime releaseDate, boolean locked) {
         this.episodeId = episodeId;
         this.mediumId = mediumId;
         this.mediumTitle = mediumTitle;
@@ -27,10 +28,15 @@ public class DisplayRelease implements Indexable {
         this.partialIndex = partialIndex;
         this.saved = saved;
         this.read = read;
+        this.medium = medium;
         this.title = title;
         this.url = url;
         this.releaseDate = releaseDate;
         this.locked = locked;
+    }
+
+    public int getMedium() {
+        return medium;
     }
 
     public int getMediumId() {
@@ -83,22 +89,6 @@ public class DisplayRelease implements Indexable {
         return getReleaseDate().equals(that.getReleaseDate());
     }
 
-    public int getEpisodeId() {
-        return episodeId;
-    }
-
-    public boolean isLocked() {
-        return locked;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public LocalDateTime getReleaseDate() {
-        return releaseDate;
-    }
-
     @Override
     public String toString() {
         return "DisplayRelease{" +
@@ -114,5 +104,21 @@ public class DisplayRelease implements Indexable {
                 ", releaseDate=" + releaseDate +
                 ", locked=" + locked +
                 '}';
+    }
+
+    public int getEpisodeId() {
+        return episodeId;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public LocalDateTime getReleaseDate() {
+        return releaseDate;
+    }
+
+    public boolean isLocked() {
+        return locked;
     }
 }

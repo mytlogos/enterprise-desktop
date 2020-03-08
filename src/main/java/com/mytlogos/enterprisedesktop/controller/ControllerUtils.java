@@ -72,6 +72,20 @@ public class ControllerUtils {
         return loader.getController();
     }
 
+    public static <P, T extends Node> T loadNode(String fxmlFile, Consumer<P> consumer) {
+        final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
+        try {
+            final T load = loader.load();
+            if (consumer != null) {
+                consumer.accept(loader.getController());
+            }
+            return load;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static <P extends Node> P load(String fxmlFile, Object controller) {
         final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
         loader.setController(controller);

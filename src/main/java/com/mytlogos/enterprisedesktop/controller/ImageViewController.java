@@ -7,6 +7,7 @@ import com.mytlogos.enterprisedesktop.model.SimpleEpisode;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
 import com.mytlogos.enterprisedesktop.tools.ImageContentTool;
+import com.mytlogos.enterprisedesktop.tools.TextContentTool;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -30,7 +31,6 @@ import java.util.Set;
  */
 public class ImageViewController {
 
-    private final int mediumId;
     @FXML
     private Spinner<Integer> zoom;
     @FXML
@@ -38,14 +38,13 @@ public class ImageViewController {
     @FXML
     private ListView<ChapterPage> list;
     @FXML
-    private Text title;
+    private Label title;
     @FXML
     private ChoiceBox<SimpleEpisode> episodeBox;
     @FXML
     private Button previousBtn;
     @FXML
     private Button nextBtn;
-    private int currentEpisode;
     private IntegerProperty latestVisiblePage = new SimpleIntegerProperty(0);
     private EventHandler<KeyEvent> keyEventEventHandler = event -> {
         if (event.isControlDown()) {
@@ -81,16 +80,38 @@ public class ImageViewController {
             }
         }
     };
+    private Map<Integer, Set<ChapterPage>> episodePagePaths;
+    private List<SimpleEpisode> simpleEpisodes;
 
-    public ImageViewController(int mediumId, int currentEpisode) {
-        this.mediumId = mediumId;
-        this.currentEpisode = currentEpisode;
+    public void open(int mediumId, int currentEpisode) {
+        final Repository repository = ApplicationConfig.getRepository();
+
+        final ImageContentTool contentTool = FileTools.getImageContentTool();
+        final SimpleMedium simpleMedium = repository.getSimpleMedium(mediumId);
+        final List<Integer> episodes = repository.getSavedEpisodes(mediumId);
+        this.title.setText(simpleMedium.getTitle());
+        final String itemPath = contentTool.getItemPath(mediumId);
+
+        if (itemPath == null || itemPath.isEmpty()) {
+            Notifications.create().title("No Medium Directory available").show();
+            return;
+        }
+        this.episodePagePaths = contentTool.getEpisodePagePaths(itemPath);
+        episodes.retainAll(this.episodePagePaths.keySet());
+        this.simpleEpisodes = repository.getSimpleEpisodes(episodes);
+
+        this.episodeBox.getItems().setAll(this.simpleEpisodes);
+
+        for (SimpleEpisode episode : this.simpleEpisodes) {
+            if (episode.getEpisodeId() == currentEpisode) {
+                this.episodeBox.getSelectionModel().select(episode);
+                break;
+            }
+        }
     }
 
     public void initialize() {
         final Repository repository = ApplicationConfig.getRepository();
-        final SimpleMedium simpleMedium = repository.getSimpleMedium(this.mediumId);
-        final List<Integer> episodes = repository.getSavedEpisodes(this.mediumId);
         this.latestVisiblePage.addListener((observable, oldValue, newValue) -> {
             final SimpleEpisode episode = this.episodeBox.getSelectionModel().getSelectedItem();
             if (episode == null || this.list.getItems().isEmpty()) {
@@ -102,7 +123,6 @@ public class ImageViewController {
                 repository.updateProgress(episode.getEpisodeId(), progress);
             }
         });
-        this.title.setText(simpleMedium.getTitle());
         this.zoom.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(10, 200, 100, 10));
         this.list.sceneProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
@@ -129,17 +149,6 @@ public class ImageViewController {
             }
         });
 
-        final ImageContentTool contentTool = FileTools.getImageContentTool();
-        final String itemPath = contentTool.getItemPath(this.mediumId);
-
-        if (itemPath == null || itemPath.isEmpty()) {
-            Notifications.create().title("No Medium Directory available").show();
-            return;
-        }
-        final Map<Integer, Set<ChapterPage>> episodePagePaths = contentTool.getEpisodePagePaths(itemPath);
-        episodes.retainAll(episodePagePaths.keySet());
-        final List<SimpleEpisode> simpleEpisodes = repository.getSimpleEpisodes(episodes);
-
         this.episodeBox.setConverter(new StringConverter<SimpleEpisode>() {
             @Override
             public String toString(SimpleEpisode object) {
@@ -161,7 +170,6 @@ public class ImageViewController {
         this.previousBtn.setOnAction(event -> this.episodeBox.getSelectionModel().selectPrevious());
         this.nextBtn.setOnAction(event -> this.episodeBox.getSelectionModel().selectNext());
 
-        this.episodeBox.getItems().setAll(simpleEpisodes);
         this.episodeBox.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == null) {
                 this.previousBtn.setDisable(true);
@@ -174,13 +182,6 @@ public class ImageViewController {
             this.nextBtn.setDisable(index < this.episodeBox.getItems().size() - 1);
             this.list.getItems().setAll(episodePagePaths.get(newValue.getEpisodeId()));
         });
-
-        for (SimpleEpisode episode : simpleEpisodes) {
-            if (episode.getEpisodeId() == this.currentEpisode) {
-                this.episodeBox.getSelectionModel().select(episode);
-                break;
-            }
-        }
     }
 
     private class ImageCell extends ListCell<ChapterPage> {

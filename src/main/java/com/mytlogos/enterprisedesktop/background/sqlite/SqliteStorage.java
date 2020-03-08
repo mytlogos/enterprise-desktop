@@ -288,7 +288,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void updateProgress(Collection<Integer> episodeIds, float progress) {
-
+        this.episodeTable.updateProgress(episodeIds, progress, LocalDateTime.now());
     }
 
     @Override

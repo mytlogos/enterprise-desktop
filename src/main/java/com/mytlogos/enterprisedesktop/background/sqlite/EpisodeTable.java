@@ -51,6 +51,7 @@ class EpisodeTable extends AbstractTable {
 
     private QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("UPDATE episode SET saved=? WHERE episodeId $?");
     private QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
+    private QueryBuilder<Boolean> updateProgressMultiQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId $?");
     private QueryBuilder<Integer> saveEpisodesQuery = new QueryBuilder<>("SELECT episodeId FROM episode WHERE saved=1;");
     private QueryBuilder<Integer> getDownloadableQuery = new QueryBuilder<Integer>(
             "SELECT episodeId FROM (SELECT episode.episodeId, episode.saved FROM episode " +
@@ -129,6 +130,29 @@ class EpisodeTable extends AbstractTable {
         });
         if (voidQueryBuilder.execute()) {
             this.setInvalidated();
+        }
+    }
+
+    public void updateProgress(Collection<Integer> episodeId, float progress, LocalDateTime readDate) {
+        final Boolean update;
+        try {
+            update = this.updateProgressMultiQuery.
+                    setQueryIn(episodeId, QueryBuilder.Type.INT)
+                    .setValues((statement) -> {
+                        statement.setFloat(1, progress);
+                        statement.setString(2, Formatter.isoFormat(readDate));
+                    })
+                    .executeIn(SqlUtils.update(value -> {
+                                value.setFloat(1, progress);
+                                value.setString(2, Formatter.isoFormat(readDate));
+                            }),
+                            (o, o1) -> o == null ? o1 : o || o1
+                    );
+            if (update != null && update) {
+                this.setInvalidated();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 

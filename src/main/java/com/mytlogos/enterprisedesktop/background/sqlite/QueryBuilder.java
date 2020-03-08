@@ -239,7 +239,6 @@ class QueryBuilder<R> {
     LiveData<R> executeInLiveData(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) {
         return this.createLiveData(() -> this.executeIn(biFunction, mergeFunction));
     }
-
     R executeIn(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) throws SQLException {
         final String inPlaceholder = "$?";
         int index = this.query.indexOf(inPlaceholder);
