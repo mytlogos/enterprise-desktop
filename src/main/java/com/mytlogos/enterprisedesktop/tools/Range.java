@@ -13,7 +13,7 @@ public class Range {
     }
 
     public boolean inRange(int i) {
-        return this.from >= i && this.to <= i;
+        return this.from <= i && this.to >= i;
     }
 
     public boolean isAfter(int i) {
@@ -30,6 +30,10 @@ public class Range {
 
     public int getTo() {
         return to;
+    }
+
+    public int rangeSize() {
+        return this.to - this.from + 1;
     }
 
     @Override

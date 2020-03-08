@@ -328,11 +328,8 @@ public class PreparedStatementImpl implements PreparedStatement {
             changed = false;
             for (Iterator<Range> iterator = ranges.iterator(); iterator.hasNext(); ) {
                 Range range = iterator.next();
-                if (range.isAfter(parameterIndex)) {
-                    iterator.remove();
-                }
-                if (range.inRange(parameterIndex)) {
-                    parameterIndex = range.getTo() + 1;
+                if (range.isAfter(parameterIndex) || range.inRange(parameterIndex)) {
+                    parameterIndex = range.rangeSize() + parameterIndex;
                     iterator.remove();
                     changed = true;
                 }
