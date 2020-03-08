@@ -292,8 +292,21 @@ class QueryBuilder<R> {
         return null;
     }
 
-    LiveData<List<R>> selectInLiveDataList(SqlFunction<ResultSet, R> biFunction) {
-        return this.createLiveData(() -> this.selectInList(biFunction));
+    boolean updateInIgnoreError() {
+        try {
+            return this.updateIn();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    boolean updateIn() throws SQLException {
+        return this.executeIn(SqlUtils.update(this.singleQuerySetter), (o, o1) -> o == null ? o1 : o || o1);
+    }
+
+    LiveData<List<R>> selectInLiveDataList() {
+        return this.createLiveData(this::selectInListIgnoreError);
     }
 
     List<R> selectInListIgnoreError() {

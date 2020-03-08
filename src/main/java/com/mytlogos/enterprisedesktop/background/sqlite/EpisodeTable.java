@@ -134,25 +134,15 @@ class EpisodeTable extends AbstractTable {
     }
 
     public void updateProgress(Collection<Integer> episodeId, float progress, LocalDateTime readDate) {
-        final Boolean update;
-        try {
-            update = this.updateProgressMultiQuery.
-                    setQueryIn(episodeId, QueryBuilder.Type.INT)
-                    .setValues((statement) -> {
-                        statement.setFloat(1, progress);
-                        statement.setString(2, Formatter.isoFormat(readDate));
-                    })
-                    .executeIn(SqlUtils.update(value -> {
-                                value.setFloat(1, progress);
-                                value.setString(2, Formatter.isoFormat(readDate));
-                            }),
-                            (o, o1) -> o == null ? o1 : o || o1
-                    );
-            if (update != null && update) {
-                this.setInvalidated();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+        final boolean update = this.updateProgressMultiQuery.
+                setQueryIn(episodeId, QueryBuilder.Type.INT)
+                .setValues((statement) -> {
+                    statement.setFloat(1, progress);
+                    statement.setString(2, Formatter.isoFormat(readDate));
+                })
+                .updateInIgnoreError();
+        if (update) {
+            this.setInvalidated();
         }
     }
 

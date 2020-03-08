@@ -138,7 +138,7 @@ class MediaListTable extends AbstractTable {
     }
 
     public LiveData<List<Integer>> getMediumItemsIds(Collection<Integer> listIds) {
-        return this.getListsMediaItemsIdsQuery.setQueryIn(listIds, QueryBuilder.Type.INT).selectInLiveDataList(value -> value.getInt(1));
+        return this.getListsMediaItemsIdsQuery.setQueryIn(listIds, QueryBuilder.Type.INT).setConverter(value -> value.getInt(1)).selectInLiveDataList();
     }
 
     LiveData<List<MediumItem>> getMediumItems(int listId) {
