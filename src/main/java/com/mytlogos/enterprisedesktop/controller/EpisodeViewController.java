@@ -111,7 +111,6 @@ public class EpisodeViewController implements Attachable {
     private Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
 
     public void initialize() {
-        System.out.println("episodeview initialize");
         final FilteredList<DisplayRelease> filteredList = new FilteredList<>(this.releases);
 
         filteredList.predicateProperty().bind(Bindings.createObjectBinding(
@@ -131,9 +130,7 @@ public class EpisodeViewController implements Attachable {
                     }
                 },
                 this.listFilterView.getItems(),
-                this.mediumFilterView.getItems(),
-                this.ignoreLists.selectedProperty(),
-                this.ignoreMedium.selectedProperty()
+                this.ignoreLists.selectedProperty()
         ));
 
         this.episodes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -229,12 +226,9 @@ public class EpisodeViewController implements Attachable {
                 this.showImageBox.selectedProperty(),
                 this.showTextBox.selectedProperty(),
                 this.showVideoBox.selectedProperty(),
-                this.latestOnly.selectedProperty(),
                 this.minEpisodeIndex.valueProperty(),
                 this.maxEpisodeIndex.valueProperty(),
-                this.ignoreLists.selectedProperty(),
                 this.ignoreMedium.selectedProperty(),
-                this.listFilterView.getItems(),
                 this.mediumFilterView.getItems()
         );
         this.episodes.setCellFactory(param -> new DisplayReleaseCell(lockedImage, readImage, onlineImage, localImage));
@@ -387,6 +381,15 @@ public class EpisodeViewController implements Attachable {
         if (this.mediumLiveData != null) {
             this.mediumLiveData.removeObserver(this.mediumObserver);
         }
+    }
+
+    private boolean containsSameEpisodeRelease(DisplayRelease release) {
+        for (DisplayRelease item : this.episodes.getItems()) {
+            if (item.getEpisodeId() == release.getEpisodeId()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static class DisplayReleaseCell extends ListCell<DisplayRelease> {

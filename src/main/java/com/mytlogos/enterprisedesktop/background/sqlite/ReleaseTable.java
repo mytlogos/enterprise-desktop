@@ -44,7 +44,7 @@ class ReleaseTable extends AbstractTable {
                     "AND (? < 0 OR episode.combiIndex >= ?)\n" +
                     "AND (? < 0 OR episode.combiIndex <= ?)\n" +
 //                    "AND (? = 1 OR (list_medium.listId $? AND NOT ?))" +
-                    "AND (? = 1 OR medium.mediumId $? AND NOT ?)" +
+                    "AND (? = 1 OR (CASE medium.mediumId $? WHEN 1 THEN NOT ? ELSE ? END))" +
                     "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC"
     ).setDependencies(
             EpisodeTable.class,
@@ -107,6 +107,7 @@ class ReleaseTable extends AbstractTable {
 //                    value.setBoolean(11, filter.ignoreLists);
                     value.setBoolean(10, filter.mediumIds.isEmpty());
                     value.setBoolean(11, filter.ignoreMedia);
+                    value.setBoolean(12, filter.ignoreMedia);
                 })
                 .doEmpty()
                 .selectInLiveDataList()
