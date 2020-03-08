@@ -252,7 +252,7 @@ class EpisodeTable extends AbstractTable {
         attrMap.put("totalIndex", (IntProducer<ClientEpisode>) ClientEpisode::getTotalIndex);
         attrMap.put("partialIndex", (IntProducer<ClientEpisode>) ClientEpisode::getPartialIndex);
         attrMap.put("combiIndex", (DoubleProducer<ClientEpisode>) ClientEpisode::getCombiIndex);
-        attrMap.put("saved", (BooleanProducer<ClientEpisode>) ClientEpisode::isSaved);
+//        attrMap.put("saved", (BooleanProducer<ClientEpisode>) ClientEpisode::isSaved);
 
         final Map<String, Function<ClientEpisode, ?>> keyExtractors = new HashMap<>();
         keyExtractors.put("episodeId", (IntProducer<ClientEpisode>) ClientEpisode::getId);
