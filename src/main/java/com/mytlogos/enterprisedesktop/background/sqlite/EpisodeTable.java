@@ -32,7 +32,7 @@ class EpisodeTable extends AbstractTable {
         statement.setBoolean(8, episode.isSaved());
     });
 
-    private QueryBuilder<SimpleEpisode> simpleEpisodeQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, partialIndex, totalIndex, progress FROM episode WHERE episodeId = ?")
+    private QueryBuilder<SimpleEpisode> simpleEpisodeQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId = ?")
             .setConverter(value -> new SimpleEpisode(
                             value.getInt(1),
                             value.getInt(2),
@@ -40,7 +40,7 @@ class EpisodeTable extends AbstractTable {
                             value.getFloat(4)
                     )
             );
-    private QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, partialIndex, totalIndex, progress FROM episode WHERE episodeId $?")
+    private QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId $?")
             .setConverter(value -> new SimpleEpisode(
                             value.getInt(1),
                             value.getInt(2),
