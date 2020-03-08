@@ -117,11 +117,6 @@ public class EpisodeViewController implements Attachable {
         filteredList.predicateProperty().bind(Bindings.createObjectBinding(
                 () -> displayRelease -> {
                     final int mediumId = displayRelease.getMediumId();
-                    for (SimpleMedium item : this.mediumFilterView.getItems()) {
-                        if (item.getMediumId() == mediumId) {
-                            return ignoreMedium.isSelected();
-                        }
-                    }
                     if (this.listItemsLiveData == null) {
                         return true;
                     }
@@ -141,6 +136,7 @@ public class EpisodeViewController implements Attachable {
                 this.ignoreMedium.selectedProperty()
         ));
 
+        this.episodes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.listFilterView.setCellFactory(param -> {
             final ListCell<MediaList> cell = new ListCell<>();
             cell.textProperty().bind(Bindings.createStringBinding(
@@ -278,7 +274,7 @@ public class EpisodeViewController implements Attachable {
         setReadItem.setOnAction(event -> doEpisodeRepoAction(
                 "Set Read",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, true),
-                (repository, ids, mediumId) -> repository.updateRead(mediumId, true))
+                (repository, ids, mediumId) -> repository.updateRead(ids, true))
         );
 
         MenuItem setUnreadItem = new MenuItem();
@@ -286,7 +282,7 @@ public class EpisodeViewController implements Attachable {
         setUnreadItem.setOnAction(event -> doEpisodeRepoAction(
                 "Set Unread",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, false),
-                (repository, ids, mediumId) -> repository.updateRead(mediumId, false))
+                (repository, ids, mediumId) -> repository.updateRead(ids, false))
         );
 
         MenuItem downloadItem = new MenuItem();

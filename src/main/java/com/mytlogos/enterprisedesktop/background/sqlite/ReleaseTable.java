@@ -44,7 +44,7 @@ class ReleaseTable extends AbstractTable {
                     "AND (? < 0 OR episode.combiIndex >= ?)\n" +
                     "AND (? < 0 OR episode.combiIndex <= ?)\n" +
 //                    "AND (? = 1 OR (list_medium.listId $? AND NOT ?))" +
-//                    "AND (? = 1 OR medium.mediumId $? AND NOT ?)" +
+                    "AND (? = 1 OR medium.mediumId $? AND NOT ?)" +
                     "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC"
     ).setDependencies(
             EpisodeTable.class,
@@ -92,6 +92,7 @@ class ReleaseTable extends AbstractTable {
 
     LiveData<PagedList<DisplayRelease>> getReleases(ReleaseFilter filter) {
         return this.getReleasesQuery
+                .setQueryIn(filter.mediumIds, QueryBuilder.Type.INT)
                 .setValues(value -> {
                     value.setInt(1, filter.readFilter);
                     value.setInt(2, filter.medium);
@@ -104,10 +105,10 @@ class ReleaseTable extends AbstractTable {
                     value.setInt(9, filter.maxEpisodeIndex);
 //                    value.setBoolean(10, filter.listsIds.isEmpty());
 //                    value.setBoolean(11, filter.ignoreLists);
-//                    value.setBoolean(12, filter.mediumIds.isEmpty());
-//                    value.setBoolean(13, filter.ignoreMedia);
+                    value.setBoolean(10, filter.mediumIds.isEmpty());
+                    value.setBoolean(11, filter.ignoreMedia);
                 })
-                .queryLiveDataList()
+                .selectInLiveDataList()
                 .map(PagedList::new);
     }
 

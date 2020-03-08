@@ -52,6 +52,10 @@ public class Utils {
     }
 
     public static <E> void doPartitioned(int steps, Collection<E> collection, FunctionEx<List<E>, Boolean> consumer) throws Exception {
+        doPartitioned(steps, false, collection, consumer);
+    }
+
+    public static <E> void doPartitioned(int steps, boolean doEmpty, Collection<E> collection, FunctionEx<List<E>, Boolean> consumer) throws Exception {
         List<E> list = new ArrayList<>(collection);
         int minItem = 0;
         int maxItem = minItem + steps;
@@ -60,7 +64,7 @@ public class Utils {
             if (maxItem > list.size()) {
                 maxItem = list.size();
             }
-            if (list.isEmpty()) {
+            if (list.isEmpty() && !doEmpty) {
                 break;
             }
             List<E> subList = list.subList(minItem, maxItem);

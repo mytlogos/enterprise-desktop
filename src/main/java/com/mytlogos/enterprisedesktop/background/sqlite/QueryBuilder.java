@@ -239,7 +239,8 @@ class QueryBuilder<R> {
     LiveData<R> executeInLiveData(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) {
         return this.createLiveData(() -> this.executeIn(biFunction, mergeFunction));
     }
-    R executeIn(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) throws SQLException {
+
+    <T> T executeIn(SqlFunction<PreparedStatement, T> biFunction, BiFunction<T, T, T> mergeFunction) throws SQLException {
         final String inPlaceholder = "$?";
         int index = this.query.indexOf(inPlaceholder);
         if (index < 0 && !this.queryInValues.isEmpty()) {
@@ -256,7 +257,7 @@ class QueryBuilder<R> {
         int remainingCount = MAX_PARAM_COUNT - placeHolderCountBefore - placeHolderCountAfter;
         String queryPart = before + "IN (";
 
-        AtomicReference<R> value = new AtomicReference<>();
+        AtomicReference<T> value = new AtomicReference<>();
 
         try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
             try {
@@ -275,8 +276,8 @@ class QueryBuilder<R> {
                         // add used indices AFTER setting the values for said indices,
                         // else values cant be set in the right places
                         statement.addUsedIndices(from, to);
-                        final R result = biFunction.apply(statement);
-                        final R mergedResult = mergeFunction.apply(value.get(), result);
+                        final T result = biFunction.apply(statement);
+                        final T mergedResult = mergeFunction.apply(value.get(), result);
                         value.set(mergedResult);
                     }
                     return false;
@@ -293,6 +294,15 @@ class QueryBuilder<R> {
 
     LiveData<List<R>> selectInLiveDataList(SqlFunction<ResultSet, R> biFunction) {
         return this.createLiveData(() -> this.selectInList(biFunction));
+    }
+
+    List<R> selectInListIgnoreError() {
+        try {
+            return this.selectInList(this.converter);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
     }
 
     List<R> selectInList(SqlFunction<ResultSet, R> biFunction) throws SQLException {
@@ -316,7 +326,7 @@ class QueryBuilder<R> {
 
         try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
             try {
-                Utils.doPartitioned(remainingCount, inValues, objects -> {
+                Utils.doPartitioned(remainingCount, true, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];
                     Arrays.fill(placeholderArray, "?");
                     final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
@@ -330,7 +340,10 @@ class QueryBuilder<R> {
                         }
                         // add used indices AFTER setting the values for said indices,
                         // else values cant be set in the right places
-                        statement.addUsedIndices(from, to);
+                        if (from <= to) {
+                            statement.addUsedIndices(from, to);
+                        }
+                        this.prepareStatement(statement);
 
                         if (statement.execute()) {
                             try (ResultSet resultSet = statement.getResultSet()) {
@@ -353,17 +366,25 @@ class QueryBuilder<R> {
         return new ArrayList<>();
     }
 
+    List<R> selectInListSimple(SqlFunction<ResultSet, R> biFunction) throws SQLException {
+        return executeIn(statement -> {
+            List<R> values = new LinkedList<>();
+            if (statement.execute()) {
+                try (ResultSet resultSet = statement.getResultSet()) {
+
+                    while (resultSet.next()) {
+                        R single = biFunction.apply(resultSet);
+                        values.add(single);
+                    }
+                }
+            }
+            return values;
+        }, SqlUtils::mergeLists);
+    }
+
     List<R> selectInListIgnoreError(SqlFunction<ResultSet, R> biFunction) {
         try {
             return this.selectInList(biFunction);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return new ArrayList<>();
-        }
-    }
-    List<R> selectInListIgnoreError() {
-        try {
-            return this.selectInList(this.converter);
         } catch (SQLException e) {
             e.printStackTrace();
             return new ArrayList<>();
