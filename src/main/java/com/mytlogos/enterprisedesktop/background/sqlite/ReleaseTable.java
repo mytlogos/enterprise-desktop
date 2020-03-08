@@ -108,6 +108,7 @@ class ReleaseTable extends AbstractTable {
                     value.setBoolean(10, filter.mediumIds.isEmpty());
                     value.setBoolean(11, filter.ignoreMedia);
                 })
+                .doEmpty()
                 .selectInLiveDataList()
                 .map(PagedList::new);
     }

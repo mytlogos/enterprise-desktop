@@ -179,13 +179,11 @@ class EpisodeTable extends AbstractTable {
 
     public void updateSaved(Collection<Integer> episodeIds, boolean saved) {
         try {
-            final Boolean update = this.updateSavedQuery
+            final boolean update = this.updateSavedQuery
                     .setQueryIn(episodeIds, QueryBuilder.Type.INT)
-                    .executeIn(
-                            SqlUtils.update(value -> value.setBoolean(1, saved)),
-                            (o, o1) -> o == null ? o1 : o || o1
-                    );
-            if (update != null && update) {
+                    .setValues(value -> value.setBoolean(1, saved))
+                    .updateIn();
+            if (update) {
                 this.setInvalidated();
             }
         } catch (SQLException e) {
@@ -224,7 +222,8 @@ class EpisodeTable extends AbstractTable {
     public List<PartEpisode> getEpisodes(Set<Integer> partIds) {
         return new QueryBuilder<PartEpisode>("SELECT partId, episodeId FROM episode WHERE partId $?")
                 .setQueryIn(partIds, QueryBuilder.Type.INT)
-                .selectInListIgnoreError(value -> new PartEpisode(value.getInt(1), value.getInt(2)));
+                .setConverter(value -> new PartEpisode(value.getInt(1), value.getInt(2)))
+                .selectInListIgnoreError();
     }
 
     public void deletePerId(List<Integer> deleteEpisodes) {
@@ -277,19 +276,17 @@ class EpisodeTable extends AbstractTable {
             for (TocEpisode item : tocEpisodes) {
                 idsMap.put(item.getEpisodeId(), item);
             }
-            List<Release> releases = new QueryBuilder<List<Release>>("SELECT episodeId, title, url, releaseDate, locked FROM episode_release WHERE episodeId $?")
+            List<Release> releases = new QueryBuilder<Release>("SELECT episodeId, title, url, releaseDate, locked FROM episode_release WHERE episodeId $?")
                     .setQueryIn(idsMap.keySet(), QueryBuilder.Type.INT)
-                    .executeIn(
-                            SqlUtils.getResults(value -> {
-                                final int episodeId = value.getInt(1);
-                                final String episodeTitle = value.getString(2);
-                                final String url = value.getString(3);
-                                final LocalDateTime releaseDate = Formatter.parseLocalDateTime(value.getString(4));
-                                final boolean locked = value.getBoolean(5);
-                                return new SimpleRelease(episodeId, episodeTitle, url, locked, releaseDate);
-                            }),
-                            SqlUtils::mergeLists
-                    );
+                    .setConverter(value -> {
+                        final int episodeId = value.getInt(1);
+                        final String episodeTitle = value.getString(2);
+                        final String url = value.getString(3);
+                        final LocalDateTime releaseDate = Formatter.parseLocalDateTime(value.getString(4));
+                        final boolean locked = value.getBoolean(5);
+                        return new SimpleRelease(episodeId, episodeTitle, url, locked, releaseDate);
+                    })
+                    .selectInListIgnoreError();
             for (Release release : releases) {
                 final TocEpisode episode = idsMap.get(release.getEpisodeId());
                 episode.getReleases().add(release);

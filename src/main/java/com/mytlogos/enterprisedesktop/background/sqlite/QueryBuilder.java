@@ -26,6 +26,7 @@ class QueryBuilder<R> {
     private SqlFunction<ResultSet, R> converter;
     private Type type;
     private List<?> queryInValues;
+    private boolean doEmpty = false;
     private Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
 
     QueryBuilder(String query) {
@@ -37,6 +38,11 @@ class QueryBuilder<R> {
         this.values = (Collection<Object>) value;
         //noinspection unchecked
         this.multiQuerySetter = (SqlBiConsumer<PreparedStatement, Object>) multiQuerySetter;
+        return this;
+    }
+
+    QueryBuilder<R> doEmpty() {
+        this.doEmpty = true;
         return this;
     }
 
@@ -275,7 +281,10 @@ class QueryBuilder<R> {
                         }
                         // add used indices AFTER setting the values for said indices,
                         // else values cant be set in the right places
-                        statement.addUsedIndices(from, to);
+                        if (from <= to) {
+                            statement.addUsedIndices(from, to);
+                        }
+                        this.prepareStatement(statement);
                         final T result = biFunction.apply(statement);
                         final T mergedResult = mergeFunction.apply(value.get(), result);
                         value.set(mergedResult);
@@ -339,7 +348,7 @@ class QueryBuilder<R> {
 
         try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
             try {
-                Utils.doPartitioned(remainingCount, true, inValues, objects -> {
+                Utils.doPartitioned(remainingCount, this.doEmpty, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];
                     Arrays.fill(placeholderArray, "?");
                     final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
