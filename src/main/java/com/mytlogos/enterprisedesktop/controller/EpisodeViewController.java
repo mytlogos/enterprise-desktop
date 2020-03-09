@@ -21,6 +21,7 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
@@ -399,7 +400,7 @@ public class EpisodeViewController implements Attachable {
         private final Image localImage;
         private VBox root;
         @FXML
-        private Text content;
+        private Label content;
         @FXML
         private Text topLeftContent;
         @FXML
@@ -419,6 +420,7 @@ public class EpisodeViewController implements Attachable {
             this.readImage = readImage;
             this.onlineImage = onlineImage;
             this.localImage = localImage;
+            this.setPrefWidth(0);
             this.setOnMouseClicked(event -> {
                 final DisplayRelease item = this.getItem();
                 if (item == null || !item.isSaved() || !event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {

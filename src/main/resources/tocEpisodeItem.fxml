@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -16,8 +17,9 @@
         <Region HBox.hgrow="ALWAYS" />
         <Text fx:id="topRightContent" layoutX="10.0" layoutY="23.0" strokeType="OUTSIDE" strokeWidth="0.0" text="right" />
     </HBox>
-    <Text fx:id="content" strokeType="OUTSIDE" strokeWidth="0.0" text="content" />
     <HBox alignment="CENTER_RIGHT" layoutX="10.0" layoutY="10.0" spacing="5.0">
+      <Label fx:id="content" text="Label" />
+      <Region HBox.hgrow="ALWAYS" />
         <ImageView fx:id="lockedView" fitHeight="20.0" fitWidth="20.0" pickOnBounds="true" preserveRatio="true">
         </ImageView>
         <ImageView fx:id="readView" fitHeight="20.0" fitWidth="20.0" layoutX="10.0" layoutY="10.0" pickOnBounds="true" preserveRatio="true">
