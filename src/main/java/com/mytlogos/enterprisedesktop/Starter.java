@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -38,6 +39,8 @@ public class Starter extends Application {
         primaryStage.setTitle("Enterprise Desktop");
         primaryStage.setScene(new Scene(root));
         primaryStage.setOnCloseRequest(event -> System.exit(0));
+        primaryStage.getIcons().add(new Image("/ext_icon_active_32.png"));
+        primaryStage.getIcons().add(new Image("/ext_icon_active_48.png"));
         primaryStage.show();
     }
 }

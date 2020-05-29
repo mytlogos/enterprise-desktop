@@ -133,6 +133,19 @@ public class EpisodeViewController implements Attachable {
                 this.listFilterView.getItems(),
                 this.ignoreLists.selectedProperty()
         ));
+        filteredList.addListener((ListChangeListener<? super DisplayRelease>) change -> {
+            while (change.next()) {
+                if (change.wasAdded()) {
+                    System.out.println(String.format("Added to Filtered %d", change.getAddedSize()));
+                } else if (change.wasPermutated()) {
+                    System.out.println("permutated in filtered");
+                } else if (change.wasRemoved()) {
+                    System.out.println("removed in filtered");
+                } else if (change.wasReplaced()) {
+                    System.out.println("replaced in filtered");
+                }
+            }
+        });
 
         this.episodes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.listFilterView.setCellFactory(param -> {
