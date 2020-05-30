@@ -235,8 +235,8 @@ class EpisodeTable extends AbstractTable {
     }
 
     public List<SmallRelease> getReleases(Set<Integer> partIds) {
-        return new QueryBuilder<SmallRelease>("SELECT partId, RoomEpisode.episodeId, RoomRelease.url \n" +
-                "FROM RoomEpisode INNER JOIN RoomRelease ON RoomRelease.episodeId=RoomEpisode.episodeId \n" +
+        return new QueryBuilder<SmallRelease>("SELECT partId, episode.episodeId, episode_release.url \n" +
+                "FROM episode INNER JOIN episode_release ON episode_release.episodeId=episode.episodeId \n" +
                 "WHERE partId $?")
                 .setQueryIn(partIds, QueryBuilder.Type.INT)
                 .selectInListIgnoreError(value -> new SmallRelease(
