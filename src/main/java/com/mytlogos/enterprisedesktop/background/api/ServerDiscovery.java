@@ -40,6 +40,7 @@ class ServerDiscovery {
             // as localhost udp server cannot seem to receive upd packets send from emulator
             futures.add(CompletableFuture.supplyAsync(() -> this.discoverLocalNetworkServerPerTcp(local), executor));
         }
+        Server server = null;
         try {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> this.discoverLocalNetworkServerPerUdp(broadcastAddress, discoveredServer));
             try {
@@ -59,7 +60,6 @@ class ServerDiscovery {
                     e.printStackTrace();
                 }
             }
-            Server server = null;
 
             for (Server discovered : discoveredServer) {
                 if (discovered.isLocal() && discovered.isDevServer() == isDev) {
@@ -67,13 +67,14 @@ class ServerDiscovery {
                     break;
                 }
             }
-            if (server != null) {
-                return server;
+            if (server == null) {
+                server = executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
             }
-            return executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
         } catch (Exception e) {
-            return null;
+            e.printStackTrace();
         }
+        this.executor.shutdownNow();
+        return server;
     }
 
     private Server discoverLocalNetworkServerPerTcp(int local) {
