@@ -338,7 +338,7 @@ public class ListViewController implements Attachable {
         private final Image localImage;
         private VBox root;
         @FXML
-        private Text content;
+        private Label content;
         @FXML
         private Text topLeftContent;
         @FXML
