@@ -116,13 +116,6 @@ public class MainController {
 
     }
 
-    private void attachSearchTab() {
-        if (this.searchController == null) {
-            this.searchController = ControllerUtils.load("/searchMedium.fxml", node -> this.searchTab.setContent(node));
-        }
-        this.searchController.onAttach();
-    }
-
     private void attachMediumInWaitTab() {
         if (this.mediaInWaitController == null) {
             this.mediaInWaitController = ControllerUtils.load("/mediumInWaitListView.fxml", node -> this.mediumInWaitTab.setContent(node));
@@ -130,9 +123,21 @@ public class MainController {
         this.mediaInWaitController.onAttach();
     }
 
+    private void attachSearchTab() {
+        if (this.searchController == null) {
+            this.searchController = ControllerUtils.load("/searchMedium.fxml", node -> this.searchTab.setContent(node));
+        }
+        this.searchController.onAttach();
+    }
+
     public void openSettings() {
         PreferencesFx preferencesFx = this.mainPreferences.getPreferences();
         preferencesFx.show();
+    }
+
+    @FXML
+    private void startSynchronize() {
+        this.taskController.startSynchronizeTask();
     }
 
     public interface DisplayValue {

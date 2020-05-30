@@ -90,6 +90,14 @@ public class TaskController {
         }
     }
 
+    public void startSynchronizeTask() {
+        if (this.synchronizeService.getState() == Worker.State.SCHEDULED) {
+            this.synchronizeService.restart();
+        } else if (this.synchronizeService.getState() == Worker.State.READY) {
+            this.synchronizeService.start();
+        }
+    }
+
     public void startDownloadTask(int medium, List<Integer> episodeIds) {
         final DownloadWorker worker = new DownloadWorker(medium, episodeIds);
         this.manualDownloadService.add(worker);
