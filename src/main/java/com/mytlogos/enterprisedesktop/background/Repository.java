@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.background;
 
+import com.mytlogos.enterprisedesktop.background.api.Client;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
@@ -7,6 +8,8 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
+import javafx.concurrent.Task;
+
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -180,8 +183,6 @@ public interface Repository {
 
     List<String> getReleaseLinks(int episodeId);
 
-    void syncWithTime() throws IOException;
-
     void syncUser() throws IOException;
 
     void clearLocalMediaData();
@@ -259,4 +260,18 @@ public interface Repository {
     List<SearchResponse> requestSearch(SearchRequest searchRequest);
 
     LiveData<List<Integer>> getListItems(Collection<Integer> listIds);
+
+    ReloadPart checkReload(ClientStat.ParsedStat parsedStat);
+
+    boolean isEpisodeLoaded(int id);
+
+    boolean isExternalUserLoaded(String uuid);
+
+    boolean isPartLoaded(int partId);
+
+    boolean isMediumLoaded(int mediumId);
+
+    Client getClient(Task<?> worker);
+
+    ClientModelPersister getPersister(Task<?> worker);
 }
