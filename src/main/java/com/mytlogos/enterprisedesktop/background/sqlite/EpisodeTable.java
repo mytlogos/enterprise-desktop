@@ -208,9 +208,9 @@ class EpisodeTable extends AbstractTable {
                     "GROUP BY partId")
                     .setConverter(value -> new PartStat(
                             value.getInt(1),
-                            value.getInt(2),
-                            value.getInt(3),
-                            value.getInt(4)
+                            value.getLong(2),
+                            value.getLong(3),
+                            value.getLong(4)
                     ))
                     .queryList();
         } catch (SQLException e) {
@@ -222,7 +222,7 @@ class EpisodeTable extends AbstractTable {
     public List<PartEpisode> getEpisodes(Set<Integer> partIds) {
         return new QueryBuilder<PartEpisode>("SELECT partId, episodeId FROM episode WHERE partId $?")
                 .setQueryIn(partIds, QueryBuilder.Type.INT)
-                .setConverter(value -> new PartEpisode(value.getInt(1), value.getInt(2)))
+                .setConverter(value -> new PartEpisode(value.getInt(2), value.getInt(1)))
                 .selectInListIgnoreError();
     }
 
