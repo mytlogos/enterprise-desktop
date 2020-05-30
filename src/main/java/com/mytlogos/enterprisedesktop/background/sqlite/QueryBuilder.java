@@ -311,7 +311,17 @@ class QueryBuilder<R> {
     }
 
     boolean updateIn() throws SQLException {
-        return this.executeIn(SqlUtils.update(this.singleQuerySetter), (o, o1) -> o == null ? o1 : o || o1);
+        return this.executeIn(SqlUtils.update(this.singleQuerySetter), (o, o1) -> {
+            if (o == null) {
+                if (o1 == null) {
+                    return false;
+                } else {
+                    return o1;
+                }
+            } else {
+                return o || o1;
+            }
+        });
     }
 
     LiveData<List<R>> selectInLiveDataList() {
