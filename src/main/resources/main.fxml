@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.input.KeyCodeCombination?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
-<BorderPane xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
-            fx:controller="com.mytlogos.enterprisedesktop.controller.MainController">
+
+<BorderPane xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MainController">
     <center>
         <TabPane fx:id="tabPane" tabClosingPolicy="UNAVAILABLE">
             <Tab fx:id="episodeTab" text="Episodes">
@@ -16,10 +25,10 @@
             <Tab fx:id="mediaTab" text="Media">
             </Tab>
             <Tab fx:id="statisticsTab" text="Statistics">
-                <AnchorPane prefHeight="400.0" prefWidth="600.0"/>
+                <AnchorPane prefHeight="400.0" prefWidth="600.0" />
             </Tab>
             <Tab fx:id="externalUserTab" text="Externaluser">
-                <AnchorPane prefHeight="400.0" prefWidth="600.0"/>
+                <AnchorPane prefHeight="400.0" prefWidth="600.0" />
             </Tab>
             <Tab fx:id="mediumInWaitTab" text="MediaInWait">
             </Tab>
@@ -32,35 +41,36 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="File">
-                <MenuItem mnemonicParsing="false" text="Close"/>
+                <MenuItem mnemonicParsing="false" text="Close" />
             </Menu>
             <Menu mnemonicParsing="false" text="Edit">
-                <MenuItem mnemonicParsing="false" text="Delete"/>
+                <MenuItem mnemonicParsing="false" text="Delete" />
             </Menu>
             <Menu mnemonicParsing="false" text="Extras">
                 <MenuItem mnemonicParsing="false" onAction="#openSettings" text="Settings">
                     <accelerator>
-                        <KeyCodeCombination alt="DOWN" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP"/>
+                        <KeyCodeCombination alt="DOWN" code="S" control="DOWN" meta="UP" shift="UP" shortcut="UP" />
                     </accelerator>
                 </MenuItem>
                 <MenuItem mnemonicParsing="false" onAction="#startSynchronize" text="Sync now">
                     <accelerator>
-                        <KeyCodeCombination alt="UP" code="F5" control="UP" meta="UP" shift="UP" shortcut="UP"/>
+                        <KeyCodeCombination alt="UP" code="F5" control="UP" meta="UP" shift="UP" shortcut="UP" />
                     </accelerator>
                 </MenuItem>
             </Menu>
             <Menu mnemonicParsing="false" text="Help">
-                <MenuItem mnemonicParsing="false" text="About"/>
+                <MenuItem mnemonicParsing="false" text="About" />
             </Menu>
         </MenuBar>
     </top>
     <bottom>
         <VBox prefHeight="30.0" BorderPane.alignment="CENTER">
-            <Separator prefWidth="200.0"/>
+            <Separator prefWidth="200.0" />
             <HBox alignment="CENTER_LEFT" minHeight="30.0" prefHeight="30.0" spacing="5.0" VBox.vgrow="NEVER">
-                <Text fx:id="infoText" strokeType="OUTSIDE" strokeWidth="0.0"/>
+                <Text fx:id="infoText" strokeType="OUTSIDE" strokeWidth="0.0" />
+            <ProgressBar fx:id="taskProgress" prefWidth="200.0" progress="0.0" />
                 <padding>
-                    <Insets left="5.0" right="5.0"/>
+                    <Insets left="5.0" right="5.0" />
                 </padding>
             </HBox>
         </VBox>

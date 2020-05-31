@@ -4,6 +4,7 @@ import com.dlsc.preferencesfx.PreferencesFx;
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
 import javafx.fxml.FXML;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.text.Text;
@@ -16,6 +17,8 @@ import java.util.Objects;
  *
  */
 public class MainController {
+    @FXML
+    private ProgressBar taskProgress;
     @FXML
     private Tab mediaTab;
     @FXML
@@ -34,6 +37,7 @@ public class MainController {
     private TabPane tabPane;
     @FXML
     private Text infoText;
+    private TasksHelper helper;
     private TaskController taskController = ApplicationConfig.getTaskController();
     private EpisodeViewController episodeViewController;
     private ListViewController listViewController;
@@ -42,7 +46,8 @@ public class MainController {
     private MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
 
     public void initialize() {
-        this.taskController.setInfoTextProperty(this.infoText.textProperty());
+        this.helper = new TasksHelper(this.infoText, this.taskProgress);
+        this.taskController.setTasksHelper(this.helper);
         this.tabPane.getSelectionModel().selectedItemProperty().addListener((LiveData, oldValue, newValue) -> {
             detachTab(oldValue);
             attachTab(newValue);
