@@ -16,6 +16,7 @@ import java.util.List;
  */
 class ReleaseTable extends AbstractTable {
     private final QueryBuilder<Release> insertReleaseQuery = new QueryBuilder<Release>(
+            "Insert Release",
             "INSERT OR IGNORE INTO episode_release (episodeId, title, url, releaseDate, locked) VALUES (?,?,?,?,?)"
     ).setValueSetter((statement, release) -> {
         statement.setInt(1, release.getEpisodeId());
@@ -26,6 +27,7 @@ class ReleaseTable extends AbstractTable {
     });
 
     private final QueryBuilder<DisplayRelease> getReleasesQuery = new QueryBuilder<DisplayRelease>(
+            "Select DisplayRelease",
             "SELECT episode.episodeId, episode.saved, episode.partialIndex, episode.totalIndex, \n" +
                     "medium.mediumId, medium.title as mediumTitle, medium.medium, \n" +
                     "CASE episode.progress WHEN 1 THEN 1 ELSE 0 END as read, \n " +
@@ -75,7 +77,7 @@ class ReleaseTable extends AbstractTable {
     public void delete(List<SmallRelease> releases) {
         this.executeDMLQuery(
                 releases,
-                new QueryBuilder<SmallRelease>("DELETE FROM episode_release WHERE episodeId = ? AND url = ?")
+                new QueryBuilder<SmallRelease>("Delete Release","DELETE FROM episode_release WHERE episodeId = ? AND url = ?")
                         .setValueSetter((preparedStatement, smallRelease) -> {
                             preparedStatement.setInt(1, smallRelease.episodeId);
                             preparedStatement.setString(2, smallRelease.url);
@@ -84,7 +86,7 @@ class ReleaseTable extends AbstractTable {
     }
 
     public List<String> getLinks(int episodeId) {
-        return new QueryBuilder<String>("SELECT url FROM episode_release WHERE episodeId=?")
+        return new QueryBuilder<String>("Select EpisodeReleaseLinks","SELECT url FROM episode_release WHERE episodeId=?")
                 .setValues(value -> value.setInt(1, episodeId))
                 .setConverter(value -> value.getString(1))
                 .queryListIgnoreError();

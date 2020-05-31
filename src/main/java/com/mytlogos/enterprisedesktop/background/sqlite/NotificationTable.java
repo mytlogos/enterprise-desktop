@@ -12,6 +12,7 @@ import java.util.Collection;
  */
 class NotificationTable extends AbstractTable {
     private final QueryBuilder<NotificationItem> insertNotificationItemQuery = new QueryBuilder<NotificationItem>(
+            "Insert Notification",
             "INSERT OR IGNORE INTO notification (title, description, dateTime) VALUES (?,?,?)"
     ).setValueSetter((statement, notificationItem) -> {
         statement.setString(1, notificationItem.getTitle());

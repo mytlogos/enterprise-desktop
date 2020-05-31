@@ -5,7 +5,6 @@ import com.mytlogos.enterprisedesktop.background.sqlite.internal.PreparedStateme
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -19,6 +18,7 @@ import java.util.function.BiFunction;
  */
 class QueryBuilder<R> {
     private static final int MAX_PARAM_COUNT = 100;
+    private final String name;
     private String query;
     private SqlConsumer<PreparedStatement> singleQuerySetter;
     private Collection<Object> values;
@@ -29,7 +29,8 @@ class QueryBuilder<R> {
     private boolean doEmpty = false;
     private Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
 
-    QueryBuilder(String query) {
+    QueryBuilder(String name, String query) {
+        this.name = name;
         this.query = query;
     }
 
@@ -94,7 +95,7 @@ class QueryBuilder<R> {
             throw new IllegalStateException("no converter available");
         }
         try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
-            try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.query)) {
+            try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.query, this.name)) {
                 this.prepareStatement(preparedStatement);
 
                 try (ResultSet set = preparedStatement.executeQuery()) {
@@ -130,12 +131,12 @@ class QueryBuilder<R> {
         }
     }
 
-    R query(Connection con) throws SQLException {
+    R query(ConnectionImpl con) throws SQLException {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
-        try (Connection connection = con) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
+        try (ConnectionImpl connection = con) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
                 this.prepareStatement(preparedStatement);
 
                 try (ResultSet set = preparedStatement.executeQuery()) {
@@ -158,8 +159,8 @@ class QueryBuilder<R> {
             throw new IllegalStateException("no converter available");
         }
         return this.createLiveData(() -> {
-            try (Connection connection = ConnectionManager.getManager().getConnection()) {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
+            try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
                     this.prepareStatement(preparedStatement);
 
                     try (ResultSet set = preparedStatement.executeQuery()) {
@@ -183,8 +184,8 @@ class QueryBuilder<R> {
             throw new IllegalStateException("no converter available");
         }
         return this.createLiveData(() -> {
-            try (Connection connection = ConnectionManager.getManager().getConnection()) {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query)) {
+            try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
                     this.prepareStatement(preparedStatement);
 
                     try (ResultSet set = preparedStatement.executeQuery()) {
@@ -210,9 +211,9 @@ class QueryBuilder<R> {
         return false;
     }
 
-    boolean execute(Connection con) {
-        try (Connection connection = con) {
-            try (PreparedStatement statement = connection.prepareStatement(this.query)) {
+    boolean execute(ConnectionImpl con) {
+        try (ConnectionImpl connection = con) {
+            try (PreparedStatement statement = connection.prepareStatement(this.query, this.name)) {
                 this.prepareStatement(statement);
 
                 if (this.values != null) {
@@ -272,7 +273,7 @@ class QueryBuilder<R> {
                     Arrays.fill(placeholderArray, "?");
                     final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
 
-                    try (PreparedStatementImpl statement = connection.prepareStatement(query)) {
+                    try (PreparedStatementImpl statement = connection.prepareStatement(query, this.name)) {
                         final int from = placeHolderCountBefore + 1;
                         final int to = placeHolderCountBefore + objects.size();
 
@@ -363,7 +364,7 @@ class QueryBuilder<R> {
                     Arrays.fill(placeholderArray, "?");
                     final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
 
-                    try (PreparedStatementImpl statement = connection.prepareStatement(query)) {
+                    try (PreparedStatementImpl statement = connection.prepareStatement(query, this.name)) {
                         final int from = placeHolderCountBefore + 1;
                         final int to = placeHolderCountBefore + objects.size();
 

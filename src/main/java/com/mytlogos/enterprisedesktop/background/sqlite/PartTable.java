@@ -14,6 +14,7 @@ import java.util.function.Function;
  */
 class PartTable extends AbstractTable {
     private final QueryBuilder<Part> insertPartQuery = new QueryBuilder<Part>(
+            "Insert Part",
             "INSERT OR IGNORE INTO part (partId, mediumId, title, totalIndex, partialIndex, combiIndex) VALUES (?,?,?,?,?,?)"
     ).setValueSetter((statement, part) -> {
         statement.setInt(1, part.getPartId());

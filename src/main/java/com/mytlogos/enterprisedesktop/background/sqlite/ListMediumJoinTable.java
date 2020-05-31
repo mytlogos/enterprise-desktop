@@ -12,6 +12,7 @@ import java.util.List;
  */
 class ListMediumJoinTable extends AbstractTable {
     private final QueryBuilder<ListMediumJoin> insertListMediumJoinQuery = new QueryBuilder<ListMediumJoin>(
+            "Select ListJoin",
             "INSERT OR IGNORE INTO list_medium (listId, mediumId) VALUES (?,?)"
     ).setValueSetter((statement, listMediumJoin) -> {
         statement.setInt(1, listMediumJoin.getListId());
@@ -19,10 +20,12 @@ class ListMediumJoinTable extends AbstractTable {
     });
 
     private final QueryBuilder<Integer> deleteJoinQuery = new QueryBuilder<Integer>(
+            "Delete ListJoin",
             "DELETE FROM list_medium WHERE listId = ?"
     ).setValueSetter((statement, integer) -> statement.setInt(1, integer));
 
     private final QueryBuilder<Integer> getMediumItemsIdsQuery = new QueryBuilder<Integer>(
+            "Select ListMediaId",
             "SELECT mediumId FROM list_medium WHERE listId=?"
     ).setConverter(value -> value.getInt(1));
 
@@ -48,7 +51,7 @@ class ListMediumJoinTable extends AbstractTable {
     }
 
     public List<ListMediumJoin> getListItems() {
-        return new QueryBuilder<ListMediumJoin>("SELECT listId, mediumId FROM list_medium")
+        return new QueryBuilder<ListMediumJoin>("Select ListJoins","SELECT listId, mediumId FROM list_medium")
                 .setConverter(value -> new ListMediumJoin(value.getInt(1), value.getInt(2), false))
                 .queryListIgnoreError();
     }
@@ -56,7 +59,7 @@ class ListMediumJoinTable extends AbstractTable {
     public void removeJoin(List<ListMediumJoin> joins) {
         this.executeDMLQuery(
                 joins,
-                new QueryBuilder<ListMediumJoin>("DELETE FROM list_medium WHERE listId = ? and mediumId = ?;")
+                new QueryBuilder<ListMediumJoin>("Delete ListJoin","DELETE FROM list_medium WHERE listId = ? and mediumId = ?;")
                         .setValueSetter((preparedStatement, listMediumJoin) -> {
                             if (listMediumJoin.external) {
                                 throw new IllegalArgumentException("Trying to delete an external ListJoin from an normal one");

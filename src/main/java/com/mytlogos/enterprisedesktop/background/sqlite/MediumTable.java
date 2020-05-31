@@ -19,6 +19,7 @@ import java.util.function.Function;
  */
 class MediumTable extends AbstractTable {
     private final QueryBuilder<Medium> insertMediumQuery = new QueryBuilder<Medium>(
+            "Insert Medium",
             "INSERT OR IGNORE INTO medium (mediumId, currentRead, countryOfOrigin, languageOfOrigin, author, title, medium, artist, lang, stateOrigin, stateTl, series, universe) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
     ).setValueSetter((statement, medium) -> {
         statement.setInt(1, medium.getMediumId());
@@ -37,6 +38,7 @@ class MediumTable extends AbstractTable {
     });
 
     private final QueryBuilder<MediumSetting> getSettingsQuery = new QueryBuilder<MediumSetting>(
+            "Select MediumSetting",
             "SELECT medium.mediumId, title, author, artist, medium, stateTL, stateOrigin, " +
                     "countryOfOrigin, languageOfOrigin, lang, series, universe, toDownload, " +
                     "(" +
@@ -97,6 +99,7 @@ class MediumTable extends AbstractTable {
     });
 
     private final QueryBuilder<SimpleMedium> getSimpleMediumQuery = new QueryBuilder<SimpleMedium>(
+            "Select SimpleMedium",
             "SELECT mediumId, title, medium FROM medium WHERE mediumId=?"
     ).setConverter(value -> new SimpleMedium(
             value.getInt(1),
@@ -104,6 +107,7 @@ class MediumTable extends AbstractTable {
             value.getInt(3)
     ));
     private final QueryBuilder<SimpleMedium> getAllSimpleMediumQuery = new QueryBuilder<SimpleMedium>(
+            "Select SimpleMedia",
             "SELECT mediumId, title, medium FROM medium"
     ).setConverter(value -> new SimpleMedium(
             value.getInt(1),

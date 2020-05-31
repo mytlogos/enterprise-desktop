@@ -13,6 +13,7 @@ import java.util.List;
  */
 class ToDownloadTable extends AbstractTable {
     private final QueryBuilder<ToDownload> insertToDownloadQuery = new QueryBuilder<ToDownload>(
+            "Insert ToDownload",
             "INSERT OR IGNORE INTO todownload (toDownloadId, prohibited, mediumId, listId, externalListId) VALUES (?,?,?,?,?)"
     ).setValueSetter((statement, toDownload) -> {
         statement.setBoolean(1, toDownload.isProhibited());
@@ -22,6 +23,7 @@ class ToDownloadTable extends AbstractTable {
     });
 
     private final QueryBuilder<ToDownload> getItemsQuery = new QueryBuilder<ToDownload>(
+            "Select ToDownload",
             "SELECT prohibited, mediumId, listId, externalListId FROM todownload"
     ).setConverter(value -> {
         final boolean prohibited = value.getBoolean(1);

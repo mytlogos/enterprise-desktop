@@ -11,6 +11,7 @@ import java.sql.SQLException;
 class UserTable extends AbstractTable {
 
     private final QueryBuilder<User> insertUserQuery = new QueryBuilder<User>(
+            "Insert User",
             "INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)"
     ).setValueSetter((statement, user) -> {
         statement.setString(1, user.getUuid());
@@ -18,7 +19,7 @@ class UserTable extends AbstractTable {
         statement.setString(3, user.getName());
     });
 
-    private final QueryBuilder<User> getUserQuery = new QueryBuilder<User>("SELECT * FROM user")
+    private final QueryBuilder<User> getUserQuery = new QueryBuilder<User>("Select User","SELECT * FROM user")
             .setConverter(resultSet -> {
                 String uuid = resultSet.getString("uuid");
                 String name = resultSet.getString("name");

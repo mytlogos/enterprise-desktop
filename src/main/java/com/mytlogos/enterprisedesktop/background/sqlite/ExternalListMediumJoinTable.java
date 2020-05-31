@@ -12,6 +12,7 @@ import java.util.List;
 class ExternalListMediumJoinTable extends AbstractTable {
 
     private final QueryBuilder<ListMediumJoin> joinInsertQuery = new QueryBuilder<ListMediumJoin>(
+            "Insert ExternalListJoin",
             "INSERT OR IGNORE INTO external_list_medium (listId, mediumId) VALUES (?,?)"
     ).setValueSetter((preparedStatement, listMediumJoin) -> {
         preparedStatement.setInt(1, listMediumJoin.getListId());
@@ -19,13 +20,18 @@ class ExternalListMediumJoinTable extends AbstractTable {
     });
 
     private final QueryBuilder<Integer> deleteJoinQuery = new QueryBuilder<Integer>(
+            "Delete ExternalListJoin",
             "DELETE FROM external_list_medium WHERE listId = ?"
     ).setValueSetter((preparedStatement, value) -> preparedStatement.setInt(1, value));
 
     private final QueryBuilder<Integer> getMediumItemsIdsQuery = new
-            QueryBuilder<Integer>("SELECT mediumId FROM external_list_medium WHERE listId=?")
+            QueryBuilder<Integer>("Select ExternalListItems","SELECT mediumId FROM external_list_medium WHERE listId=?")
             .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
             .setConverter(value -> value.getInt(1));
+
+    public ExternalListMediumJoinTable() {
+        super("external_list_medium");
+    }
 
     public Collection<Integer> getMediumItemsIds(Integer externalListId) {
         return this.getMediumItemsIdsQuery.setValue(Collections.singleton(externalListId)).queryListIgnoreError();
@@ -40,7 +46,7 @@ class ExternalListMediumJoinTable extends AbstractTable {
     }
 
     public List<ListMediumJoin> getListItems() {
-        return new QueryBuilder<ListMediumJoin>("SELECT listId, mediumId FROM external_list_medium")
+        return new QueryBuilder<ListMediumJoin>("Select ExternalListJoin", "SELECT listId, mediumId FROM external_list_medium")
                 .setConverter(value -> new ListMediumJoin(value.getInt(1), value.getInt(2), true))
                 .queryListIgnoreError();
     }
@@ -48,7 +54,7 @@ class ExternalListMediumJoinTable extends AbstractTable {
     public void removeJoin(List<ListMediumJoin> exListJoins) {
         this.executeDMLQuery(
                 exListJoins,
-                new QueryBuilder<ListMediumJoin>("DELETE FROM external_list_medium WHERE listId = ? and mediumId = ?;")
+                new QueryBuilder<ListMediumJoin>("Remove ExternalListJoint", "DELETE FROM external_list_medium WHERE listId = ? and mediumId = ?;")
                         .setValueSetter((preparedStatement, listMediumJoin) -> {
                             if (!listMediumJoin.external) {
                                 throw new IllegalArgumentException("Trying to delete a normal ListJoin from an external one");
@@ -56,10 +62,6 @@ class ExternalListMediumJoinTable extends AbstractTable {
                             preparedStatement.setInt(1, listMediumJoin.listId);
                             preparedStatement.setInt(2, listMediumJoin.mediumId);
                         }));
-    }
-
-    public ExternalListMediumJoinTable() {
-        super("external_list_medium");
     }
 
     void insert(ListMediumJoin join) {

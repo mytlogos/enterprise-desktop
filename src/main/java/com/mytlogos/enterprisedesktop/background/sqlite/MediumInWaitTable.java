@@ -13,6 +13,7 @@ import java.util.List;
  */
 class MediumInWaitTable extends AbstractTable {
     private final QueryBuilder<MediumInWait> insertMediumInWaitQuery = new QueryBuilder<MediumInWait>(
+            "Insert MediumInWait",
             "INSERT OR IGNORE INTO medium_in_wait (title, medium, link) VALUES (?,?,?)"
     ).setValueSetter((statement, mediumInWait) -> {
         statement.setString(1, mediumInWait.getTitle());
@@ -26,6 +27,7 @@ class MediumInWaitTable extends AbstractTable {
 
     public LiveData<PagedList<MediumInWait>> get(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
         return new QueryBuilder<MediumInWait>(
+                "Select LiveMediumInWait",
                 "SELECT title, medium, link FROM medium_in_wait " +
                         "WHERE (title IS NULL OR INSTR(lower(title), ?) > 0) " +
                         "AND (? = 0 OR (medium & ?) > 0) " +
@@ -51,7 +53,7 @@ class MediumInWaitTable extends AbstractTable {
     }
 
     public List<MediumInWait> getSimilar(MediumInWait mediumInWait) {
-        return new QueryBuilder<MediumInWait>("SELECT title, medium, link FROM medium_in_wait WHERE INSTR(title, ?) > 0 AND medium=?")
+        return new QueryBuilder<MediumInWait>("Select SimilarMediaInWait", "SELECT title, medium, link FROM medium_in_wait WHERE INSTR(title, ?) > 0 AND medium=?")
                 .setValues(value -> {
                     value.setString(1, mediumInWait.getTitle());
                     value.setInt(2, mediumInWait.getMedium());

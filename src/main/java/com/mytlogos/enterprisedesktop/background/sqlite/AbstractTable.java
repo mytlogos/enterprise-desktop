@@ -1,6 +1,7 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 
+import com.mytlogos.enterprisedesktop.background.sqlite.internal.ConnectionImpl;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.MutableLiveData;
 import com.mytlogos.enterprisedesktop.tools.Log;
@@ -47,6 +48,11 @@ public abstract class AbstractTable {
         }
     }
 
+    ConnectionImpl getConnection() throws SQLException {
+        final ConnectionManager manager = ConnectionManager.getManager();
+        return manager.getConnection();
+    }
+
     void setInvalidated() {
         this.invalidated.postValue(Boolean.TRUE);
     }
@@ -57,11 +63,6 @@ public abstract class AbstractTable {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    Connection getConnection() throws SQLException {
-        final ConnectionManager manager = ConnectionManager.getManager();
-        return manager.getConnection();
     }
 
     abstract String createTableSql();
@@ -202,7 +203,7 @@ public abstract class AbstractTable {
 
         this.executeDMLQuery(
                 values,
-                new QueryBuilder<T>(query)
+                new QueryBuilder<T>("Update " + this.getClass().getSimpleName(), query)
                         .setValueSetter((preparedStatement, t) -> {
                             int placeholder = 1;
                             for (int i = 0, attrNamesSize = attrNames.size(); i < attrNamesSize; i++, placeholder++) {

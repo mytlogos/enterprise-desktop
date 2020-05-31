@@ -17,6 +17,7 @@ import java.util.function.Function;
  */
 class NewsTable extends AbstractTable {
     private final QueryBuilder<News> insertNewsQuery = new QueryBuilder<News>(
+            "Insert News",
             "INSERT OR IGNORE INTO news (title, timeStamp, newsId, read, link) VALUES (?,?,?,?,?)"
     ).setValueSetter((statement, news) -> {
         statement.setString(1, news.getTitle());

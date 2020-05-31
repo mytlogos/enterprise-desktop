@@ -16,6 +16,7 @@ import java.util.function.Function;
  */
 class MediaListTable extends AbstractTable {
     private final QueryBuilder<MediaList> insertMediaListQuery = new QueryBuilder<MediaList>(
+            "Insert List",
             "INSERT OR IGNORE INTO media_list (listId, uuid, name, medium) VALUES (?,?,?,?)"
     ).setValueSetter((statement, mediaList) -> {
         statement.setInt(1, mediaList.getListId());
@@ -25,6 +26,7 @@ class MediaListTable extends AbstractTable {
     });
 
     private final QueryBuilder<MediaList> getListsQuery = new QueryBuilder<MediaList>(
+            "Select List",
             "SELECT media_list.*, (SELECT COUNT(listId) FROM list_medium WHERE list_medium.listId=media_list.listId) as count FROM media_list"
     ).setConverter(value -> {
         final int listId = value.getInt("listId");
@@ -36,18 +38,21 @@ class MediaListTable extends AbstractTable {
     });
 
     private final QueryBuilder<Integer> getMediumItemsIdsQuery = new QueryBuilder<Integer>(
+            "Select ListItems",
             "SELECT medium.mediumId FROM medium INNER JOIN list_medium " +
                     "ON list_medium.mediumId=medium.mediumId " +
                     "WHERE listId=?"
     ).setConverter(value -> value.getInt(1));
 
     private final QueryBuilder<Integer> getListsMediaItemsIdsQuery = new QueryBuilder<Integer>(
+            "Select ListsItems",
             "SELECT medium.mediumId FROM medium INNER JOIN list_medium " +
                     "ON list_medium.mediumId=medium.mediumId " +
                     "WHERE listId $?"
     ).setDependencies(MediumTable.class, ListMediumJoinTable.class);
 
     private final QueryBuilder<MediumItem> getMediumItemsQuery = new QueryBuilder<MediumItem>(
+            "Select MediumItems",
             "SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, " +
                     "countryOfOrigin, languageOfOrigin, lang, series, universe, " +
                     "(" +
@@ -122,7 +127,7 @@ class MediaListTable extends AbstractTable {
     public void delete(Set<Integer> deletedLists) {
         this.executeDMLQuery(
                 deletedLists,
-                new QueryBuilder<Integer>("DELETE FROM media_list WHERE listId = ?")
+                new QueryBuilder<Integer>("Delete ListIds","DELETE FROM media_list WHERE listId = ?")
                         .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
         );
     }

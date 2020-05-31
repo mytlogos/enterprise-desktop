@@ -10,6 +10,7 @@ import java.util.Collection;
  */
 class EditEventTable extends AbstractTable {
     private QueryBuilder<EditEvent> insertEditEventQuery = new QueryBuilder<EditEvent>(
+            "Insert EditEvent",
             "INSERT OR IGNORE INTO edit_event (id, objectType, eventType, dateTime, firstValue, secondValue) VALUES (?,?,?,?,?,?)"
     )
             .setValueSetter((preparedStatement, editEvent) -> {

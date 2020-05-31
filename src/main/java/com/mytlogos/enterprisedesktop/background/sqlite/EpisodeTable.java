@@ -20,6 +20,7 @@ import java.util.function.Function;
 class EpisodeTable extends AbstractTable {
 
     private final QueryBuilder<Episode> insertEpisodeQuery = new QueryBuilder<Episode>(
+            "Insert Episode",
             "INSERT OR IGNORE INTO episode (episodeId, progress, readDate, partId, totalIndex, partialIndex, combiIndex, saved) VALUES (?,?,?,?,?,?,?,?)"
     ).setValueSetter((statement, episode) -> {
         statement.setInt(1, episode.getEpisodeId());
@@ -32,7 +33,10 @@ class EpisodeTable extends AbstractTable {
         statement.setBoolean(8, episode.isSaved());
     });
 
-    private QueryBuilder<SimpleEpisode> simpleEpisodeQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId = ?")
+    private QueryBuilder<SimpleEpisode> simpleEpisodeQuery = new QueryBuilder<SimpleEpisode>(
+            "Select SimpleEpisode",
+            "SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId = ?"
+    )
             .setConverter(value -> new SimpleEpisode(
                             value.getInt(1),
                             value.getInt(2),
@@ -40,7 +44,10 @@ class EpisodeTable extends AbstractTable {
                             value.getFloat(4)
                     )
             );
-    private QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>("SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId $?")
+    private QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>(
+            "Select SimpleEpisodes",
+            "SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId $?"
+    )
             .setConverter(value -> new SimpleEpisode(
                             value.getInt(1),
                             value.getInt(2),
@@ -49,11 +56,12 @@ class EpisodeTable extends AbstractTable {
                     )
             );
 
-    private QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("UPDATE episode SET saved=? WHERE episodeId $?");
-    private QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
-    private QueryBuilder<Boolean> updateProgressMultiQuery = new QueryBuilder<>("UPDATE episode SET progress=?, readDate=? WHERE episodeId $?");
-    private QueryBuilder<Integer> saveEpisodesQuery = new QueryBuilder<>("SELECT episodeId FROM episode WHERE saved=1;");
+    private QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("Update Saved", "UPDATE episode SET saved=? WHERE episodeId $?");
+    private QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("Update Progress", "UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
+    private QueryBuilder<Boolean> updateProgressMultiQuery = new QueryBuilder<>("Update Progresses", "UPDATE episode SET progress=?, readDate=? WHERE episodeId $?");
+    private QueryBuilder<Integer> saveEpisodesQuery = new QueryBuilder<>("Select Saved", "SELECT episodeId FROM episode WHERE saved=1;");
     private QueryBuilder<Integer> getDownloadableQuery = new QueryBuilder<Integer>(
+            "Select Downloadable",
             "SELECT episodeId FROM (SELECT episode.episodeId, episode.saved FROM episode " +
                     "LEFT JOIN failedEpisode ON failedEpisode.episodeId=episode.episodeId " +
                     "INNER JOIN part ON part.partId=episode.partId " +
@@ -76,6 +84,7 @@ class EpisodeTable extends AbstractTable {
     ).setConverter(value -> value.getInt(1));
 
     private QueryBuilder<TocEpisode> getTocAscQuery = new QueryBuilder<TocEpisode>(
+            "Select Toc Asc",
             "SELECT episode.episodeId, episode.progress, episode.readDate, episode.partId, " +
                     "episode.totalIndex, episode.partialIndex, episode.saved " +
                     "FROM episode " +
@@ -97,6 +106,7 @@ class EpisodeTable extends AbstractTable {
             }
     );
     private QueryBuilder<TocEpisode> getTocDescQuery = new QueryBuilder<TocEpisode>(
+            "Select Toc Desc",
             "SELECT episode.episodeId, episode.progress, episode.readDate, episode.partId, " +
                     "episode.totalIndex, episode.partialIndex, episode.saved " +
                     "FROM episode " +
@@ -202,10 +212,12 @@ class EpisodeTable extends AbstractTable {
 
     public List<PartStat> getStat() {
         try {
-            return new QueryBuilder<PartStat>("SELECT partId, count(DISTINCT episode.episodeId) as episodeCount, " +
-                    "sum(DISTINCT episode.episodeId) as episodeSum, count(url) as releaseCount " +
-                    "FROM episode LEFT JOIN episode_release ON episode.episodeId=episode_release.episodeId " +
-                    "GROUP BY partId")
+            return new QueryBuilder<PartStat>(
+                    "Select PartStat",
+                    "SELECT partId, count(DISTINCT episode.episodeId) as episodeCount, " +
+                            "sum(DISTINCT episode.episodeId) as episodeSum, count(url) as releaseCount " +
+                            "FROM episode LEFT JOIN episode_release ON episode.episodeId=episode_release.episodeId " +
+                            "GROUP BY partId")
                     .setConverter(value -> new PartStat(
                             value.getInt(1),
                             value.getLong(2),
@@ -220,7 +232,7 @@ class EpisodeTable extends AbstractTable {
     }
 
     public List<PartEpisode> getEpisodes(Set<Integer> partIds) {
-        return new QueryBuilder<PartEpisode>("SELECT partId, episodeId FROM episode WHERE partId $?")
+        return new QueryBuilder<PartEpisode>("Select PartEpisodes", "SELECT partId, episodeId FROM episode WHERE partId $?")
                 .setQueryIn(partIds, QueryBuilder.Type.INT)
                 .setConverter(value -> new PartEpisode(value.getInt(2), value.getInt(1)))
                 .selectInListIgnoreError();
@@ -229,13 +241,13 @@ class EpisodeTable extends AbstractTable {
     public void deletePerId(List<Integer> deleteEpisodes) {
         this.executeDMLQuery(
                 deleteEpisodes,
-                new QueryBuilder<Integer>("DELETE FROM episode WHERE episodeId = ?")
+                new QueryBuilder<Integer>("Delete EpisodeIds", "DELETE FROM episode WHERE episodeId = ?")
                         .setValueSetter((preparedStatement, episodeId) -> preparedStatement.setInt(1, episodeId))
         );
     }
 
     public List<SmallRelease> getReleases(Set<Integer> partIds) {
-        return new QueryBuilder<SmallRelease>("SELECT partId, episode.episodeId, episode_release.url \n" +
+        return new QueryBuilder<SmallRelease>("Select SmallReleases", "SELECT partId, episode.episodeId, episode_release.url \n" +
                 "FROM episode INNER JOIN episode_release ON episode_release.episodeId=episode.episodeId \n" +
                 "WHERE partId $?")
                 .setQueryIn(partIds, QueryBuilder.Type.INT)
@@ -276,7 +288,10 @@ class EpisodeTable extends AbstractTable {
             for (TocEpisode item : tocEpisodes) {
                 idsMap.put(item.getEpisodeId(), item);
             }
-            List<Release> releases = new QueryBuilder<Release>("SELECT episodeId, title, url, releaseDate, locked FROM episode_release WHERE episodeId $?")
+            List<Release> releases = new QueryBuilder<Release>(
+                    "Select LiveReleases",
+                    "SELECT episodeId, title, url, releaseDate, locked FROM episode_release WHERE episodeId $?"
+            )
                     .setQueryIn(idsMap.keySet(), QueryBuilder.Type.INT)
                     .setConverter(value -> {
                         final int episodeId = value.getInt(1);

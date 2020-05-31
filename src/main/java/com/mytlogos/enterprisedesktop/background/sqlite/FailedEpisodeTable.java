@@ -12,12 +12,13 @@ import java.util.List;
  */
 class FailedEpisodeTable extends AbstractTable {
     private final QueryBuilder<FailedEpisode> insertFailedEpisodeQuery = new QueryBuilder<FailedEpisode>(
+            "Insert FailedEpisode",
             "INSERT OR IGNORE INTO failed_episode (episodeId, failCount) VALUES (?,?)"
     ).setValueSetter((statement, failedEpisode) -> {
         statement.setInt(1, failedEpisode.getEpisodeId());
         statement.setInt(2, failedEpisode.getFailCount());
     });
-    private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?");
+    private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("Select FailedEpisode","SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?");
 
     FailedEpisodeTable() {
         super("failed_episode");

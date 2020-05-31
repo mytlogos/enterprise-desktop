@@ -11,6 +11,7 @@ import java.util.function.Function;
  */
 class ExternalUserTable extends AbstractTable {
     private final QueryBuilder<ExternalUser> insertExternalUserQuery = new QueryBuilder<ExternalUser>(
+            "Insert ExternalUser",
             "INSERT OR IGNORE INTO external_user (uuid, userUuid, identifier, type) VALUES (?,?,?,?)"
     ).setValueSetter((statement, externalUser) -> {
         statement.setString(1, externalUser.getUuid());
@@ -27,7 +28,7 @@ class ExternalUserTable extends AbstractTable {
     public void delete(Set<String> deletedExUser) {
         this.executeDMLQuery(
                 deletedExUser,
-                new QueryBuilder<String>("DELETE FROM external_user WHERE uuid = ?")
+                new QueryBuilder<String>("Delete ExternalUuid","DELETE FROM external_user WHERE uuid = ?")
                         .setValueSetter((preparedStatement, uuid) -> preparedStatement.setString(1, uuid))
         );
     }

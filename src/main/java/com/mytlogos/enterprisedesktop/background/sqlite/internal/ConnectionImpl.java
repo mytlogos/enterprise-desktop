@@ -25,6 +25,11 @@ public class ConnectionImpl implements Connection {
         return new PreparedStatementImpl(this.connection.prepareStatement(sql));
     }
 
+    public PreparedStatementImpl prepareStatement(String sql, String name) throws SQLException {
+        return new PreparedStatementImpl(this.connection.prepareStatement(sql), name);
+    }
+
+
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
         return new CallableStatementImpl(this.connection.prepareCall(sql));

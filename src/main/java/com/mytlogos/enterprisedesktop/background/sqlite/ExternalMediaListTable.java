@@ -17,6 +17,7 @@ import java.util.function.Function;
  */
 class ExternalMediaListTable extends AbstractTable {
     private final QueryBuilder<ExternalMediaList> insertExternalMediaListQuery = new QueryBuilder<ExternalMediaList>(
+            "Insert ExternalList",
             "INSERT OR IGNORE INTO external_media_list (uuid,externalListId, name, medium, url) VALUES (?,?,?,?,?)"
     ).setValueSetter((statement, value) -> {
         statement.setString(1, value.getUuid());
@@ -27,6 +28,7 @@ class ExternalMediaListTable extends AbstractTable {
     });
 
     private QueryBuilder<ExternalMediaList> getListsQuery = new QueryBuilder<ExternalMediaList>(
+            "Select ExternalList",
             "SELECT external_media_list.*, " +
                     "(SELECT COUNT(listId) FROM external_list_medium WHERE external_list_medium.listId=external_media_list.externalListId) " +
                     "as count " +
@@ -44,6 +46,7 @@ class ExternalMediaListTable extends AbstractTable {
     });
 
     private QueryBuilder<MediumItem> getMediumItems = new QueryBuilder<MediumItem>(
+            "Select ExternalMediumItem",
             "SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, " +
                     "countryOfOrigin, languageOfOrigin, lang, series, universe, " +
                     "(" +
@@ -111,7 +114,7 @@ class ExternalMediaListTable extends AbstractTable {
     }
 
     public List<ListUser> getListUser() {
-        return new QueryBuilder<ListUser>("SELECT externalListId as listId, uuid FROM external_media_list")
+        return new QueryBuilder<ListUser>("Select ExternalListUser","SELECT externalListId as listId, uuid FROM external_media_list")
                 .setConverter(value -> new ListUser(value.getInt(1), value.getString(2)))
                 .queryListIgnoreError();
     }
@@ -119,7 +122,7 @@ class ExternalMediaListTable extends AbstractTable {
     public void delete(Set<Integer> deletedExLists) {
         this.executeDMLQuery(
                 deletedExLists,
-                new QueryBuilder<Integer>("DELETE FROM external_media_list WHERE externalListId = ?")
+                new QueryBuilder<Integer>("Delete ExternalListId","DELETE FROM external_media_list WHERE externalListId = ?")
                         .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
         );
     }
