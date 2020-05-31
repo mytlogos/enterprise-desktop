@@ -18,6 +18,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import org.controlsfx.control.Notifications;
@@ -33,6 +34,12 @@ import java.util.regex.Pattern;
 public class ListViewController implements Attachable {
     public ChoiceBox<SavedFilter> savedFilterBox;
     public ChoiceBox<ReadFilter> readFilterBox;
+    @FXML
+    private StackPane listLoadPane;
+    @FXML
+    private StackPane listsLoadPane;
+    @FXML
+    private StackPane mediumLoadPane;
     @FXML
     private TextField scrollToEpisodeField;
     @FXML
@@ -57,7 +64,12 @@ public class ListViewController implements Attachable {
     private TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private ObjectBinding<EpisodeFilter> episodeFilterBinding;
     private MediumDisplayController mediumDisplayController = null;
-    private Observer<PagedList<TocEpisode>> episodesObserver = episodes -> this.mediumContentView.getItems().setAll(episodes == null ? Collections.emptyList() : episodes);
+    private Observer<PagedList<TocEpisode>> episodesObserver = episodes -> {
+        if (episodes != null) {
+            this.mediumLoadPane.setVisible(false);
+            this.mediumContentView.getItems().setAll(episodes);
+        }
+    };
     private LiveData<PagedList<TocEpisode>> episodesLiveData;
     private LiveData<MediumSetting> mediumSettingLiveData;
     private Observer<MediumSetting> settingObserver = mediumSetting -> {
@@ -70,10 +82,18 @@ public class ListViewController implements Attachable {
     private LiveData<List<MediumItem>> listItemsLiveData;
     private Observer<List<MediumItem>> listItemsObserver = mediumItems -> {
         this.mediumContentView.getItems().clear();
-        this.listMediaView.getItems().setAll(mediumItems == null ? Collections.emptyList() : mediumItems);
+        if (mediumItems != null) {
+            this.listLoadPane.setVisible(false);
+            this.listMediaView.getItems().setAll(mediumItems);
+        }
     };
     private LiveData<List<MediaList>> listLiveData;
-    private Observer<List<MediaList>> listObserver = mediaLists -> this.listsView.getItems().setAll(mediaLists == null ? Collections.emptyList() : mediaLists);
+    private Observer<List<MediaList>> listObserver = mediaLists -> {
+        if (mediaLists != null) {
+            this.listsLoadPane.setVisible(false);
+        }
+        this.listsView.getItems().setAll(mediaLists == null ? Collections.emptyList() : mediaLists);
+    };
     private InvalidationListener mediumListener = observable -> selectMedium();
     private InvalidationListener listsListener = observable -> {
         final MediaList item = this.listsView.getSelectionModel().getSelectedItem();
@@ -90,6 +110,7 @@ public class ListViewController implements Attachable {
                         item.getListId(),
                         item instanceof ExternalMediaList
                 ));
+        this.listLoadPane.setVisible(true);
         this.listItemsLiveData.observe(this.listItemsObserver);
     };
 
@@ -210,6 +231,7 @@ public class ListViewController implements Attachable {
             Log.severe("onAttach called before initialize");
             return;
         }
+        this.listsLoadPane.setVisible(true);
         final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
 
         this.listLiveData = repositorySingle.flatMap(Repository::getLists);
@@ -247,6 +269,8 @@ public class ListViewController implements Attachable {
         if (selectedItem == null) {
             return;
         }
+        this.mediumLoadPane.setVisible(false);
+
         if (this.episodesLiveData != null) {
             this.episodesLiveData.removeObserver(this.episodesObserver);
         }

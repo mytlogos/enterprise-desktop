@@ -3,16 +3,27 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.ListViewController">
+<SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.ListViewController">
     <SplitPane dividerPositions="0.3, 0.6">
-        <ListView fx:id="listsView" />
+        <StackPane>
+            <ListView fx:id="listsView" />
+            <StackPane fx:id="listsLoadPane" style="-fx-background-color: rgba(0, 0, 0, 0.2);" visible="false">
+                <ProgressIndicator>
+                    <StackPane.margin>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </StackPane.margin>
+                </ProgressIndicator>
+            </StackPane>
+        </StackPane>
         <VBox>
             <FlowPane hgap="5.0" vgap="5.0">
                 <padding>
@@ -22,7 +33,19 @@
                 <ToggleButton fx:id="mediumAscendingBtn" mnemonicParsing="false" text="Ascending" />
                 <ToggleButton fx:id="enableSelectBtn" mnemonicParsing="false" text="Select" />
             </FlowPane>
-            <ListView fx:id="listMediaView" VBox.vgrow="ALWAYS" />
+            <StackPane VBox.vgrow="ALWAYS">
+                <ListView fx:id="listMediaView" />
+                <StackPane fx:id="listLoadPane" style="-fx-background-color: rgba(0, 0, 0, 0.2);" visible="false" StackPane.alignment="CENTER">
+                    <StackPane.margin>
+                        <Insets />
+                    </StackPane.margin>
+                    <ProgressIndicator>
+                        <StackPane.margin>
+                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                        </StackPane.margin>
+                    </ProgressIndicator>
+                </StackPane>
+            </StackPane>
         </VBox>
         <VBox>
             <FlowPane hgap="5.0" vgap="5.0">
@@ -31,16 +54,25 @@
                 </padding>
                 <ChoiceBox fx:id="episodeSorting" prefWidth="150.0" />
                 <ToggleButton fx:id="episodeAscendingBtn" mnemonicParsing="false" text="Ascending" />
-            <ChoiceBox fx:id="savedFilterBox" prefWidth="150.0" />
+                <ChoiceBox fx:id="savedFilterBox" prefWidth="150.0" />
                 <TextField fx:id="scrollToEpisodeField" onAction="#scrollToEpisode" promptText="Scroll To" />
-            <ChoiceBox fx:id="readFilterBox" layoutX="247.0" layoutY="15.0" prefWidth="150.0" />
+                <ChoiceBox fx:id="readFilterBox" layoutX="247.0" layoutY="15.0" prefWidth="150.0" />
             </FlowPane>
-            <ListView fx:id="mediumContentView" VBox.vgrow="ALWAYS" />
+            <StackPane VBox.vgrow="ALWAYS">
+                <ListView fx:id="mediumContentView" />
+                <StackPane fx:id="mediumLoadPane" style="-fx-background-color: rgba(0, 0, 0, 0.2);" visible="false">
+                    <ProgressIndicator>
+                        <StackPane.margin>
+                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                        </StackPane.margin>
+                    </ProgressIndicator>
+                </StackPane>
+            </StackPane>
         </VBox>
     </SplitPane>
-   <ScrollPane fx:id="detailPane" fitToHeight="true" fitToWidth="true">
-      <padding>
-         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-      </padding>
-   </ScrollPane>
+    <ScrollPane fx:id="detailPane" fitToHeight="true" fitToWidth="true">
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+    </ScrollPane>
 </SplitPane>
