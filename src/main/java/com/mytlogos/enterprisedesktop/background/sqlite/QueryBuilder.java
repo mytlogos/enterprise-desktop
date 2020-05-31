@@ -11,6 +11,8 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiFunction;
 
 /**
@@ -18,8 +20,11 @@ import java.util.function.BiFunction;
  */
 class QueryBuilder<R> {
     private static final int MAX_PARAM_COUNT = 100;
+    private static final ReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock();
     private final String name;
-    private String query;
+    private final String query;
+    private final Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
+    private final boolean isRead;
     private SqlConsumer<PreparedStatement> singleQuerySetter;
     private Collection<Object> values;
     private SqlBiConsumer<PreparedStatement, Object> multiQuerySetter;
@@ -27,11 +32,11 @@ class QueryBuilder<R> {
     private Type type;
     private List<?> queryInValues;
     private boolean doEmpty = false;
-    private Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
 
     QueryBuilder(String name, String query) {
         this.name = name;
         this.query = query;
+        this.isRead = query.substring(0, query.indexOf(" ")).trim().equalsIgnoreCase("select");
     }
 
     <T> QueryBuilder<R> setValue(Collection<T> value, SqlBiConsumer<PreparedStatement, T> multiQuerySetter) {
@@ -82,6 +87,7 @@ class QueryBuilder<R> {
     }
 
     List<R> queryListIgnoreError() {
+        this.expectRead();
         try {
             return this.queryList();
         } catch (SQLException e) {
@@ -90,25 +96,38 @@ class QueryBuilder<R> {
         }
     }
 
+    private void expectRead() {
+        if (!this.isRead) {
+            throw new IllegalStateException("Expected 'Read', got 'Write' instead");
+        }
+    }
+
     List<R> queryList() throws SQLException {
+        this.expectRead();
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
         try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
             try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.query, this.name)) {
-                this.prepareStatement(preparedStatement);
-
-                try (ResultSet set = preparedStatement.executeQuery()) {
-                    List<R> values = new ArrayList<>();
-
-                    while (set.next()) {
-                        R value = this.converter.apply(set);
-                        values.add(value);
-                    }
-                    return values;
-                }
+                return selectResultList(preparedStatement);
             }
         }
+    }
+
+    private List<R> selectResultList(PreparedStatement preparedStatement) throws SQLException {
+        this.prepareStatement(preparedStatement);
+
+        List<R> values = new ArrayList<>();
+        this.lock();
+        try (ResultSet set = preparedStatement.executeQuery()) {
+            while (set.next()) {
+                R value = this.converter.apply(set);
+                values.add(value);
+            }
+        } finally {
+            this.unlock();
+        }
+        return values;
     }
 
     private void prepareStatement(PreparedStatement preparedStatement) throws SQLException {
@@ -122,7 +141,24 @@ class QueryBuilder<R> {
         }
     }
 
+    private void lock() {
+        if (this.isRead) {
+            READ_WRITE_LOCK.readLock().lock();
+        } else {
+            READ_WRITE_LOCK.writeLock().lock();
+        }
+    }
+
+    private void unlock() {
+        if (this.isRead) {
+            READ_WRITE_LOCK.readLock().unlock();
+        } else {
+            READ_WRITE_LOCK.writeLock().unlock();
+        }
+    }
+
     R query() {
+        this.expectRead();
         try {
             return this.query(ConnectionManager.getManager().getConnection());
         } catch (SQLException e) {
@@ -132,20 +168,28 @@ class QueryBuilder<R> {
     }
 
     R query(ConnectionImpl con) throws SQLException {
+        this.expectRead();
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
         try (ConnectionImpl connection = con) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
-                this.prepareStatement(preparedStatement);
+            return selectResult(connection);
+        }
+    }
 
-                try (ResultSet set = preparedStatement.executeQuery()) {
-                    if (set.next()) {
-                        return this.converter.apply(set);
-                    } else {
-                        return null;
-                    }
+    private R selectResult(ConnectionImpl connection) throws SQLException {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
+            this.prepareStatement(preparedStatement);
+
+            this.lock();
+            try (ResultSet set = preparedStatement.executeQuery()) {
+                if (set.next()) {
+                    return this.converter.apply(set);
+                } else {
+                    return null;
                 }
+            } finally {
+                this.unlock();
             }
         }
     }
@@ -155,48 +199,31 @@ class QueryBuilder<R> {
     }
 
     LiveData<R> queryLiveData() {
+        this.expectRead();
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
         return this.createLiveData(() -> {
             try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
-                    this.prepareStatement(preparedStatement);
-
-                    try (ResultSet set = preparedStatement.executeQuery()) {
-                        if (set.next()) {
-                            return this.converter.apply(set);
-                        } else {
-                            return null;
-                        }
-                    }
-                }
+                return selectResult(connection);
             }
         });
     }
 
     private <T> LiveData<T> createLiveData(Callable<T> supplier) {
+        this.expectRead();
         return LiveData.create(supplier, this.tables);
     }
 
     LiveData<List<R>> queryLiveDataList() {
+        this.expectRead();
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
         return this.createLiveData(() -> {
             try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
-                    this.prepareStatement(preparedStatement);
-
-                    try (ResultSet set = preparedStatement.executeQuery()) {
-                        List<R> values = new ArrayList<>();
-
-                        while (set.next()) {
-                            R value = this.converter.apply(set);
-                            values.add(value);
-                        }
-                        return values;
-                    }
+                    return selectResultList(preparedStatement);
                 }
             }
         });
@@ -212,6 +239,7 @@ class QueryBuilder<R> {
     }
 
     boolean execute(ConnectionImpl con) {
+        this.expectWrite();
         try (ConnectionImpl connection = con) {
             try (PreparedStatement statement = connection.prepareStatement(this.query, this.name)) {
                 this.prepareStatement(statement);
@@ -220,6 +248,7 @@ class QueryBuilder<R> {
                     connection.setAutoCommit(false);
 
                     final int[] execute;
+                    this.lock();
                     try {
                         execute = statement.executeBatch();
                         connection.commit();
@@ -227,6 +256,8 @@ class QueryBuilder<R> {
                         connection.rollback();
                         e.printStackTrace();
                         return false;
+                    } finally {
+                        this.unlock();
                     }
                     for (int insertInfo : execute) {
                         if (insertInfo > 0) {
@@ -234,7 +265,12 @@ class QueryBuilder<R> {
                         }
                     }
                 } else {
-                    return !statement.execute() && statement.getUpdateCount() > 0;
+                    try {
+                        this.lock();
+                        return !statement.execute() && statement.getUpdateCount() > 0;
+                    } finally {
+                        this.unlock();
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -243,7 +279,14 @@ class QueryBuilder<R> {
         return false;
     }
 
+    private void expectWrite() {
+        if (this.isRead) {
+            throw new IllegalStateException("Expected 'Write', got 'Read' instead");
+        }
+    }
+
     LiveData<R> executeInLiveData(SqlFunction<PreparedStatement, R> biFunction, BiFunction<R, R, R> mergeFunction) {
+        this.expectRead();
         return this.createLiveData(() -> this.executeIn(biFunction, mergeFunction));
     }
 
@@ -286,7 +329,13 @@ class QueryBuilder<R> {
                             statement.addUsedIndices(from, to);
                         }
                         this.prepareStatement(statement);
-                        final T result = biFunction.apply(statement);
+                        this.lock();
+                        final T result;
+                        try {
+                            result = biFunction.apply(statement);
+                        } finally {
+                            this.unlock();
+                        }
                         final T mergedResult = mergeFunction.apply(value.get(), result);
                         value.set(mergedResult);
                     }
@@ -312,6 +361,7 @@ class QueryBuilder<R> {
     }
 
     boolean updateIn() throws SQLException {
+        this.expectWrite();
         return this.executeIn(SqlUtils.update(this.singleQuerySetter), (o, o1) -> {
             if (o == null) {
                 if (o1 == null) {
@@ -326,10 +376,12 @@ class QueryBuilder<R> {
     }
 
     LiveData<List<R>> selectInLiveDataList() {
+        this.expectRead();
         return this.createLiveData(this::selectInListIgnoreError);
     }
 
     List<R> selectInListIgnoreError() {
+        this.expectRead();
         try {
             return this.selectInList(this.converter);
         } catch (SQLException e) {
@@ -339,6 +391,7 @@ class QueryBuilder<R> {
     }
 
     List<R> selectInList(SqlFunction<ResultSet, R> biFunction) throws SQLException {
+        this.expectRead();
         final String inPlaceholder = "$?";
         int index = this.query.indexOf(inPlaceholder);
         if (index < 0 && !this.queryInValues.isEmpty()) {
@@ -378,13 +431,18 @@ class QueryBuilder<R> {
                         }
                         this.prepareStatement(statement);
 
-                        if (statement.execute()) {
-                            try (ResultSet resultSet = statement.getResultSet()) {
-                                while (resultSet.next()) {
-                                    final R result = biFunction.apply(resultSet);
-                                    resultValues.add(result);
+                        this.lock();
+                        try {
+                            if (statement.execute()) {
+                                try (ResultSet resultSet = statement.getResultSet()) {
+                                    while (resultSet.next()) {
+                                        final R result = biFunction.apply(resultSet);
+                                        resultValues.add(result);
+                                    }
                                 }
                             }
+                        } finally {
+                            this.unlock();
                         }
                     }
                     return false;
@@ -400,22 +458,30 @@ class QueryBuilder<R> {
     }
 
     List<R> selectInListSimple(SqlFunction<ResultSet, R> biFunction) throws SQLException {
+        this.expectRead();
         return executeIn(statement -> {
             List<R> values = new LinkedList<>();
-            if (statement.execute()) {
-                try (ResultSet resultSet = statement.getResultSet()) {
+            this.lock();
 
-                    while (resultSet.next()) {
-                        R single = biFunction.apply(resultSet);
-                        values.add(single);
+            try {
+                if (statement.execute()) {
+                    try (ResultSet resultSet = statement.getResultSet()) {
+
+                        while (resultSet.next()) {
+                            R single = biFunction.apply(resultSet);
+                            values.add(single);
+                        }
                     }
                 }
+            } finally {
+                this.unlock();
             }
             return values;
         }, SqlUtils::mergeLists);
     }
 
     List<R> selectInListIgnoreError(SqlFunction<ResultSet, R> biFunction) {
+        this.expectRead();
         try {
             return this.selectInList(biFunction);
         } catch (SQLException e) {
