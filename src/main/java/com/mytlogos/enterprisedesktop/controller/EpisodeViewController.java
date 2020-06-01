@@ -18,7 +18,9 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -46,6 +48,18 @@ import java.util.stream.Collectors;
  *
  */
 public class EpisodeViewController implements Attachable {
+    private final ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
+    private final ObservableList<DisplayRelease> releases = FXCollections.observableArrayList();
+    private final Observer<PagedList<DisplayRelease>> pagedListObserver = releases -> {
+        Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
+        if (releases == null) {
+            this.releases.clear();
+            return;
+        }
+        this.latestOnlyFilterNeeded.set(true);
+    };
+    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
     @FXML
     private ToggleButton ignoreMedium;
     @FXML
@@ -90,9 +104,6 @@ public class EpisodeViewController implements Attachable {
     private CheckBox showAudioBox;
     @FXML
     private CheckBox latestOnly;
-    private final ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
-
     private ObjectBinding<ReleaseFilter> episodeFilterBinding;
     private LiveData<PagedList<DisplayRelease>> episodesLiveData;
     private LiveData<List<Integer>> listItemsLiveData;
@@ -100,18 +111,11 @@ public class EpisodeViewController implements Attachable {
     private LiveData<List<SimpleMedium>> mediumLiveData;
     private Observer<List<MediaList>> listObserver;
     private Observer<List<SimpleMedium>> mediumObserver;
-    private final ObservableList<DisplayRelease> releases = FXCollections.observableArrayList();
-    private final Observer<PagedList<DisplayRelease>> pagedListObserver = releases -> {
-        Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
-        if (releases == null) {
-            this.releases.clear();
-            return;
-        }
-        this.releases.setAll(releases);
-    };
-    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
+    private final BooleanProperty latestOnlyFilterNeeded = new SimpleBooleanProperty();
 
     public void initialize() {
+        this.latestOnly.selectedProperty().addListener(o -> this.latestOnlyFilterNeeded.set(true));
+        this.latestOnlyFilterNeeded.addListener(o -> filterLatestOnly());
         final FilteredList<DisplayRelease> filteredList = new FilteredList<>(this.releases);
 
         filteredList.predicateProperty().bind(Bindings.createObjectBinding(
@@ -273,6 +277,32 @@ public class EpisodeViewController implements Attachable {
         this.mediumLiveData.observe(this.mediumObserver);
         ControllerUtils.addAutoCompletionBinding(this.listFilter, this.listLiveData, MediaList::getName, mediaList -> this.listFilterView.getItems().add(mediaList));
         ControllerUtils.addAutoCompletionBinding(this.mediumFilter, this.mediumLiveData, SimpleMedium::getTitle, simpleMedium -> this.mediumFilterView.getItems().add(simpleMedium));
+    }
+
+    private void filterLatestOnly() {
+        if (!this.latestOnlyFilterNeeded.get()) {
+            return;
+        }
+        this.latestOnlyFilterNeeded.set(false);
+
+        final PagedList<DisplayRelease> list = this.episodesLiveData.getValue();
+
+        if (list == null) {
+            return;
+        }
+        if (this.latestOnly.isSelected()) {
+            Set<Integer> episodeIds = new HashSet<>();
+            List<DisplayRelease> latestUnique = new LinkedList<>();
+            // only simply iterate, the latest releases come the earliest as its in descending order
+            for (DisplayRelease release : list) {
+                if (episodeIds.add(release.getEpisodeId())) {
+                    latestUnique.add(release);
+                }
+            }
+            this.releases.setAll(latestUnique);
+        } else {
+            this.releases.setAll(list);
+        }
     }
 
     private void setEpisodeViewContextMenu() {
