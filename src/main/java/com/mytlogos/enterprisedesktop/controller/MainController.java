@@ -11,12 +11,17 @@ import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 
 /**
  *
  */
 public class MainController {
+    private final TaskController taskController = ApplicationConfig.getTaskController();
+    private final MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
+    private final Map<Tab, TabController> tabTabControllerMap = new WeakHashMap<>();
     @FXML
     private ProgressBar taskProgress;
     @FXML
@@ -38,14 +43,14 @@ public class MainController {
     @FXML
     private Text infoText;
     private TasksHelper helper;
-    private final TaskController taskController = ApplicationConfig.getTaskController();
     private EpisodeViewController episodeViewController;
     private ListViewController listViewController;
     private MediaInWaitController mediaInWaitController;
     private SearchMediumController searchController;
-    private final MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
+    private MediaController mediaController;
 
     public void initialize() {
+        this.initTabMaps();
         this.helper = new TasksHelper(this.infoText, this.taskProgress);
         this.taskController.setTasksHelper(this.helper);
         this.tabPane.getSelectionModel().selectedItemProperty().addListener((LiveData, oldValue, newValue) -> {
@@ -55,41 +60,36 @@ public class MainController {
         this.attachTab(this.tabPane.getSelectionModel().getSelectedItem());
     }
 
+    private void initTabMaps() {
+        this.tabTabControllerMap.put(this.episodeTab, new TabController("/episodeListView.fxml"));
+        this.tabTabControllerMap.put(this.listsTab, new TabController("/listsView.fxml"));
+        this.tabTabControllerMap.put(this.mediumInWaitTab, new TabController("/mediumInWaitListView.fxml"));
+        this.tabTabControllerMap.put(this.searchTab, new TabController("/searchMedium.fxml"));
+        this.tabTabControllerMap.put(this.mediaTab, new TabController("/media.fxml"));
+    }
+
     private void detachTab(Tab oldValue) {
         System.out.println("old tab: " + oldValue);
-        if (oldValue == this.episodeTab) {
-            this.detachTab(this.episodeViewController);
-        } else if (oldValue == this.listsTab) {
-            this.detachTab(this.listViewController);
-        } else if (oldValue == this.externalUserTab) {
-            this.detachTab((Attachable) null);
-        } else if (oldValue == this.mediumInWaitTab) {
-            this.detachTab(this.mediaInWaitController);
-        } else if (oldValue == this.searchTab) {
-            this.detachTab(this.searchController);
-        } else if (oldValue == this.statisticsTab) {
-            this.detachTab((Attachable) null);
-        } else if (oldValue == this.statisticsTab) {
-            this.detachTab((Attachable) null);
+        final TabController tabController = this.tabTabControllerMap.get(oldValue);
+
+        if (tabController != null) {
+            tabController.getAttachable(oldValue).onDetach();
         }
     }
 
     private void attachTab(Tab newValue) {
         System.out.println("new tab: " + newValue);
 
-        if (newValue == this.episodeTab) {
-            this.attachEpisodeTab();
-        } else if (newValue == this.listsTab) {
-            this.attachListsTab();
-        } else if (newValue == this.externalUserTab) {
-            this.attachExternalUserTab();
-        } else if (newValue == this.statisticsTab) {
-            this.attachStatisticsTab();
-        } else if (newValue == this.mediumInWaitTab) {
-            this.attachMediumInWaitTab();
-        } else if (newValue == this.searchTab) {
-            this.attachSearchTab();
+        final TabController tabController = this.tabTabControllerMap.get(newValue);
+
+        if (tabController != null) {
+            tabController.getAttachable(newValue).onAttach();
         }
+    }
+
+    public void openSettings() {
+        PreferencesFx preferencesFx = this.mainPreferences.getPreferences();
+        preferencesFx.show();
     }
 
     private void detachTab(Attachable attachable) {
@@ -99,47 +99,6 @@ public class MainController {
         attachable.onDetach();
     }
 
-    private void attachEpisodeTab() {
-        if (this.episodeViewController == null) {
-            this.episodeViewController = ControllerUtils.load("/episodeListView.fxml", node -> this.episodeTab.setContent(node));
-        }
-        this.episodeViewController.onAttach();
-    }
-
-    private void attachListsTab() {
-        if (this.listViewController == null) {
-            this.listViewController = ControllerUtils.load("/listsView.fxml", node -> this.listsTab.setContent(node));
-        }
-        this.listViewController.onAttach();
-    }
-
-    private void attachExternalUserTab() {
-
-    }
-
-    private void attachStatisticsTab() {
-
-    }
-
-    private void attachMediumInWaitTab() {
-        if (this.mediaInWaitController == null) {
-            this.mediaInWaitController = ControllerUtils.load("/mediumInWaitListView.fxml", node -> this.mediumInWaitTab.setContent(node));
-        }
-        this.mediaInWaitController.onAttach();
-    }
-
-    private void attachSearchTab() {
-        if (this.searchController == null) {
-            this.searchController = ControllerUtils.load("/searchMedium.fxml", node -> this.searchTab.setContent(node));
-        }
-        this.searchController.onAttach();
-    }
-
-    public void openSettings() {
-        PreferencesFx preferencesFx = this.mainPreferences.getPreferences();
-        preferencesFx.show();
-    }
-
     @FXML
     private void startSynchronize() {
         this.taskController.startSynchronizeTask();
@@ -147,6 +106,22 @@ public class MainController {
 
     public interface DisplayValue {
         String getDisplayValue();
+    }
+
+    private static class TabController {
+        private final String fxml;
+        private Attachable attachable;
+
+        private TabController(String fxml) {
+            this.fxml = fxml;
+        }
+
+        private Attachable getAttachable(Tab tab) {
+            if (this.attachable == null) {
+                this.attachable = ControllerUtils.load(this.fxml, tab::setContent);
+            }
+            return this.attachable;
+        }
     }
 
     public static class DisplayConverter<T extends DisplayValue> extends StringConverter<T> {
