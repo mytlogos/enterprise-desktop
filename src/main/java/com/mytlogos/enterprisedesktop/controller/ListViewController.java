@@ -1,7 +1,6 @@
 package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
-import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
@@ -17,10 +16,7 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import org.controlsfx.control.Notifications;
 
 import java.util.*;
@@ -355,93 +351,4 @@ public class ListViewController implements Attachable {
         }
     }
 
-    private static class TocEpisodeCell extends ListCell<TocEpisode> {
-        private final Image lockedImage;
-        private final Image readImage;
-        private final Image onlineImage;
-        private final Image localImage;
-        private VBox root;
-        @FXML
-        private Label content;
-        @FXML
-        private Text topLeftContent;
-        @FXML
-        private Text topRightContent;
-        @FXML
-        private ImageView lockedView;
-        @FXML
-        private ImageView readView;
-        @FXML
-        private ImageView onlineView;
-        @FXML
-        private ImageView localView;
-        private boolean loadFailed;
-
-        private TocEpisodeCell(Image lockedImage, Image readImage, Image onlineImage, Image localImage) {
-            this.lockedImage = lockedImage;
-            this.readImage = readImage;
-            this.onlineImage = onlineImage;
-            this.localImage = localImage;
-        }
-
-        public void initialize() {
-            System.out.println("initializing item");
-        }
-
-        @Override
-        protected void updateItem(TocEpisode item, boolean empty) {
-            super.updateItem(item, empty);
-
-            if (this.root == null && !this.loadFailed) {
-                this.init();
-            }
-            if (empty || item == null) {
-                this.setText(null);
-                this.setGraphic(null);
-            } else {
-                if (this.loadFailed) {
-                    this.setGraphic(null);
-                    this.setText("Could not load Item Graphic");
-                } else {
-                    this.setGraphic(this.root);
-                    final List<Release> releases = item.getReleases();
-                    final String title = releases
-                            .stream()
-                            .max(Comparator.comparingInt(release -> release.getTitle().length()))
-                            .map(Release::getTitle)
-                            .orElse("N/A");
-
-                    final String latestRelease = releases
-                            .stream()
-                            .min(Comparator.comparing(Release::getReleaseDate))
-                            .map(Release::getReleaseDate)
-                            .map(Formatter::format)
-                            .orElse("N/A");
-
-                    this.topLeftContent.setText(Formatter.format(item));
-                    this.topRightContent.setText(latestRelease);
-                    this.content.setText(title);
-                    final boolean locked = releases.stream().allMatch(Release::isLocked) && !releases.isEmpty();
-                    final boolean hasOnline = releases.stream().map(Release::getUrl).anyMatch(s -> s != null && !s.isEmpty());
-                    this.lockedView.setVisible(locked);
-                    this.readView.setOpacity((item.getProgress() + 0.25) / (1.25));
-                    this.onlineView.setOpacity(hasOnline ? 1 : 0.25);
-                    this.localView.setOpacity(item.isSaved() ? 1 : 0.25);
-                }
-            }
-        }
-
-        private void init() {
-            this.root = ControllerUtils.load("/tocEpisodeItem.fxml", this);
-            if (this.root == null) {
-                this.loadFailed = true;
-            } else {
-                this.lockedView.setImage(this.lockedImage);
-                this.readView.setImage(this.readImage);
-                this.onlineView.setImage(this.onlineImage);
-                this.localView.setImage(this.localImage);
-                this.loadFailed = false;
-            }
-        }
-    }
 }

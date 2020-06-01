@@ -119,6 +119,8 @@ public interface Repository {
 
     LiveData<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes);
 
+    LiveData<List<MediumItem>> getAllMedia(Sorting sortings);
+
     LiveData<MediumSetting> getMediumSettings(int mediumId);
 
     CompletableFuture<String> updateMedium(MediumSetting mediumSettings);

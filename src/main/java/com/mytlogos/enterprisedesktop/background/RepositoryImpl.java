@@ -469,6 +469,11 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
+    public LiveData<List<MediumItem>> getAllMedia(Sorting sortings) {
+        return this.storage.getAllMedia(sortings);
+    }
+
+    @Override
     public LiveData<MediumSetting> getMediumSettings(int mediumId) {
         return this.storage.getMediumSettings(mediumId);
     }

@@ -109,7 +109,6 @@ class MediaListTable extends AbstractTable {
         final int lastEpisode = value.getInt(15);
         final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
         return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
-
     });
 
     MediaListTable() {

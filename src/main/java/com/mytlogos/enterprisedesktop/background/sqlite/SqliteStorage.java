@@ -242,6 +242,11 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
+    public LiveData<List<MediumItem>> getAllMedia(Sorting sortings) {
+        return this.mediumTable.getAllMedia(sortings);
+    }
+
+    @Override
     public LiveData<MediumSetting> getMediumSettings(int mediumId) {
         return this.mediumTable.getSettings(mediumId);
     }

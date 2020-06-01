@@ -4,8 +4,11 @@ import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.Medium;
+import com.mytlogos.enterprisedesktop.model.MediumItem;
 import com.mytlogos.enterprisedesktop.model.MediumSetting;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
+import com.mytlogos.enterprisedesktop.tools.Sorting;
+
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
@@ -113,6 +116,131 @@ class MediumTable extends AbstractTable {
             value.getString(2),
             value.getInt(3)
     ));
+    private final QueryBuilder<MediumItem> getAllMediumAscQuery = new QueryBuilder<MediumItem>(
+            "Select AllMedia",
+            "SELECT * FROM \n" +
+                    "(SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, \n" +
+                    "countryOfOrigin, languageOfOrigin, lang, series, universe, \n" +
+                    "(\n" +
+                    "   SELECT episodeId FROM episode \n" +
+                    "   INNER JOIN part ON part.partId= episode.partId \n" +
+                    "   WHERE mediumId=medium.mediumId \n" +
+                    "   ORDER BY episode.combiIndex DESC \n" +
+                    "   LIMIT 1\n" +
+                    ") as currentRead,\n" +
+                    "(\n" +
+                    "    SELECT episode.combiIndex \n" +
+                    "    FROM episode\n" +
+                    "    INNER JOIN part ON part.partId=episode.partId\n" +
+                    "    WHERE part.mediumId=medium.mediumId AND episode.progress=1\n" +
+                    "    ORDER BY episode.combiIndex DESC\n" +
+                    "    LIMIT 1\n" +
+                    ") as currentReadEpisode,\n" +
+                    "(\n" +
+                    "   SELECT MAX(episode.combiIndex) FROM episode \n" +
+                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
+                    "   WHERE part.mediumId=medium.mediumId\n" +
+                    ") as lastEpisode , \n" +
+                    "(\n" +
+                    "   SELECT MAX(episode_release.releaseDate) FROM episode \n" +
+                    "   INNER JOIN episode_release ON episode.episodeId=episode_release.episodeId \n" +
+                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
+                    "   WHERE part.mediumId=medium.mediumId\n" +
+                    ") as lastUpdated \n" +
+                    "FROM medium\n" +
+                    ") as medium \n" +
+                    "ORDER BY \n" +
+                    "CASE ? \n" +
+                    "WHEN 2 THEN medium \n" +
+                    "WHEN 3 THEN title \n" +
+                    "WHEN 5 THEN author \n" +
+                    "WHEN 7 THEN lastEpisode \n" +
+                    "WHEN 8 THEN currentReadEpisode \n" +
+                    "WHEN 9 THEN lastUpdated \n" +
+                    "ELSE title \n" +
+                    "END ASC"
+    ).setConverter(value -> {
+        final String title = value.getString(1);
+        final int mediumId = value.getInt(2);
+        final String author = value.getString(3);
+        final String artist = value.getString(4);
+        final int medium = value.getInt(5);
+        final int stateTl = value.getInt(6);
+        final int stateOrigin = value.getInt(7);
+        final String countryOfOrigin = value.getString(8);
+        final String languageOfOrigin = value.getString(9);
+        final String language = value.getString(10);
+        final String series = value.getString(11);
+        final String universe = value.getString(12);
+        final int currentRead = value.getInt(13);
+        final int currentReadEpisode = value.getInt(14);
+        final int lastEpisode = value.getInt(15);
+        final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
+        return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
+    });
+
+    private final QueryBuilder<MediumItem> getAllMediumDescQuery = new QueryBuilder<MediumItem>(
+            "Select AllMedia",
+            "SELECT * FROM \n" +
+                    "(SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, \n" +
+                    "countryOfOrigin, languageOfOrigin, lang, series, universe, \n" +
+                    "(\n" +
+                    "   SELECT episodeId FROM episode \n" +
+                    "   INNER JOIN part ON part.partId= episode.partId \n" +
+                    "   WHERE mediumId=medium.mediumId \n" +
+                    "   ORDER BY episode.combiIndex DESC \n" +
+                    "   LIMIT 1\n" +
+                    ") as currentRead,\n" +
+                    "(\n" +
+                    "    SELECT episode.combiIndex \n" +
+                    "    FROM episode\n" +
+                    "    INNER JOIN part ON part.partId=episode.partId\n" +
+                    "    WHERE part.mediumId=medium.mediumId AND episode.progress=1\n" +
+                    "    ORDER BY episode.combiIndex DESC\n" +
+                    "    LIMIT 1\n" +
+                    ") as currentReadEpisode,\n" +
+                    "(\n" +
+                    "   SELECT MAX(episode.combiIndex) FROM episode \n" +
+                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
+                    "   WHERE part.mediumId=medium.mediumId\n" +
+                    ") as lastEpisode , \n" +
+                    "(\n" +
+                    "   SELECT MAX(episode_release.releaseDate) FROM episode \n" +
+                    "   INNER JOIN episode_release ON episode.episodeId=episode_release.episodeId \n" +
+                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
+                    "   WHERE part.mediumId=medium.mediumId\n" +
+                    ") as lastUpdated \n" +
+                    "FROM medium\n" +
+                    ") as medium \n" +
+                    "ORDER BY \n" +
+                    "CASE ? \n" +
+                    "WHEN 2 THEN medium \n" +
+                    "WHEN 3 THEN title \n" +
+                    "WHEN 5 THEN author \n" +
+                    "WHEN 7 THEN lastEpisode \n" +
+                    "WHEN 8 THEN currentReadEpisode \n" +
+                    "WHEN 9 THEN lastUpdated \n" +
+                    "ELSE title \n" +
+                    "END DESC"
+    ).setConverter(value -> {
+        final String title = value.getString(1);
+        final int mediumId = value.getInt(2);
+        final String author = value.getString(3);
+        final String artist = value.getString(4);
+        final int medium = value.getInt(5);
+        final int stateTl = value.getInt(6);
+        final int stateOrigin = value.getInt(7);
+        final String countryOfOrigin = value.getString(8);
+        final String languageOfOrigin = value.getString(9);
+        final String language = value.getString(10);
+        final String series = value.getString(11);
+        final String universe = value.getString(12);
+        final int currentRead = value.getInt(13);
+        final int currentReadEpisode = value.getInt(14);
+        final int lastEpisode = value.getInt(15);
+        final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
+        return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
+    });
 
     MediumTable() {
         super("medium");
@@ -147,6 +275,20 @@ class MediumTable extends AbstractTable {
 
     public LiveData<List<SimpleMedium>> getSimpleMedium() {
         return this.getAllSimpleMediumQuery.queryLiveDataList();
+    }
+
+    public LiveData<List<MediumItem>> getAllMedia(Sorting sortings) {
+        final int sortValue = sortings.getSortValue();
+
+        QueryBuilder<MediumItem> queryBuilder;
+
+        if (sortValue > 0) {
+            queryBuilder = this.getAllMediumAscQuery;
+        } else {
+            queryBuilder = this.getAllMediumDescQuery;
+        }
+        queryBuilder.setValues(value -> value.setInt(1, sortValue));
+        return queryBuilder.queryLiveDataList();
     }
 
     void insert(Medium medium) {

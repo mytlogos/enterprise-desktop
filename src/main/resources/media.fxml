@@ -4,7 +4,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.Text?>
-<SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.121"
+<SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.141"
            xmlns:fx="http://javafx.com/fxml/1"
            fx:controller="com.mytlogos.enterprisedesktop.controller.MediaController">
     <SplitPane dividerPositions="0.6">
@@ -23,7 +23,16 @@
                 <ChoiceBox fx:id="mediumSorting" prefWidth="150.0"/>
                 <ToggleButton fx:id="mediumAscendingBtn" mnemonicParsing="false" text="Ascending"/>
             </FlowPane>
-            <ListView fx:id="mediaView" VBox.vgrow="ALWAYS"/>
+            <StackPane VBox.vgrow="ALWAYS">
+                <ListView fx:id="mediaView"/>
+                <StackPane fx:id="mediaLoadPane" style="-fx-background-color: rgba(0, 0, 0, 0.2);" visible="false">
+                    <ProgressIndicator>
+                        <StackPane.margin>
+                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+                        </StackPane.margin>
+                    </ProgressIndicator>
+                </StackPane>
+            </StackPane>
         </VBox>
         <VBox>
             <FlowPane hgap="5.0" vgap="5.0">
@@ -64,13 +73,22 @@
                                  selected="true" text="Ignore" toggleGroup="$savedFilter"/>
                 </HBox>
             </FlowPane>
-            <ListView fx:id="mediumContentView" VBox.vgrow="ALWAYS"/>
+            <StackPane VBox.vgrow="ALWAYS">
+                <ListView fx:id="mediumContentView"/>
+                <StackPane fx:id="mediumLoadPane" style="-fx-background-color: rgba(0, 0, 0, 0.2);" visible="false">
+                    <ProgressIndicator>
+                        <StackPane.margin>
+                            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0"/>
+                        </StackPane.margin>
+                    </ProgressIndicator>
+                </StackPane>
+            </StackPane>
         </VBox>
     </SplitPane>
     <ScrollPane fx:id="detailPane" fitToHeight="true" fitToWidth="true">
         <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
         </padding>
-        <fx:include source="mediumDisplay.fxml" fx:id="mediumDisplayController"/>
+        <fx:include fx:id="mediumDisplay" source="mediumDisplay.fxml"/>
     </ScrollPane>
 </SplitPane>
