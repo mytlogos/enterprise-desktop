@@ -43,4 +43,8 @@ public class MediumType {
     public static boolean is(int type, int toCheck) {
         return (type & toCheck) == toCheck;
     }
+
+    public static boolean intersect(int type, int toCheck) {
+        return (type & toCheck) > 0;
+    }
 }

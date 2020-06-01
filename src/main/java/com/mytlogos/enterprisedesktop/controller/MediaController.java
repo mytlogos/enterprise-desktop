@@ -9,19 +9,25 @@ import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
+import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.Notifications;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +40,16 @@ public class MediaController implements Attachable {
     private final ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
     private final ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
     private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
+    private final ObservableList<MediumItem> observableMediaItems = FXCollections.observableArrayList();
+    private final Observer<List<MediaList>> listObserver = Utils.emptyObserver();
+    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
+    private ObjectBinding<MediumFilter> mediumFilter;
+    @FXML
+    private TextField listFilter;
+    @FXML
+    private ToggleButton ignoreLists;
+    @FXML
+    private ListView<MediaList> listFilterView;
     @FXML
     private StackPane mediaLoadPane;
     @FXML
@@ -65,6 +81,13 @@ public class MediaController implements Attachable {
             this.mediumContentView.getItems().setAll(episodes);
         }
     };
+    private final Observer<List<MediumItem>> mediaItemsObserver = mediumItems -> {
+        this.mediumContentView.getItems().clear();
+        if (mediumItems != null) {
+            this.mediaLoadPane.setVisible(false);
+            this.observableMediaItems.setAll(mediumItems);
+        }
+    };
     @FXML
     private TextField scrollToEpisodeField;
     @FXML
@@ -72,14 +95,7 @@ public class MediaController implements Attachable {
     @FXML
     private ChoiceBox<EpisodeSorting> episodeSorting;
     @FXML
-    private ListView<Medium> mediaView;
-    private final Observer<List<MediumItem>> mediaItemsObserver = mediumItems -> {
-        this.mediumContentView.getItems().clear();
-        if (mediumItems != null) {
-            this.mediaLoadPane.setVisible(false);
-            this.mediaView.getItems().setAll(mediumItems);
-        }
-    };
+    private ListView<MediumItem> mediaView;
     @FXML
     private ToggleButton mediumAscendingBtn;
     @FXML
@@ -106,8 +122,103 @@ public class MediaController implements Attachable {
     private LiveData<MediumSetting> mediumSettingLiveData;
     private final InvalidationListener mediumListener = observable -> selectMedium();
     private LiveData<List<MediumItem>> mediaItems;
+    private LiveData<List<Integer>> listItemsLiveData;
+    private LiveData<List<MediaList>> listLiveData;
 
     public void initialize() {
+        this.mediumFilter = Bindings.createObjectBinding(() -> new MediumFilter(
+                        this.nameFilter.getText(),
+                        ControllerUtils.getMedium(this.showTextBox, this.showImageBox, this.showVideoBox, this.showAudioBox),
+                        -1,
+                        -1
+                ),
+                this.nameFilter.textProperty(),
+                this.showAudioBox.selectedProperty(),
+                this.showImageBox.selectedProperty(),
+                this.showTextBox.selectedProperty(),
+                this.showVideoBox.selectedProperty()
+        );
+
+        FilteredList<MediumItem> itemFilteredList = new FilteredList<>(this.observableMediaItems);
+        this.mediaView.setItems(itemFilteredList);
+        itemFilteredList.predicateProperty().bind(Bindings.createObjectBinding(
+                () -> {
+                    final MediumFilter mediumFilter;
+                    if (this.mediumFilter == null) {
+                        mediumFilter = null;
+                    } else {
+                        mediumFilter = this.mediumFilter.get();
+                    }
+                    String title;
+                    if (mediumFilter == null || mediumFilter.title == null) {
+                        title = null;
+                    } else {
+                        title = mediumFilter.title.toLowerCase();
+                    }
+                    return mediumItem -> {
+                        if (mediumFilter != null) {
+                            if (mediumFilter.medium > 0 && !MediumType.intersect(mediumFilter.medium, mediumItem.getMedium())) {
+                                return false;
+                            }
+                            if (title != null && !mediumItem.getTitle().toLowerCase().contains(title)) {
+                                return false;
+                            }
+                        }
+                        final int mediumId = mediumItem.getMediumId();
+                        if (this.listItemsLiveData == null) {
+                            return true;
+                        }
+                        final List<Integer> value = this.listItemsLiveData.getValue();
+                        if (value == null || this.listFilterView.getItems().isEmpty()) {
+                            return true;
+                        }
+                        if (this.ignoreLists.isSelected()) {
+                            return !value.contains(mediumId);
+                        } else {
+                            return value.contains(mediumId);
+                        }
+                    };
+                },
+                this.listFilterView.getItems(),
+                this.ignoreLists.selectedProperty(),
+                this.mediumFilter
+        ));
+        this.listFilterView.setCellFactory(param -> {
+            final ListCell<MediaList> cell = new ListCell<>();
+            cell.textProperty().bind(Bindings.createStringBinding(
+                    () -> cell.getItem() == null ? "" : cell.getItem().getName(),
+                    cell.itemProperty())
+            );
+            return cell;
+        });
+
+        this.listFilterView.setOnKeyPressed(event -> {
+            if (event.getCode() == KeyCode.DELETE) {
+                this.listFilterView.getItems().removeAll(this.listFilterView.getSelectionModel().getSelectedItems());
+            }
+        });
+
+        this.listFilterView.getItems().addListener((InvalidationListener) observable -> {
+            List<Integer> listIds = new ArrayList<>(this.listFilterView.getItems().size());
+
+            for (MediaList item : this.listFilterView.getItems()) {
+                listIds.add(item.getListId());
+            }
+            if (this.listItemsLiveData != null) {
+                this.listItemsLiveData.removeObserver(this.listItemsObserver);
+            }
+            this.listItemsLiveData = ApplicationConfig.getRepository().getListItems(listIds);
+            this.listItemsLiveData.observe(this.listItemsObserver);
+        });
+        this.listLiveData = ApplicationConfig.getLiveDataRepository().flatMap(Repository::getInternLists);
+        this.listLiveData.observe(this.listObserver);
+        ControllerUtils.addAutoCompletionBinding(
+                this.listFilter,
+                this.listLiveData,
+                MediaList::getName,
+                mediaList -> this.listFilterView.getItems().add(mediaList)
+        );
+
         this.mediaView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.mediumContentView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
@@ -311,13 +422,13 @@ public class MediaController implements Attachable {
 
     }
 
-    private static class MediumCell extends ListCell<Medium> {
+    private static class MediumCell extends ListCell<MediumItem> {
         MediumCell() {
 
         }
 
         @Override
-        protected void updateItem(Medium item, boolean empty) {
+        protected void updateItem(MediumItem item, boolean empty) {
             super.updateItem(item, empty);
 
             if (empty || item == null) {
@@ -329,9 +440,17 @@ public class MediaController implements Attachable {
         }
     }
 
-    private class MediumFilter {
-        public MediumFilter(int medium, int minEpisodeIndex, int maxEpisodeIndex) {
+    private static class MediumFilter {
+        private final String title;
+        private final int medium;
+        private final int minEpisodeIndex;
+        private final int maxEpisodeIndex;
 
+        public MediumFilter(String title, int medium, int minEpisodeIndex, int maxEpisodeIndex) {
+            this.title = title;
+            this.medium = medium;
+            this.minEpisodeIndex = minEpisodeIndex;
+            this.maxEpisodeIndex = maxEpisodeIndex;
         }
     }
 }
