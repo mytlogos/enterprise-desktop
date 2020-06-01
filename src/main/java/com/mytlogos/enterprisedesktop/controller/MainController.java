@@ -43,11 +43,6 @@ public class MainController {
     @FXML
     private Text infoText;
     private TasksHelper helper;
-    private EpisodeViewController episodeViewController;
-    private ListViewController listViewController;
-    private MediaInWaitController mediaInWaitController;
-    private SearchMediumController searchController;
-    private MediaController mediaController;
 
     public void initialize() {
         this.initTabMaps();
