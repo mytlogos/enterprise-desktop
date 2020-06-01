@@ -3,8 +3,8 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 import java.util.Arrays;
 
 public class ClientListQuery {
-    private ClientMediaList list;
-    private ClientMedium[] media;
+    private final ClientMediaList list;
+    private final ClientMedium[] media;
 
     public ClientListQuery(ClientMediaList list, ClientMedium[] media) {
         this.list = list;

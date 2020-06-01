@@ -15,8 +15,8 @@ public abstract class ApplicationConfig {
     private static Repository repository;
     private static Future<?> initializeFuture;
     private static final MutableLiveData<Repository> repositoryLiveData = new MutableLiveData<>();
-    private static MainPreferences mainPreferences = new MainPreferences();
-    private static TaskController taskController = new TaskController();
+    private static final MainPreferences mainPreferences = new MainPreferences();
+    private static final TaskController taskController = new TaskController();
 
     private ApplicationConfig() throws IllegalAccessException {
         throw new IllegalAccessException();

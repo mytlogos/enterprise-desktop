@@ -5,12 +5,12 @@ import com.mytlogos.enterprisedesktop.model.ExternalMediaList;
 import java.util.Arrays;
 
 public class ClientExternalMediaList implements ExternalMediaList {
-    private String uuid;
-    private int id;
-    private String name;
-    private int medium;
-    private String url;
-    private int[] items;
+    private final String uuid;
+    private final int id;
+    private final String name;
+    private final int medium;
+    private final String url;
+    private final int[] items;
 
     public ClientExternalMediaList(String uuid, int id, String name, int medium, String url,
                                    int[] items) {

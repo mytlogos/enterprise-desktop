@@ -7,7 +7,6 @@ import com.mytlogos.enterprisedesktop.model.SimpleEpisode;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
 import com.mytlogos.enterprisedesktop.tools.ImageContentTool;
-import com.mytlogos.enterprisedesktop.tools.TextContentTool;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -18,7 +17,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
 
@@ -45,8 +43,8 @@ public class ImageViewController {
     private Button previousBtn;
     @FXML
     private Button nextBtn;
-    private IntegerProperty latestVisiblePage = new SimpleIntegerProperty(0);
-    private EventHandler<KeyEvent> keyEventEventHandler = event -> {
+    private final IntegerProperty latestVisiblePage = new SimpleIntegerProperty(0);
+    private final EventHandler<KeyEvent> keyEventEventHandler = event -> {
         if (event.isControlDown()) {
             if (event.getCode() == KeyCode.MINUS) {
                 this.zoom.decrement();

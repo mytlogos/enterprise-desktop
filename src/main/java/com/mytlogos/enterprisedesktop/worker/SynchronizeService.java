@@ -412,9 +412,6 @@ public class SynchronizeService extends ScheduledService<Void> {
         }
         Utils.doPartitionedRethrow(missingIds, ids -> {
             List<ClientEpisode> parents = Utils.checkAndGetBody(client.getEpisodes(ids));
-            if (parents == null) {
-                throw new NullPointerException("missing Episodes");
-            }
             this.persistEpisodes(parents, client, persister, repository);
             return false;
         });

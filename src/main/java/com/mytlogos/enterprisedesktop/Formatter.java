@@ -14,7 +14,7 @@ public class Formatter {
     }
 
     public static String format(LocalDateTime date) {
-        return date == null ? null : DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm").format(date);
+        return date == null ? null : DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm").format(date);
     }
 
     public static String format(Indexable indexable) {

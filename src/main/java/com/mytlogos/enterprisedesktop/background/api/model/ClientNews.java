@@ -6,11 +6,11 @@ import com.mytlogos.enterprisedesktop.model.News;
 import java.time.LocalDateTime;
 
 public class ClientNews implements News {
-    private String title;
-    private String link;
-    private LocalDateTime date;
-    private int id;
-    private boolean read;
+    private final String title;
+    private final String link;
+    private final LocalDateTime date;
+    private final int id;
+    private final boolean read;
 
     public ClientNews(String title, String link, LocalDateTime date, int id, boolean read) {
         this.title = title;

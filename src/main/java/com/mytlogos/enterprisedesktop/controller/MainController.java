@@ -38,12 +38,12 @@ public class MainController {
     @FXML
     private Text infoText;
     private TasksHelper helper;
-    private TaskController taskController = ApplicationConfig.getTaskController();
+    private final TaskController taskController = ApplicationConfig.getTaskController();
     private EpisodeViewController episodeViewController;
     private ListViewController listViewController;
     private MediaInWaitController mediaInWaitController;
     private SearchMediumController searchController;
-    private MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
+    private final MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
 
     public void initialize() {
         this.helper = new TasksHelper(this.infoText, this.taskProgress);

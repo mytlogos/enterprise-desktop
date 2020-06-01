@@ -47,7 +47,7 @@ import java.util.Map;
  * @param <T> The type of data hold by this instance
  */
 public class MediatorLiveData<T> extends MutableLiveData<T> {
-    private Map<LiveData<?>, Source<?>> mSources = new HashMap<>();
+    private final Map<LiveData<?>, Source<?>> mSources = new HashMap<>();
 
     /**
      * Starts to listen the given {@code source} LiveData, {@code onChanged} observer will be called

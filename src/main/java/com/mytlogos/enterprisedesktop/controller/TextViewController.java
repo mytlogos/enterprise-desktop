@@ -40,7 +40,7 @@ public class TextViewController {
     private Button previousBtn;
     @FXML
     private Button nextBtn;
-    private EventHandler<KeyEvent> keyEventEventHandler = event -> {
+    private final EventHandler<KeyEvent> keyEventEventHandler = event -> {
         if (event.isControlDown()) {
             if (event.getCode() == KeyCode.MINUS) {
                 this.zoom.decrement();

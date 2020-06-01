@@ -1,6 +1,5 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
-import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientExternalUser;
 
 import java.util.List;

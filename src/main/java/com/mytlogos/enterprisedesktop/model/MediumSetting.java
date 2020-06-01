@@ -191,7 +191,7 @@ public class MediumSetting {
 
     public static class MediumSettingBuilder {
         private String title;
-        private int mediumId;
+        private final int mediumId;
         private String author;
         private String artist;
         private int medium;
@@ -203,9 +203,9 @@ public class MediumSetting {
         private String series;
         private String universe;
         private int currentRead;
-        private int currentReadEpisode;
-        private int lastEpisode;
-        private LocalDateTime lastUpdated;
+        private final int currentReadEpisode;
+        private final int lastEpisode;
+        private final LocalDateTime lastUpdated;
         private boolean toDownload;
 
         public MediumSettingBuilder(MediumSetting setting) {

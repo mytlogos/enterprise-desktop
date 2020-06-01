@@ -1,8 +1,5 @@
 package com.mytlogos.enterprisedesktop.background;
 
-import com.mytlogos.enterprisedesktop.model.Release;
-import com.mytlogos.enterprisedesktop.model.SimpleRelease;
-
 /**
  *
  */

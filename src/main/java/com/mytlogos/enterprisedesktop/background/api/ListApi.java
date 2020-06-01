@@ -1,6 +1,5 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
-import com.mytlogos.enterprisedesktop.background.api.model.ClientEpisode;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientListQuery;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMultiListQuery;

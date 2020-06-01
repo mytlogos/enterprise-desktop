@@ -1,7 +1,5 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-import com.mytlogos.enterprisedesktop.background.sqlite.internal.builder.SqlExpression;
-
 import java.sql.SQLException;
 
 /**

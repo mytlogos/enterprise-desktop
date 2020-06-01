@@ -5,15 +5,15 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 import java.util.Objects;
 
 public class InvalidatedData {
-    private int mediumId;
-    private int partId;
-    private int newsId;
-    private int episodeId;
-    private boolean userUuid;
-    private String externalUuid;
-    private int externalListId;
-    private int listId;
-    private String uuid;
+    private final int mediumId;
+    private final int partId;
+    private final int newsId;
+    private final int episodeId;
+    private final boolean userUuid;
+    private final String externalUuid;
+    private final int externalListId;
+    private final int listId;
+    private final String uuid;
 
     public InvalidatedData(int mediumId, int partId, int newsId, int episodeId, boolean userUuid, String externalUuid, int externalListId, int listId, String uuid) {
         this.mediumId = mediumId;

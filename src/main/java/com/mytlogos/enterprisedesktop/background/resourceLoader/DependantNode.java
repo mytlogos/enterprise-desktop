@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 
 class DependantNode {
-    private boolean root;
+    private final boolean root;
     private final DependantValue value;
     private final Set<DependantNode> children = new HashSet<>();
     private final Set<DependantNode> optionalChildren = new HashSet<>();

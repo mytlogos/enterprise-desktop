@@ -36,10 +36,10 @@ public class BlockingLoadWorker extends LoadWorker {
     private final ExecutorService workService = Executors.newSingleThreadExecutor();
     private final ExecutorService loadingService = Executors.newFixedThreadPool(5);
 
-    private Map<NetworkLoader<Integer>, IntLoaderManager> intLoaderManager = new HashMap<>();
-    private Map<NetworkLoader<String>, StringLoaderManager> stringLoaderManager = new HashMap<>();
-    private List<Integer> enforceMedia = new ArrayList<>();
-    private List<Integer> enforcePart = new ArrayList<>();
+    private final Map<NetworkLoader<Integer>, IntLoaderManager> intLoaderManager = new HashMap<>();
+    private final Map<NetworkLoader<String>, StringLoaderManager> stringLoaderManager = new HashMap<>();
+    private final List<Integer> enforceMedia = new ArrayList<>();
+    private final List<Integer> enforcePart = new ArrayList<>();
 
     public BlockingLoadWorker(LoadData loadedData, Repository repository, ClientModelPersister persister, DependantGenerator generator) {
         super(repository, persister, loadedData, generator);
@@ -336,7 +336,6 @@ public class BlockingLoadWorker extends LoadWorker {
                 }
                 // check only the first value,
                 // on the assumption that every value after it has the same class
-                //noinspection LoopStatementThatDoesntLoop
                 for (Object o : collection) {
                     clazz = o.getClass();
                     break;

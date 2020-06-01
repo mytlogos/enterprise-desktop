@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 class ExtUserLoader implements NetworkLoader<String> {
 
-    private LoadWorker loadWorker;
+    private final LoadWorker loadWorker;
 
     ExtUserLoader(LoadWorker loadWorker) {
         this.loadWorker = loadWorker;

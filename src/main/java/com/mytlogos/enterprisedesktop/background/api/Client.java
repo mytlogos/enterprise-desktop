@@ -17,8 +17,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
-    private static Map<Class<?>, Retrofit> retrofitMap = new HashMap<>();
-    private static Map<Class<?>, String> fullClassPathMap = new HashMap<>();
+    private static final Map<Class<?>, Retrofit> retrofitMap = new HashMap<>();
+    private static final Map<Class<?>, String> fullClassPathMap = new HashMap<>();
 
     static {
         buildPathMap();
@@ -29,7 +29,7 @@ public class Client {
     private Server server;
     private String lastNetworkSSID;
     private LocalDateTime disconnectedSince;
-    private Set<DisconnectedListener> disconnectedListeners = Collections.synchronizedSet(new HashSet<>());
+    private final Set<DisconnectedListener> disconnectedListeners = Collections.synchronizedSet(new HashSet<>());
 
     public Client(NetworkIdentificator identificator) {
         this.identificator = identificator;

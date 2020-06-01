@@ -3,9 +3,9 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 import java.time.LocalDateTime;
 
 public class ClientReadEpisode {
-    private int episodeId;
-    private LocalDateTime readDate;
-    private float progress;
+    private final int episodeId;
+    private final LocalDateTime readDate;
+    private final float progress;
 
     public ClientReadEpisode(int episodeId, LocalDateTime readDate, float progress) {
         this.episodeId = episodeId;

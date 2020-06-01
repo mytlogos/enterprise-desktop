@@ -7,12 +7,12 @@ import java.util.Arrays;
 import java.util.List;
 
 public class ClientPart implements Part {
-    private int mediumId;
-    private int id;
-    private String title;
-    private int totalIndex;
-    private int partialIndex;
-    private ClientEpisode[] episodes;
+    private final int mediumId;
+    private final int id;
+    private final String title;
+    private final int totalIndex;
+    private final int partialIndex;
+    private final ClientEpisode[] episodes;
 
     public ClientPart(int mediumId, int id, String title, int totalIndex, int partialIndex, ClientEpisode[] episodes) {
         this.mediumId = mediumId;

@@ -3,7 +3,6 @@ package com.mytlogos.enterprisedesktop;
 import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.RepositoryProvider;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -13,7 +12,6 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 /**
  *

@@ -34,8 +34,8 @@ public class HtmlToPlainText {
     }
 
     // the formatting rules, implemented in a breadth-first DOM traverse
-    private class FormattingVisitor implements NodeVisitor {
-        private StringBuilder accum = new StringBuilder(); // holds the accumulated text
+    private static class FormattingVisitor implements NodeVisitor {
+        private final StringBuilder accum = new StringBuilder(); // holds the accumulated text
         private int listNesting;
 
         // hit when the node is first seen

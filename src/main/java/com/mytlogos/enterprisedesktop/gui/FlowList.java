@@ -6,7 +6,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.FocusModel;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.layout.FlowPane;
 import javafx.util.Callback;
@@ -16,9 +15,9 @@ import javafx.util.Callback;
  */
 public class FlowList<T> extends FlowPane {
     private ObservableList<T> items = FXCollections.observableArrayList();
-    private ObjectProperty<MultipleSelectionModel<T>> selectionModel = new SimpleObjectProperty<>();
-    private ObjectProperty<FocusModel<T>> focusModel = new SimpleObjectProperty<>();
-    private ObjectProperty<Callback<FlowList<T>, ListCell<T>>> cellFactory = new SimpleObjectProperty<>();
+    private final ObjectProperty<MultipleSelectionModel<T>> selectionModel = new SimpleObjectProperty<>();
+    private final ObjectProperty<FocusModel<T>> focusModel = new SimpleObjectProperty<>();
+    private final ObjectProperty<Callback<FlowList<T>, ListCell<T>>> cellFactory = new SimpleObjectProperty<>();
 
     public ObservableList<T> getItems() {
         return items;
@@ -28,7 +27,7 @@ public class FlowList<T> extends FlowPane {
         this.items = items;
     }
 
-    public FocusModel getFocusModel() {
+    public FocusModel<T> getFocusModel() {
         return focusModel.get();
     }
 
@@ -40,7 +39,7 @@ public class FlowList<T> extends FlowPane {
         this.focusModel.set(focusModel);
     }
 
-    public MultipleSelectionModel getSelectionModel() {
+    public MultipleSelectionModel<T> getSelectionModel() {
         return selectionModel.get();
     }
 

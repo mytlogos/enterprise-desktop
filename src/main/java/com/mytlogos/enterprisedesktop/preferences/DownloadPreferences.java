@@ -14,17 +14,17 @@ import java.nio.file.FileSystems;
  */
 public class DownloadPreferences extends CategoryPreference {
 
-    private SimpleObjectProperty<File> defaultFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium").toFile());
-    private ObjectProperty<File> textFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "text").toFile());
-    private ObjectProperty<File> videoFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "video").toFile());
-    private ObjectProperty<File> audioFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "audio").toFile());
-    private ObjectProperty<File> imageFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "image").toFile());
-    private BooleanProperty autoDownload = new SimpleBooleanProperty(true);
-    private IntegerProperty defaultSizeLimit = new SimpleIntegerProperty(4000);
-    private IntegerProperty videoSizeLimit = new SimpleIntegerProperty(1000);
-    private IntegerProperty textSizeLimit = new SimpleIntegerProperty(1000);
-    private IntegerProperty audioSizeLimit = new SimpleIntegerProperty(1000);
-    private IntegerProperty imageSizeLimit = new SimpleIntegerProperty(1000);
+    private final SimpleObjectProperty<File> defaultFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium").toFile());
+    private final ObjectProperty<File> textFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "text").toFile());
+    private final ObjectProperty<File> videoFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "video").toFile());
+    private final ObjectProperty<File> audioFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "audio").toFile());
+    private final ObjectProperty<File> imageFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "image").toFile());
+    private final BooleanProperty autoDownload = new SimpleBooleanProperty(true);
+    private final IntegerProperty defaultSizeLimit = new SimpleIntegerProperty(4000);
+    private final IntegerProperty videoSizeLimit = new SimpleIntegerProperty(1000);
+    private final IntegerProperty textSizeLimit = new SimpleIntegerProperty(1000);
+    private final IntegerProperty audioSizeLimit = new SimpleIntegerProperty(1000);
+    private final IntegerProperty imageSizeLimit = new SimpleIntegerProperty(1000);
 
     public File getDefaultFile() {
         return defaultFile.get();

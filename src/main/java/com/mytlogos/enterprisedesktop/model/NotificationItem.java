@@ -5,11 +5,11 @@ import java.time.LocalDateTime;
 
 public class NotificationItem {
 
-    private String title;
+    private final String title;
 
-    private String description;
+    private final String description;
 
-    private LocalDateTime datetime;
+    private final LocalDateTime datetime;
 
     public NotificationItem( String title,  String description,  LocalDateTime datetime) {
         this.title = title;

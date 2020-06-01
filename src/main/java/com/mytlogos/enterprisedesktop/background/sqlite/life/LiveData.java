@@ -44,7 +44,7 @@ public abstract class LiveData<T> {
     // thread
     @SuppressWarnings("WeakerAccess") /* synthetic access */
     volatile Object mPendingData = NOT_SET;
-    private Map<Observer<? super T>, ObserverWrapper> mObservers = new LinkedHashMap<>();
+    private final Map<Observer<? super T>, ObserverWrapper> mObservers = new LinkedHashMap<>();
     private volatile Object mData;
     private int mVersion;
 

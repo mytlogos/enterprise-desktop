@@ -64,7 +64,7 @@ public class MediumDisplayController {
     @FXML
     private ToggleGroup mediumMedium;
 
-    private ObjectProperty<MediumSetting> mediumSetting = new SimpleObjectProperty<>();
+    private final ObjectProperty<MediumSetting> mediumSetting = new SimpleObjectProperty<>();
 
     Parent getRoot() {
         return this.root;

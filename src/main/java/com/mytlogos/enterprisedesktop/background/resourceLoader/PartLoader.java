@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 class PartLoader implements NetworkLoader<Integer> {
 
-    private LoadWorker loadWorker;
+    private final LoadWorker loadWorker;
 
     PartLoader(LoadWorker loadWorker) {
         this.loadWorker = loadWorker;

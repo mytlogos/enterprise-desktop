@@ -8,13 +8,13 @@ import java.util.Set;
  * A container for synchronized Sets.
  */
 public class LoadData {
-    private Set<Integer> media = Collections.synchronizedSet(new HashSet<>());
-    private Set<Integer> part = Collections.synchronizedSet(new HashSet<>());
-    private Set<Integer> episode = Collections.synchronizedSet(new HashSet<>());
-    private Set<Integer> news = Collections.synchronizedSet(new HashSet<>());
-    private Set<String> externalUser = Collections.synchronizedSet(new HashSet<>());
-    private Set<Integer> externalMediaList = Collections.synchronizedSet(new HashSet<>());
-    private Set<Integer> mediaList = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Integer> media = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Integer> part = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Integer> episode = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Integer> news = Collections.synchronizedSet(new HashSet<>());
+    private final Set<String> externalUser = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Integer> externalMediaList = Collections.synchronizedSet(new HashSet<>());
+    private final Set<Integer> mediaList = Collections.synchronizedSet(new HashSet<>());
 
     public Set<Integer> getMedia() {
         return media;

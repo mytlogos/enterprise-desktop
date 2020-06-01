@@ -33,7 +33,7 @@ class EpisodeTable extends AbstractTable {
         statement.setBoolean(8, episode.isSaved());
     });
 
-    private QueryBuilder<SimpleEpisode> simpleEpisodeQuery = new QueryBuilder<SimpleEpisode>(
+    private final QueryBuilder<SimpleEpisode> simpleEpisodeQuery = new QueryBuilder<SimpleEpisode>(
             "Select SimpleEpisode",
             "SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId = ?"
     )
@@ -44,7 +44,7 @@ class EpisodeTable extends AbstractTable {
                             value.getFloat(4)
                     )
             );
-    private QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>(
+    private final QueryBuilder<SimpleEpisode> simpleEpisodesQuery = new QueryBuilder<SimpleEpisode>(
             "Select SimpleEpisodes",
             "SELECT episodeId, totalIndex, partialIndex, progress FROM episode WHERE episodeId $?"
     )
@@ -56,11 +56,11 @@ class EpisodeTable extends AbstractTable {
                     )
             );
 
-    private QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("Update Saved", "UPDATE episode SET saved=? WHERE episodeId $?");
-    private QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("Update Progress", "UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
-    private QueryBuilder<Boolean> updateProgressMultiQuery = new QueryBuilder<>("Update Progresses", "UPDATE episode SET progress=?, readDate=? WHERE episodeId $?");
-    private QueryBuilder<Integer> saveEpisodesQuery = new QueryBuilder<>("Select Saved", "SELECT episodeId FROM episode WHERE saved=1;");
-    private QueryBuilder<Integer> getDownloadableQuery = new QueryBuilder<Integer>(
+    private final QueryBuilder<Boolean> updateSavedQuery = new QueryBuilder<>("Update Saved", "UPDATE episode SET saved=? WHERE episodeId $?");
+    private final QueryBuilder<Boolean> updateProgressQuery = new QueryBuilder<>("Update Progress", "UPDATE episode SET progress=?, readDate=? WHERE episodeId=?");
+    private final QueryBuilder<Boolean> updateProgressMultiQuery = new QueryBuilder<>("Update Progresses", "UPDATE episode SET progress=?, readDate=? WHERE episodeId $?");
+    private final QueryBuilder<Integer> saveEpisodesQuery = new QueryBuilder<>("Select Saved", "SELECT episodeId FROM episode WHERE saved=1;");
+    private final QueryBuilder<Integer> getDownloadableQuery = new QueryBuilder<Integer>(
             "Select Downloadable",
             "SELECT episodeId FROM (SELECT episode.episodeId, episode.saved FROM episode " +
                     "LEFT JOIN failedEpisode ON failedEpisode.episodeId=episode.episodeId " +
@@ -83,7 +83,7 @@ class EpisodeTable extends AbstractTable {
                     "WHERE saved = 0"
     ).setConverter(value -> value.getInt(1));
 
-    private QueryBuilder<TocEpisode> getTocAscQuery = new QueryBuilder<TocEpisode>(
+    private final QueryBuilder<TocEpisode> getTocAscQuery = new QueryBuilder<TocEpisode>(
             "Select Toc Asc",
             "SELECT episode.episodeId, episode.progress, episode.readDate, episode.partId, " +
                     "episode.totalIndex, episode.partialIndex, episode.saved " +
@@ -105,7 +105,7 @@ class EpisodeTable extends AbstractTable {
                 return new TocEpisode(episodeId, progress, partId, partialIndex, totalIndex, localDateTime, savedDb, new ArrayList<>());
             }
     );
-    private QueryBuilder<TocEpisode> getTocDescQuery = new QueryBuilder<TocEpisode>(
+    private final QueryBuilder<TocEpisode> getTocDescQuery = new QueryBuilder<TocEpisode>(
             "Select Toc Desc",
             "SELECT episode.episodeId, episode.progress, episode.readDate, episode.partId, " +
                     "episode.totalIndex, episode.partialIndex, episode.saved " +

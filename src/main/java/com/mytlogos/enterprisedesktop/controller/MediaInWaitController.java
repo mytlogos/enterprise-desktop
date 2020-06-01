@@ -57,7 +57,7 @@ public class MediaInWaitController implements Attachable {
     @FXML
     private TextField hostFilter;
     private LiveData<PagedList<MediumInWait>> mediumInWaitLiveData;
-    private Observer<List<MediumInWait>> mediumInWaitObserver = mediumInWaits -> this.mediumInWaitListView.getItems().setAll(mediumInWaits);
+    private final Observer<List<MediumInWait>> mediumInWaitObserver = mediumInWaits -> this.mediumInWaitListView.getItems().setAll(mediumInWaits);
     private MediaList selectedList;
     private SimpleMedium selectedMedium;
     private boolean running;

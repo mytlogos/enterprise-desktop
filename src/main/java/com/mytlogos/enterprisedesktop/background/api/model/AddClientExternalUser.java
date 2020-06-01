@@ -1,7 +1,7 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
 public class AddClientExternalUser extends ClientExternalUser {
-    private String pwd;
+    private final String pwd;
 
     public AddClientExternalUser(String uuid, String identifier, int type, ClientExternalMediaList[] lists, String pwd) {
         super("", uuid, identifier, type, lists);

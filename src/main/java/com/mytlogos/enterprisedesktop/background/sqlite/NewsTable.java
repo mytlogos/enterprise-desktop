@@ -1,11 +1,8 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.background.api.model.ClientNews;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
 import com.mytlogos.enterprisedesktop.model.News;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;

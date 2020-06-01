@@ -2,7 +2,6 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
-import com.mytlogos.enterprisedesktop.background.api.model.ClientPart;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.Medium;
 import com.mytlogos.enterprisedesktop.model.MediumSetting;

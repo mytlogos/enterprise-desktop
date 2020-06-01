@@ -5,11 +5,11 @@ import com.mytlogos.enterprisedesktop.model.MediaList;
 import java.util.Arrays;
 
 public class ClientMediaList implements MediaList {
-    private String userUuid;
-    private int id;
-    private String name;
-    private int medium;
-    private int[] items;
+    private final String userUuid;
+    private final int id;
+    private final String name;
+    private final int medium;
+    private final int[] items;
 
     public ClientMediaList(String userUuid, int id, String name, int medium, int[] items) {
         this.userUuid = userUuid;

@@ -9,7 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 class MediumLoader implements NetworkLoader<Integer> {
-    private LoadWorker loadWorker;
+    private final LoadWorker loadWorker;
 
     MediumLoader(LoadWorker loadWorker) {
         this.loadWorker = loadWorker;

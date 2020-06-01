@@ -12,10 +12,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  */
 public class InvalidationManager {
-    private static InvalidationManager INSTANCE = new InvalidationManager();
-    private Map<AbstractTable, Set<Runnable>> tableRunnable = Collections.synchronizedMap(new HashMap<>());
-    private Map<AbstractTable, AtomicBoolean> tableInvalidationRunning = Collections.synchronizedMap(new HashMap<>());
-    private ExecutorService service = Executors.newFixedThreadPool(5);
+    private static final InvalidationManager INSTANCE = new InvalidationManager();
+    private final Map<AbstractTable, Set<Runnable>> tableRunnable = Collections.synchronizedMap(new HashMap<>());
+    private final Map<AbstractTable, AtomicBoolean> tableInvalidationRunning = Collections.synchronizedMap(new HashMap<>());
+    private final ExecutorService service = Executors.newFixedThreadPool(5);
 
     private InvalidationManager() {
         if (INSTANCE != null) {

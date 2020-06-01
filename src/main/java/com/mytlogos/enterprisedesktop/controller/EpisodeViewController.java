@@ -90,8 +90,8 @@ public class EpisodeViewController implements Attachable {
     private CheckBox showAudioBox;
     @FXML
     private CheckBox latestOnly;
-    private ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
-    private ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
 
     private ObjectBinding<ReleaseFilter> episodeFilterBinding;
     private LiveData<PagedList<DisplayRelease>> episodesLiveData;
@@ -100,8 +100,8 @@ public class EpisodeViewController implements Attachable {
     private LiveData<List<SimpleMedium>> mediumLiveData;
     private Observer<List<MediaList>> listObserver;
     private Observer<List<SimpleMedium>> mediumObserver;
-    private ObservableList<DisplayRelease> releases = FXCollections.observableArrayList();
-    private Observer<PagedList<DisplayRelease>> pagedListObserver = releases -> {
+    private final ObservableList<DisplayRelease> releases = FXCollections.observableArrayList();
+    private final Observer<PagedList<DisplayRelease>> pagedListObserver = releases -> {
         Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
         if (releases == null) {
             this.releases.clear();
@@ -109,7 +109,7 @@ public class EpisodeViewController implements Attachable {
         }
         this.releases.setAll(releases);
     };
-    private Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
+    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
 
     public void initialize() {
         final FilteredList<DisplayRelease> filteredList = new FilteredList<>(this.releases);

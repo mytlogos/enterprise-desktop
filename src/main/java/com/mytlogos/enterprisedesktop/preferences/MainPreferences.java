@@ -10,8 +10,8 @@ import java.util.prefs.Preferences;
  *
  */
 public class MainPreferences {
-    private static String LAST_SYNC = "last_time_sync";
-    private DownloadPreferences downloadPreferences = new DownloadPreferences();
+    private static final String LAST_SYNC = "last_time_sync";
+    private final DownloadPreferences downloadPreferences = new DownloadPreferences();
 
     public static LocalDateTime getLastSync() {
         final String value = Preferences.userRoot().get(LAST_SYNC, null);

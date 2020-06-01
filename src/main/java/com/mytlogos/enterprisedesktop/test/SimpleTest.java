@@ -5,10 +5,7 @@ import com.comcast.viper.hlsparserj.*;
 import com.comcast.viper.hlsparserj.tags.master.StreamInf;
 import com.comcast.viper.hlsparserj.tags.media.ExtInf;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;

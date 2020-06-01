@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 class MediaListLoader implements NetworkLoader<Integer> {
 
-    private LoadWorker loadWorker;
+    private final LoadWorker loadWorker;
 
     MediaListLoader(LoadWorker loadWorker) {
         this.loadWorker = loadWorker;

@@ -293,7 +293,6 @@ public class LoadWorkerImpl extends LoadWorker {
                 }
                 // check only the first value,
                 // on the assumption that every value after it has the same class
-                //noinspection LoopStatementThatDoesntLoop
                 for (Object o : collection) {
                     clazz = o.getClass();
                     break;

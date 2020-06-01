@@ -27,7 +27,7 @@ class ExternalMediaListTable extends AbstractTable {
         statement.setString(5, value.getUrl());
     });
 
-    private QueryBuilder<ExternalMediaList> getListsQuery = new QueryBuilder<ExternalMediaList>(
+    private final QueryBuilder<ExternalMediaList> getListsQuery = new QueryBuilder<ExternalMediaList>(
             "Select ExternalList",
             "SELECT external_media_list.*, " +
                     "(SELECT COUNT(listId) FROM external_list_medium WHERE external_list_medium.listId=external_media_list.externalListId) " +
@@ -45,7 +45,7 @@ class ExternalMediaListTable extends AbstractTable {
         return new ExternalMediaListImpl(uuid, listId, name, medium, url, count);
     });
 
-    private QueryBuilder<MediumItem> getMediumItems = new QueryBuilder<MediumItem>(
+    private final QueryBuilder<MediumItem> getMediumItems = new QueryBuilder<MediumItem>(
             "Select ExternalMediumItem",
             "SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, " +
                     "countryOfOrigin, languageOfOrigin, lang, series, universe, " +

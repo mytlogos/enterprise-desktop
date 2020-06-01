@@ -9,7 +9,7 @@ import java.util.List;
  *
  */
 public class SqlUtils {
-    private static SqlBiFunction getResultsFunction = (SqlBiFunction<PreparedStatement, SqlFunction<ResultSet, Object>, List<Object>>) (preparedStatement, resultSetSqlFunction) -> {
+    private static final SqlBiFunction getResultsFunction = (SqlBiFunction<PreparedStatement, SqlFunction<ResultSet, Object>, List<Object>>) (preparedStatement, resultSetSqlFunction) -> {
         try (ResultSet resultSet = preparedStatement.executeQuery()) {
             List<Object> list = new ArrayList<>();
             while (resultSet.next()) {

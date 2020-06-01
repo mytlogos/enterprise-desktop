@@ -2,7 +2,6 @@ package com.mytlogos.enterprisedesktop.tools;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.model.MediumType;
-import javafx.application.Application;
 
 import java.io.File;
 import java.util.HashSet;

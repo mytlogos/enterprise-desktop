@@ -1,7 +1,5 @@
 package com.mytlogos.enterprisedesktop.background;
 
-import javafx.concurrent.Task;
-
 /**
  *
  */

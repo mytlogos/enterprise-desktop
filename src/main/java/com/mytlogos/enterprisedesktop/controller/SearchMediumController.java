@@ -12,8 +12,6 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.MenuItem;
-import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -23,7 +21,6 @@ import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
 
-import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -96,7 +93,7 @@ public class SearchMediumController implements Attachable {
         this.mediumChoiceBox.getItems().addAll(MediumType.TEXT, MediumType.AUDIO, MediumType.VIDEO, MediumType.IMAGE);
         this.mediumChoiceBox.getSelectionModel().selectFirst();
         this.mediumChoiceBox.setConverter(new StringConverter<Integer>() {
-            private Map<String, Integer> map = new HashMap<>();
+            private final Map<String, Integer> map = new HashMap<>();
 
             {
                 map.put("Text", MediumType.TEXT);
@@ -165,10 +162,10 @@ public class SearchMediumController implements Attachable {
     }
 
     private static class ResultCell extends ListCell<SearchResponse> {
-        private HBox root = new HBox();
-        private ImageView cover = new ImageView();
-        private Text text = new Text();
-        private Text link = new Text();
+        private final HBox root = new HBox();
+        private final ImageView cover = new ImageView();
+        private final Text text = new Text();
+        private final Text link = new Text();
         private boolean init = false;
 
         @Override

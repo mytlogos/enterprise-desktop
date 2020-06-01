@@ -61,10 +61,10 @@ public class ListViewController implements Attachable {
     @FXML
     private ListView<TocEpisode> mediumContentView;
 
-    private TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
+    private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private ObjectBinding<EpisodeFilter> episodeFilterBinding;
     private MediumDisplayController mediumDisplayController = null;
-    private Observer<PagedList<TocEpisode>> episodesObserver = episodes -> {
+    private final Observer<PagedList<TocEpisode>> episodesObserver = episodes -> {
         if (episodes != null) {
             this.mediumLoadPane.setVisible(false);
             this.mediumContentView.getItems().setAll(episodes);
@@ -72,7 +72,7 @@ public class ListViewController implements Attachable {
     };
     private LiveData<PagedList<TocEpisode>> episodesLiveData;
     private LiveData<MediumSetting> mediumSettingLiveData;
-    private Observer<MediumSetting> settingObserver = mediumSetting -> {
+    private final Observer<MediumSetting> settingObserver = mediumSetting -> {
         if (this.mediumDisplayController == null) {
             this.mediumDisplayController = ControllerUtils.load("/mediumDisplay.fxml");
             this.detailPane.setContent(this.mediumDisplayController.getRoot());
@@ -80,7 +80,7 @@ public class ListViewController implements Attachable {
         this.mediumDisplayController.setMedium(mediumSetting);
     };
     private LiveData<List<MediumItem>> listItemsLiveData;
-    private Observer<List<MediumItem>> listItemsObserver = mediumItems -> {
+    private final Observer<List<MediumItem>> listItemsObserver = mediumItems -> {
         this.mediumContentView.getItems().clear();
         if (mediumItems != null) {
             this.listLoadPane.setVisible(false);
@@ -88,14 +88,14 @@ public class ListViewController implements Attachable {
         }
     };
     private LiveData<List<MediaList>> listLiveData;
-    private Observer<List<MediaList>> listObserver = mediaLists -> {
+    private final Observer<List<MediaList>> listObserver = mediaLists -> {
         if (mediaLists != null) {
             this.listsLoadPane.setVisible(false);
         }
         this.listsView.getItems().setAll(mediaLists == null ? Collections.emptyList() : mediaLists);
     };
-    private InvalidationListener mediumListener = observable -> selectMedium();
-    private InvalidationListener listsListener = observable -> {
+    private final InvalidationListener mediumListener = observable -> selectMedium();
+    private final InvalidationListener listsListener = observable -> {
         final MediaList item = this.listsView.getSelectionModel().getSelectedItem();
 
         if (item == null) {
@@ -309,7 +309,7 @@ public class ListViewController implements Attachable {
     }
 
     private static class MediaListCell extends ListCell<MediaList> {
-        private static Pattern urlPattern = Pattern.compile("^https?://(www\\.)?(.+?)\\.\\w+/?.+$");
+        private static final Pattern urlPattern = Pattern.compile("^https?://(www\\.)?(.+?)\\.\\w+/?.+$");
 
         @Override
         protected void updateItem(MediaList item, boolean empty) {

@@ -1,7 +1,6 @@
 package com.mytlogos.enterprisedesktop.tools;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
-import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientDownloadedEpisode;
 import com.mytlogos.enterprisedesktop.model.ChapterPage;
 import com.mytlogos.enterprisedesktop.model.MediumType;

@@ -5,11 +5,11 @@ import com.mytlogos.enterprisedesktop.model.ExternalUser;
 import java.util.Arrays;
 
 public class ClientExternalUser implements ExternalUser {
-    private String localUuid;
-    private String uuid;
-    private String identifier;
-    private int type;
-    private ClientExternalMediaList[] lists;
+    private final String localUuid;
+    private final String uuid;
+    private final String identifier;
+    private final int type;
+    private final ClientExternalMediaList[] lists;
 
     public ClientExternalUser(String localUuid, String uuid, String identifier, int type, ClientExternalMediaList[] lists) {
         this.localUuid = localUuid;
