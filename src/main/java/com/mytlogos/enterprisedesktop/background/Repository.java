@@ -131,7 +131,7 @@ public interface Repository {
 
     void loadMediaInWaitSync() throws IOException;
 
-    void addList(MediaList list, boolean autoDownload) throws IOException;
+    int addList(MediaList list, boolean autoDownload) throws IOException;
 
     boolean listExists(String listName);
 

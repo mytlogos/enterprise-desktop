@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.User;
 import com.mytlogos.enterprisedesktop.model.UserImpl;
 
@@ -51,8 +52,8 @@ class UserTable extends AbstractTable {
         this.executeDMLQuery(user, this.insertUserQuery);
     }
 
-    User getUser() {
-        return this.getUserQuery.query();
+    LiveData<User> getUser() {
+        return this.getUserQuery.queryLiveData();
     }
 
     @Override

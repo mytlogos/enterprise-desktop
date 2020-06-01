@@ -504,8 +504,8 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public void addList(MediaList list, boolean autoDownload) throws IOException {
-        User value = this.storageUserLiveData.getValue();
+    public int addList(MediaList list, boolean autoDownload) throws IOException {
+        final User value = this.storage.getUserNow();
 
         if (value == null || value.getUuid().isEmpty()) {
             throw new IllegalStateException("user is not authenticated");
@@ -524,13 +524,16 @@ class RepositoryImpl implements Repository {
         }
 
         this.persister.persist(clientMediaList);
-        ToDownload toDownload = new ToDownload(
-                false,
-                null,
-                clientMediaList.getId(),
-                null
-        );
-        this.storage.updateToDownload(true, toDownload);
+        if (autoDownload) {
+            ToDownload toDownload = new ToDownload(
+                    false,
+                    null,
+                    clientMediaList.getId(),
+                    null
+            );
+            this.storage.updateToDownload(true, toDownload);
+        }
+        return clientMediaList.getListId();
     }
 
     @Override

@@ -23,14 +23,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import org.controlsfx.control.Notifications;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -42,7 +41,8 @@ public class MediaController implements Attachable {
     private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private final ObservableList<MediumItem> observableMediaItems = FXCollections.observableArrayList();
     private final Observer<List<MediaList>> listObserver = Utils.emptyObserver();
-    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
+    private final ObjectProperty<List<Integer>> listItemsProperty = new SimpleObjectProperty<>();
+    private final Observer<List<Integer>> listItemsObserver = this.listItemsProperty::set;
     private ObjectBinding<MediumFilter> mediumFilter;
     @FXML
     private TextField listFilter;
@@ -165,10 +165,8 @@ public class MediaController implements Attachable {
                             }
                         }
                         final int mediumId = mediumItem.getMediumId();
-                        if (this.listItemsLiveData == null) {
-                            return true;
-                        }
-                        final List<Integer> value = this.listItemsLiveData.getValue();
+                        final List<Integer> value = this.listItemsProperty.getValue();
+
                         if (value == null || this.listFilterView.getItems().isEmpty()) {
                             return true;
                         }
@@ -181,7 +179,8 @@ public class MediaController implements Attachable {
                 },
                 this.listFilterView.getItems(),
                 this.ignoreLists.selectedProperty(),
-                this.mediumFilter
+                this.mediumFilter,
+                this.listItemsProperty
         ));
         this.listFilterView.setCellFactory(param -> {
             final ListCell<MediaList> cell = new ListCell<>();
@@ -273,7 +272,46 @@ public class MediaController implements Attachable {
     }
 
     private void setMediaViewContextMenu() {
+        ContextMenu contextMenu = new ContextMenu();
+        Menu menu = new Menu("Add To List");
+        menu.setOnShowing(event -> {
+            final List<MediaList> value = this.listLiveData.getValue();
+            if (value != null) {
+                for (int i = 0; i < value.size(); i++) {
+                    final MediaList mediaList = value.get(i);
+                    final MenuItem item = new MenuItem(mediaList.getName());
+                    menu.getItems().add(i, item);
+                    item.setOnAction(action -> doMediumRepoAction(
+                            String.format("Added to List '%s'", mediaList.getName()),
+                            (repository, mediumIds) -> repository.addMediumToList(mediaList.getListId(), mediumIds).get()
+                    ));
+                }
+            }
+        });
+        menu.setOnHiding(event -> {
+            // remove all items except the static "create new List" item
+            for (Iterator<MenuItem> iterator = menu.getItems().iterator(); iterator.hasNext(); ) {
+                iterator.next();
 
+                if (iterator.hasNext()) {
+                    iterator.remove();
+                }
+            }
+        });
+        MenuItem createList = new MenuItem();
+        createList.setText("Create new List");
+        createList.setOnAction(event -> {
+            final Optional<MediaList> list = this.createMediaList();
+            list.ifPresent(mediaList -> doMediumRepoAction(
+                    String.format("Added to new List '%s'", mediaList.getName()),
+                    (repository, mediumIds) -> {
+                        final int listId = repository.addList(mediaList, false);
+                        repository.addMediumToList(listId, mediumIds).get();
+                    }));
+        });
+        menu.getItems().add(createList);
+        contextMenu.getItems().add(menu);
+        this.mediaView.setContextMenu(contextMenu);
     }
 
     private void setEpisodeViewContextMenu() {
@@ -312,6 +350,67 @@ public class MediaController implements Attachable {
 
         contextMenu.getItems().addAll(setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
         this.mediumContentView.setContextMenu(contextMenu);
+    }
+
+    private void doMediumRepoAction(String description, BiConsumerEx<Repository, Set<Integer>> idsConsumer) {
+        final Repository repository = ApplicationConfig.getRepository();
+        List<MediumItem> selectedItems = this.mediaView.getSelectionModel().getSelectedItems();
+        CompletableFuture.runAsync(() -> {
+            Set<Integer> ids = new HashSet<>();
+            for (MediumItem item : selectedItems) {
+                ids.add(item.getMediumId());
+            }
+            try {
+                idsConsumer.accept(repository, ids);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((aVoid, throwable) -> {
+            if (throwable != null) {
+                throwable.printStackTrace();
+            }
+            Platform.runLater(() -> Notifications
+                    .create()
+                    .title(description + (throwable != null ? "failed" : " succeeded"))
+                    .show()
+            );
+        });
+    }
+
+    private Optional<MediaList> createMediaList() {
+        Dialog<MediaList> mediaListDialog = new Dialog<>();
+        mediaListDialog.setHeaderText("Create Media List");
+        final DialogPane pane = new DialogPane();
+        final TextField nameField = new TextField();
+        CheckBox showTextBox = new CheckBox("Text");
+        CheckBox showImageBox = new CheckBox("Image");
+        CheckBox showVideoBox = new CheckBox("Video");
+        CheckBox showAudioBox = new CheckBox("Audio");
+
+        pane.setContent(new VBox(
+                5,
+                new HBox(5, new Text("Name:"), nameField),
+                new HBox(5, showTextBox, showImageBox, showVideoBox, showAudioBox)
+        ));
+        mediaListDialog.setDialogPane(pane);
+        pane.getButtonTypes().addAll(ButtonType.CLOSE, ButtonType.FINISH);
+        pane.lookupButton(ButtonType.FINISH).disableProperty().bind(
+                nameField.textProperty().isEmpty()
+                        .or(
+                                showAudioBox.selectedProperty().not()
+                                        .and(showImageBox.selectedProperty().not())
+                                        .and(showTextBox.selectedProperty().not())
+                                        .and(showVideoBox.selectedProperty().not())
+                        ));
+        mediaListDialog.setResultConverter(param -> {
+            if (param.getButtonData() == ButtonBar.ButtonData.FINISH) {
+                final int medium = ControllerUtils.getMedium(showTextBox, showImageBox, showVideoBox, showAudioBox);
+                return new MediaListImpl(null, 0, nameField.getText(), medium, 0);
+            } else {
+                return null;
+            }
+        });
+        return mediaListDialog.showAndWait();
     }
 
     private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {

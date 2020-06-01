@@ -62,12 +62,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<User> getUser() {
-        return LiveData.empty();
+        return this.userTable.getUser();
     }
 
     @Override
     public User getUserNow() {
-        return null;
+        return this.userTable.getUserNow();
     }
 
     @Override
