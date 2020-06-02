@@ -353,7 +353,24 @@ public class DownloadWorker extends ScheduledService<Void> {
         return episodePackages;
     }
 
-    private void stopDownload() {
+    @Override
+    protected void succeeded() {
+        // if it is only a single usage DownloadWorker
+        if (this.mediumId > 0) {
+            this.cancel();
+        } else {
+            super.succeeded();
+        }
+    }
+
+    @Override
+    protected void failed() {
+        // if it is only a single usage DownloadWorker
+        if (this.mediumId > 0) {
+            this.cancel();
+        } else {
+            super.failed();
+        }
     }
 
     private static class MediumDownload {
