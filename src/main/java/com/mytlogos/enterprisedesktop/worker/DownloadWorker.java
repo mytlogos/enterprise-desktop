@@ -147,7 +147,7 @@ public class DownloadWorker extends ScheduledService<Void> {
                 int progress = successFull + notSuccessFull;
                 updateTitle(String.format("Download in Progress [%s/%s]", progress, downloadCount));
                 updateMessage(String.format("Failed: %s", notSuccessFull));
-                updateProgress(downloadCount, progress);
+                updateProgress(progress, downloadCount);
             }
 
             private int onFailed(int downloadCount, int successFull, int notSuccessFull, Repository repository, DownloadPackage downloadPackage, boolean notEnoughSpace) {
