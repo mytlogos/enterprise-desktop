@@ -395,7 +395,10 @@ class EditService {
                 this.storage.updateProgress(filteredIds, progress);
                 return false;
             }
-            return !updateProgressOnline(progress, ids);
+            if (!updateProgressOnline(progress, ids)) {
+                return null;
+            }
+            return false;
         });
     }
 
