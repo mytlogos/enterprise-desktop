@@ -114,7 +114,7 @@ public class TasksHelper {
         double totalProgress = 0;
 
         for (Service<?> service : this.services) {
-            if (!service.isRunning()) {
+            if (service.getState() != Worker.State.RUNNING) {
                 totalProgress += 1;
             } else if (service.getProgress() >= 0) {
                 totalProgress += service.getProgress();
@@ -178,6 +178,8 @@ public class TasksHelper {
             service.reset();
             service.start();
         }
+        this.updateProgress();
+        this.updateTasks();
     }
 
     boolean isFinished(Service<?> service) {
@@ -200,6 +202,8 @@ public class TasksHelper {
         this.services.remove(service);
         service.stateProperty().removeListener(this.stateListener);
         service.progressProperty().removeListener(this.progressListener);
+        this.updateProgress();
+        this.updateTasks();
     }
 
     private static class TaskBox extends VBox {
