@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.model;
 
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 public class MediumItem implements Medium {
     private final String title;
@@ -115,5 +116,54 @@ public class MediumItem implements Medium {
     @Override
     public String getUniverse() {
         return universe;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MediumItem)) return false;
+
+        MediumItem that = (MediumItem) o;
+
+        if (mediumId != that.mediumId) return false;
+        if (medium != that.medium) return false;
+        if (stateTL != that.stateTL) return false;
+        if (stateOrigin != that.stateOrigin) return false;
+        if (!Objects.equals(title, that.title)) return false;
+        if (!Objects.equals(author, that.author)) return false;
+        if (!Objects.equals(artist, that.artist)) return false;
+        if (!Objects.equals(countryOfOrigin, that.countryOfOrigin))
+            return false;
+        if (!Objects.equals(languageOfOrigin, that.languageOfOrigin))
+            return false;
+        if (!Objects.equals(lang, that.lang)) return false;
+        if (!Objects.equals(series, that.series)) return false;
+        if (!Objects.equals(universe, that.universe)) return false;
+        if (!Objects.equals(currentRead, that.currentRead)) return false;
+        if (!Objects.equals(currentReadEpisode, that.currentReadEpisode))
+            return false;
+        if (!Objects.equals(lastEpisode, that.lastEpisode)) return false;
+        return Objects.equals(lastUpdated, that.lastUpdated);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = title != null ? title.hashCode() : 0;
+        result = 31 * result + mediumId;
+        result = 31 * result + (author != null ? author.hashCode() : 0);
+        result = 31 * result + (artist != null ? artist.hashCode() : 0);
+        result = 31 * result + medium;
+        result = 31 * result + stateTL;
+        result = 31 * result + stateOrigin;
+        result = 31 * result + (countryOfOrigin != null ? countryOfOrigin.hashCode() : 0);
+        result = 31 * result + (languageOfOrigin != null ? languageOfOrigin.hashCode() : 0);
+        result = 31 * result + (lang != null ? lang.hashCode() : 0);
+        result = 31 * result + (series != null ? series.hashCode() : 0);
+        result = 31 * result + (universe != null ? universe.hashCode() : 0);
+        result = 31 * result + (currentRead != null ? currentRead.hashCode() : 0);
+        result = 31 * result + (currentReadEpisode != null ? currentReadEpisode.hashCode() : 0);
+        result = 31 * result + (lastEpisode != null ? lastEpisode.hashCode() : 0);
+        result = 31 * result + (lastUpdated != null ? lastUpdated.hashCode() : 0);
+        return result;
     }
 }

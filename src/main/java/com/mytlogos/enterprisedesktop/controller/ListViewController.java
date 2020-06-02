@@ -77,10 +77,14 @@ public class ListViewController implements Attachable {
     };
     private LiveData<List<MediumItem>> listItemsLiveData;
     private final Observer<List<MediumItem>> listItemsObserver = mediumItems -> {
-        this.mediumContentView.getItems().clear();
         if (mediumItems != null) {
             this.listLoadPane.setVisible(false);
-            this.listMediaView.getItems().setAll(mediumItems);
+            if (!this.listMediaView.getItems().equals(mediumItems)) {
+                this.mediumContentView.getItems().clear();
+                this.listMediaView.getItems().setAll(mediumItems);
+            }
+        } else {
+            this.mediumContentView.getItems().clear();
         }
     };
     private LiveData<List<MediaList>> listLiveData;
