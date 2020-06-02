@@ -2,58 +2,55 @@ package com.mytlogos.enterprisedesktop.background.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.net.*;
-import java.time.LocalDateTime;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import okhttp3.OkHttpClient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import java.io.IOException;
+import java.net.*;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.concurrent.*;
+
 class ServerDiscovery {
 
+    private static final boolean isDev = false;
     private final int maxAddress = 50;
     private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress);
-    private static final boolean isDev = false;
-
+    private final ExecutorService broadCastExecutor = Executors.newSingleThreadExecutor();
 
     Server discover(InetAddress broadcastAddress) {
         Set<Server> discoveredServer = Collections.synchronizedSet(new HashSet<>());
 
-        List<CompletableFuture<Server>> futures = new ArrayList<>();
+        List<Future<Server>> futures = new ArrayList<>();
         for (int i = 1; i < maxAddress; i++) {
             int local = i;
             // this is for emulator sessions,
             // as localhost udp server cannot seem to receive upd packets send from emulator
-            futures.add(CompletableFuture.supplyAsync(() -> this.discoverLocalNetworkServerPerTcp(local), executor));
+            futures.add(this.executor.submit(() -> this.discoverLocalNetworkServerPerTcp(local)));
         }
         Server server = null;
         try {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> this.discoverLocalNetworkServerPerUdp(broadcastAddress, discoveredServer));
+            Future<Void> future = this.broadCastExecutor.submit(() -> this.discoverLocalNetworkServerPerUdp(broadcastAddress, discoveredServer), null);
             try {
                 future.get(2, TimeUnit.SECONDS);
+                this.broadCastExecutor.shutdownNow();
             } catch (TimeoutException ignored) {
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
-            for (CompletableFuture<Server> serverFuture : futures) {
+            for (Future<Server> serverFuture : futures) {
                 try {
-                    Server now = serverFuture.getNow(null);
-                    if (now != null) {
-                        discoveredServer.add(now);
-                    } else if (!serverFuture.isDone()) {
+                    if (serverFuture.isDone()) {
+                        Server now = serverFuture.get(0, TimeUnit.SECONDS);
+
+                        if (now != null) {
+                            discoveredServer.add(now);
+                        }
+                    } else {
                         serverFuture.cancel(true);
                     }
                 } catch (Exception e) {
@@ -68,7 +65,7 @@ class ServerDiscovery {
                 }
             }
             if (server == null) {
-                server = executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
+                server = this.executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -106,11 +103,6 @@ class ServerDiscovery {
             return new Server(ipv4, 3000, true, isDev);
         } catch (IOException ignored) {
         }
-        return null;
-    }
-
-    private Server discoverInternetServerPerUdp() {
-        // TODO: 27.07.2019 check if internet server is reachable
         return null;
     }
 
@@ -196,6 +188,11 @@ class ServerDiscovery {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private Server discoverInternetServerPerUdp() {
+        // TODO: 27.07.2019 check if internet server is reachable
+        return null;
     }
 
     private void sendUDPPacket(DatagramSocket c, byte[] data, int port, InetAddress address) throws IOException {
