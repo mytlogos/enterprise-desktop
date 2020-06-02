@@ -7,6 +7,7 @@ import com.mytlogos.enterprisedesktop.background.ClientModelPersister;
 import com.mytlogos.enterprisedesktop.background.DependantGenerator;
 import com.mytlogos.enterprisedesktop.background.LoadData;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.tools.Utils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,8 +34,8 @@ public class BlockingLoadWorker extends LoadWorker {
     // TODO: 11.06.2019 starting after a month with this new loader lead to many episodeNodes rejecting
     // FIXME: 11.06.2019 apparently the databaseValidator detected a null id value as parameter and threw an error
     private final ConcurrentMap<DependantValue, DependantNode> valueNodes = new ConcurrentHashMap<>();
-    private final ExecutorService workService = Executors.newSingleThreadExecutor();
-    private final ExecutorService loadingService = Executors.newFixedThreadPool(5);
+    private final ExecutorService workService = Executors.newSingleThreadExecutor(Utils.threadFactory("BlockingLoadWorker-Thread"));
+    private final ExecutorService loadingService = Executors.newFixedThreadPool(5, Utils.countingThreadFactory("BlockingLoadWorker.LoadPool-worker-"));
 
     private final Map<NetworkLoader<Integer>, IntLoaderManager> intLoaderManager = new HashMap<>();
     private final Map<NetworkLoader<String>, StringLoaderManager> stringLoaderManager = new HashMap<>();

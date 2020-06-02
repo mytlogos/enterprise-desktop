@@ -25,7 +25,7 @@ class EditService {
     private final Client client;
     private final DatabaseStorage storage;
     private final ClientModelPersister persister;
-    private final ExecutorService pushEditExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService pushEditExecutor = Executors.newSingleThreadExecutor(Utils.threadFactory("PushEdits-Thread"));
 
     EditService(Client client, DatabaseStorage storage, ClientModelPersister persister) {
         this.client = client;

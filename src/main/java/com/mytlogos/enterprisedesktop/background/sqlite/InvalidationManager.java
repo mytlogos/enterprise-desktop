@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.background.TaskManager;
 import com.mytlogos.enterprisedesktop.tools.Log;
+import com.mytlogos.enterprisedesktop.tools.Utils;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -15,7 +16,7 @@ public class InvalidationManager {
     private static final InvalidationManager INSTANCE = new InvalidationManager();
     private final Map<AbstractTable, Set<Runnable>> tableRunnable = Collections.synchronizedMap(new HashMap<>());
     private final Map<AbstractTable, AtomicBoolean> tableInvalidationRunning = Collections.synchronizedMap(new HashMap<>());
-    private final ExecutorService service = Executors.newFixedThreadPool(5);
+    private final ExecutorService service = Executors.newFixedThreadPool(5, Utils.countingThreadFactory("InvalidationManager.Pool-worker-"));
 
     private InvalidationManager() {
         if (INSTANCE != null) {

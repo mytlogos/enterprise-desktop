@@ -46,6 +46,7 @@ public class DownloadWorker extends ScheduledService<Void> {
                     contentTools = FileTools.getSupportedContentTools();
 
                     if (!repository.isClientAuthenticated()) {
+                        this.updateTitle("No Download: Not Authenticated");
                         cleanUp();
                         return null;
                     }
@@ -59,10 +60,12 @@ public class DownloadWorker extends ScheduledService<Void> {
 
                     if (mediumId <= 0) {
                         download(repository);
+                        Thread.currentThread().setName("Auto-DownloadWorker");
                     } else {
+                        Thread.currentThread().setName(String.format("DownloadWorker-Medium-%d-Items-%d", mediumId, DownloadWorker.this.episodeIds.size()));
                         downloadData(repository);
                     }
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     e.printStackTrace();
                 }
                 cleanUp();
@@ -180,11 +183,6 @@ public class DownloadWorker extends ScheduledService<Void> {
                 int notSuccessFull = 0;
 
                 for (DownloadPackage episodePackage : episodePackages) {
-//            if (this.isStopped()) {
-//                this.stopDownload();
-//                return;
-//            }
-
                     ContentTool contentTool = null;
                     for (ContentTool tool : contentTools) {
                         if (MediumType.is(tool.getMedium(), episodePackage.mediumType) && tool.isSupported()) {

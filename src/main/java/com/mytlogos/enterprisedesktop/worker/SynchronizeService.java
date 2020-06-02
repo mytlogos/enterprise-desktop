@@ -44,6 +44,7 @@ public class SynchronizeService extends ScheduledService<Void> {
 
             @Override
             protected Void call() throws Exception {
+                Thread.currentThread().setName("Synchronize-Thread");
                 final Repository repository = ApplicationConfig.getLiveDataRepository().firstElement().get();
 
                 if (!repository.isClientAuthenticated()) {

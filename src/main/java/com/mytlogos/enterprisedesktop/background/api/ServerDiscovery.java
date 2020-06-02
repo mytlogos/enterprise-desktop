@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.background.api;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.mytlogos.enterprisedesktop.tools.Utils;
 import okhttp3.OkHttpClient;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -11,21 +12,16 @@ import java.io.IOException;
 import java.net.*;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 class ServerDiscovery {
 
     private static final boolean isDev = false;
     private final int maxAddress = 50;
-    private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress, new ThreadFactory() {
-        private final AtomicInteger count = new AtomicInteger();
-
-        @Override
-        public Thread newThread(Runnable r) {
-            return new Thread(r, String.format("Server-Discovery-%d", this.count.getAndIncrement()));
-        }
-    });
+    private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress, Utils.countingThreadFactory("Server-Discovery-"));
 
     Server discover(InetAddress broadcastAddress) {
         Set<Server> discoveredServer = Collections.synchronizedSet(new HashSet<>());

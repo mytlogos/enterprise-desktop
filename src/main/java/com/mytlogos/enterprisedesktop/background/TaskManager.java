@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.background;
 
 
 
+import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.application.Platform;
 
 import java.util.concurrent.Callable;
@@ -13,7 +14,7 @@ import java.util.function.Supplier;
 
 public class TaskManager {
     private final static TaskManager INSTANCE = new TaskManager();
-    private final ExecutorService service = Executors.newCachedThreadPool();
+    private final ExecutorService service = Executors.newCachedThreadPool(Utils.countingThreadFactory("TaskManagerPool-worker-"));
 
     private TaskManager() {
         if (INSTANCE != null) {

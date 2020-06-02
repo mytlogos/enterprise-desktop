@@ -24,7 +24,7 @@ public class Starter extends Application {
     }
 
     private static void initializeAsync() {
-        ExecutorService service = Executors.newSingleThreadExecutor();
+//        ExecutorService service = Executors.newSingleThreadExecutor();
         final Repository repository = new RepositoryProvider().provide();
         ApplicationConfig.initialize(repository);
 //        ApplicationConfig.setInitializeFuture(service.submit(() -> {

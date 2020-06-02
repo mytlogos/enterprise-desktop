@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -20,6 +22,21 @@ import java.util.stream.Collectors;
 public class Utils {
     public static BiFunction FIRST_ONLY = (o, o2) -> o;
     public static BiFunction SECOND_ONLY = (o, o2) -> o2;
+
+    public static ThreadFactory countingThreadFactory(String prefix) {
+        return new ThreadFactory() {
+            private final AtomicInteger count = new AtomicInteger();
+
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(r, String.format("%s%d", prefix, count.getAndIncrement()));
+            }
+        };
+    }
+
+    public static ThreadFactory threadFactory(String name) {
+        return r -> new Thread(r, name);
+    }
 
     public static String getDomain(String url) {
         String host = URI.create(url).getHost();

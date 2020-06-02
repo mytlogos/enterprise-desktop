@@ -23,13 +23,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ImageContentTool extends ContentTool {
     private Map<Integer, File> imageMedia;
+    private final ExecutorService downloadPool = Executors.newCachedThreadPool(Utils.countingThreadFactory("ImageContentDownloadPool-Worker-"));
 
     ImageContentTool(File contentDir) {
         super(contentDir);
@@ -195,7 +195,7 @@ public class ImageContentTool extends ContentTool {
                     } catch (IOException e) {
                         throw new IllegalStateException(e);
                     }
-                }));
+                }, this.downloadPool));
             }
             try {
                 CompletableFuture

@@ -3,6 +3,7 @@ package com.mytlogos.enterprisedesktop.background.sqlite.life;
 import com.mytlogos.enterprisedesktop.background.sqlite.AbstractTable;
 import com.mytlogos.enterprisedesktop.background.sqlite.InvalidationManager;
 import com.mytlogos.enterprisedesktop.tools.SafeRunnable;
+import com.mytlogos.enterprisedesktop.tools.Utils;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -17,7 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  */
 public class LiveDataImpl<T> extends LiveData<T> {
-    final static ExecutorService executor = Executors.newCachedThreadPool();
+    final static ExecutorService executor = Executors.newCachedThreadPool(Utils.countingThreadFactory("LiveDataFetcher-"));
     final boolean mInTransaction;
     final Callable<T> mComputeFunction;
     final Runnable mObserver;
