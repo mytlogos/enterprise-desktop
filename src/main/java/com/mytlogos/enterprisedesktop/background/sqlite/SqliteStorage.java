@@ -140,7 +140,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void updateSaved(Collection<Integer> episodeIds, boolean saved) {
-        this.episodeTable.updateSaved(episodeIds);
+        this.episodeTable.updateSaved(episodeIds, saved);
     }
 
     @Override
