@@ -159,7 +159,7 @@ public class ListViewController implements Attachable {
         setReadItem.setOnAction(event -> doEpisodeRepoAction(
                 "Set Read",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, true),
-                (repository, ids, mediumId) -> repository.updateRead(mediumId, true))
+                (repository, episodeIds, mediumId) -> repository.updateRead(episodeIds, true))
         );
 
         MenuItem setUnreadItem = new MenuItem();
@@ -167,7 +167,7 @@ public class ListViewController implements Attachable {
         setUnreadItem.setOnAction(event -> doEpisodeRepoAction(
                 "Set Unread",
                 (repository, mediumId) -> repository.updateAllRead(mediumId, false),
-                (repository, ids, mediumId) -> repository.updateRead(mediumId, false))
+                (repository, episodeIds, mediumId) -> repository.updateRead(episodeIds, false))
         );
 
         MenuItem downloadItem = new MenuItem();
@@ -183,7 +183,7 @@ public class ListViewController implements Attachable {
         reloadItem.setOnAction(event -> doEpisodeRepoAction(
                 "Reload",
                 Repository::reloadAll,
-                (repository, ids, mediumId) -> repository.reload(ids)
+                (repository, episodeIds, mediumId) -> repository.reload(episodeIds)
         ));
 
         contextMenu.getItems().addAll(setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
