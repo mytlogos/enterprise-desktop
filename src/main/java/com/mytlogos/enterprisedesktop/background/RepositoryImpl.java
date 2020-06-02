@@ -955,7 +955,7 @@ class RepositoryImpl implements Repository {
             List<ClientEpisode> episodes = this.client.getEpisodes(integers).body();
 
             if (episodes == null) {
-                return true;
+                return null;
             }
             LoadWorkGenerator generator = new LoadWorkGenerator(this.loadedData);
             LoadWorkGenerator.FilteredEpisodes filteredEpisodes = generator.filterEpisodes(episodes);
