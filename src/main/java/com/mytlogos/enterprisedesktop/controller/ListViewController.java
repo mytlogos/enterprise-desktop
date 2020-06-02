@@ -136,7 +136,7 @@ public class ListViewController implements Attachable {
         this.scrollToEpisodeField.setTextFormatter(this.scrollToEpisodeFormatter);
         this.episodeSorting.setConverter(new MainController.DisplayConverter<>(EpisodeSorting.values()));
         this.episodeSorting.getItems().setAll(EpisodeSorting.values());
-        this.episodeSorting.getSelectionModel().selectFirst();
+        this.episodeSorting.getSelectionModel().select(EpisodeSorting.INDEX_DESC);
         this.episodeFilterBinding = Bindings.createObjectBinding(
                 () -> new EpisodeFilter(this.readFilterBox.getValue(), this.savedFilterBox.getValue()),
                 this.readFilterBox.valueProperty(),

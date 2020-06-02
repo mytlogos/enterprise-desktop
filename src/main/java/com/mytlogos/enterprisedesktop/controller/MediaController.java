@@ -248,7 +248,7 @@ public class MediaController implements Attachable {
 
         this.episodeSorting.setConverter(new MainController.DisplayConverter<>(EpisodeSorting.values()));
         this.episodeSorting.getItems().setAll(EpisodeSorting.values());
-        this.episodeSorting.getSelectionModel().selectFirst();
+        this.episodeSorting.getSelectionModel().select(EpisodeSorting.INDEX_DESC);
 
         this.readFilter.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue == readOnly) {
