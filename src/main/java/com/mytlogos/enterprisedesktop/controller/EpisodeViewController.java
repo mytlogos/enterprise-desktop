@@ -8,7 +8,6 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.MediaList;
-import com.mytlogos.enterprisedesktop.model.MediumType;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
@@ -27,8 +26,6 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -36,12 +33,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
-import javafx.stage.Stage;
 import org.controlsfx.control.Notifications;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -466,35 +461,10 @@ public class EpisodeViewController implements Attachable {
             this.setPrefWidth(0);
             this.setOnMouseClicked(event -> {
                 final DisplayRelease item = this.getItem();
-                if (item == null || !item.isSaved() || !event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {
+                if (!event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {
                     return;
                 }
-                final Parent parent;
-                if (MediumType.is(item.getMedium(), MediumType.AUDIO)) {
-                    parent = null;
-                } else if (MediumType.is(item.getMedium(), MediumType.TEXT)) {
-                    parent = ControllerUtils.loadNode(
-                            "/text.fxml",
-                            (Consumer<TextViewController>) controller -> controller.open(item.getMediumId(), item.getEpisodeId())
-                    );
-                } else if (MediumType.is(item.getMedium(), MediumType.IMAGE)) {
-                    parent = ControllerUtils.loadNode(
-                            "/images.fxml",
-                            (Consumer<ImageViewController>) controller -> controller.open(item.getMediumId(), item.getEpisodeId())
-                    );
-                } else if (MediumType.is(item.getMedium(), MediumType.VIDEO)) {
-                    parent = null;
-                } else {
-                    parent = null;
-                }
-
-                if (parent == null) {
-                    Notifications.create().title("Could not open EpisodeView").show();
-                    return;
-                }
-                Stage stage = new Stage();
-                stage.setScene(new Scene(parent));
-                stage.show();
+                ControllerUtils.openEpisode(item, item.getMedium(), item.getMediumId());
             });
         }
 

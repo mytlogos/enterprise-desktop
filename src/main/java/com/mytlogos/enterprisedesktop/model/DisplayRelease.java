@@ -3,7 +3,7 @@ package com.mytlogos.enterprisedesktop.model;
 
 import java.time.LocalDateTime;
 
-public class DisplayRelease implements Indexable {
+public class DisplayRelease implements Indexable, OpenableEpisode {
     private final int episodeId;
     private final int mediumId;
     private final String mediumTitle;
@@ -55,6 +55,7 @@ public class DisplayRelease implements Indexable {
         return totalIndex;
     }
 
+    @Override
     public boolean isSaved() {
         return saved;
     }
@@ -106,6 +107,7 @@ public class DisplayRelease implements Indexable {
                 '}';
     }
 
+    @Override
     public int getEpisodeId() {
         return episodeId;
     }

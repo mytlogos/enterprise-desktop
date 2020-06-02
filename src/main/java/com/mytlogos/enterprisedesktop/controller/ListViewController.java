@@ -127,7 +127,11 @@ public class ListViewController implements Attachable {
         Image onlineImage = new Image("/ic_open_browser_icon.png", true);
         Image localImage = new Image("/ic_open_local_icon.png", true);
 
-        this.mediumContentView.setCellFactory(param -> new TocEpisodeCell(lockedImage, readImage, onlineImage, localImage));
+        this.mediumContentView.setCellFactory(param -> {
+            final TocEpisodeCell cell = new TocEpisodeCell(lockedImage, readImage, onlineImage, localImage);
+            cell.currentMediumProperty().bind(this.listMediaView.getSelectionModel().selectedItemProperty());
+            return cell;
+        });
 
         this.scrollToEpisodeField.setTextFormatter(this.scrollToEpisodeFormatter);
         this.episodeSorting.setConverter(new MainController.DisplayConverter<>(EpisodeSorting.values()));

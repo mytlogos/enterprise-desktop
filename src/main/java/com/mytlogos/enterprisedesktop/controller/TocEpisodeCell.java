@@ -1,13 +1,17 @@
 package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.model.Medium;
 import com.mytlogos.enterprisedesktop.model.Release;
 import com.mytlogos.enterprisedesktop.model.TocEpisode;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
@@ -22,6 +26,7 @@ class TocEpisodeCell extends ListCell<TocEpisode> {
     private final Image readImage;
     private final Image onlineImage;
     private final Image localImage;
+    private final ObjectProperty<Medium> currentMedium = new SimpleObjectProperty<>();
     private VBox root;
     @FXML
     private Label content;
@@ -44,10 +49,22 @@ class TocEpisodeCell extends ListCell<TocEpisode> {
         this.readImage = readImage;
         this.onlineImage = onlineImage;
         this.localImage = localImage;
+        this.setOnMouseClicked(event -> {
+            final TocEpisode item = this.getItem();
+            if (!event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {
+                return;
+            }
+            final Medium mediumItem = currentMedium.get();
+
+            if (mediumItem == null) {
+                return;
+            }
+            ControllerUtils.openEpisode(item, mediumItem.getMedium(), mediumItem.getMediumId());
+        });
     }
 
-    public void initialize() {
-        System.out.println("initializing item");
+    public ObjectProperty<Medium> currentMediumProperty() {
+        return currentMedium;
     }
 
     @Override

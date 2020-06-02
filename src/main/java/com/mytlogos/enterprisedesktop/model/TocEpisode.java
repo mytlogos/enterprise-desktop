@@ -1,10 +1,9 @@
 package com.mytlogos.enterprisedesktop.model;
 
 import java.time.LocalDateTime;
-
 import java.util.List;
 
-public class TocEpisode implements Indexable {
+public class TocEpisode implements Indexable, OpenableEpisode {
     private final int episodeId;
     private final float progress;
     private final LocalDateTime readDate;
@@ -23,10 +22,6 @@ public class TocEpisode implements Indexable {
         this.readDate = readDate;
         this.saved = saved;
         this.releases = releases;
-    }
-
-    public int getEpisodeId() {
-        return episodeId;
     }
 
     public float getProgress() {
@@ -51,12 +46,23 @@ public class TocEpisode implements Indexable {
         return readDate;
     }
 
+    @Override
     public boolean isSaved() {
         return saved;
     }
 
+    @Override
+    public int getEpisodeId() {
+        return episodeId;
+    }
+
     public List<Release> getReleases() {
         return releases;
+    }
+
+    @Override
+    public int hashCode() {
+        return episodeId;
     }
 
     @Override
@@ -67,10 +73,5 @@ public class TocEpisode implements Indexable {
         TocEpisode that = (TocEpisode) o;
 
         return episodeId == that.episodeId;
-    }
-
-    @Override
-    public int hashCode() {
-        return episodeId;
     }
 }

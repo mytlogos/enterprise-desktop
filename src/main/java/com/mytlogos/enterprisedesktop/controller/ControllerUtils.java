@@ -2,18 +2,23 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.MediatorLiveData;
+import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.MediumType;
+import com.mytlogos.enterprisedesktop.model.OpenableEpisode;
 import com.mytlogos.enterprisedesktop.tools.TriFunction;
 import impl.org.controlsfx.autocompletion.AutoCompletionTextFieldBinding;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import org.controlsfx.control.Notifications;
 
 import java.awt.*;
 import java.io.IOException;
@@ -280,5 +285,37 @@ public class ControllerUtils {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    static void openEpisode(OpenableEpisode item, int medium, int mediumId) {
+        if (item == null || !item.isSaved()) {
+            return;
+        }
+        final Parent parent;
+        if (MediumType.is(medium, MediumType.AUDIO)) {
+            parent = null;
+        } else if (MediumType.is(medium, MediumType.TEXT)) {
+            parent = loadNode(
+                    "/text.fxml",
+                    (Consumer<TextViewController>) controller -> controller.open(mediumId, item.getEpisodeId())
+            );
+        } else if (MediumType.is(medium, MediumType.IMAGE)) {
+            parent = loadNode(
+                    "/images.fxml",
+                    (Consumer<ImageViewController>) controller -> controller.open(mediumId, item.getEpisodeId())
+            );
+        } else if (MediumType.is(medium, MediumType.VIDEO)) {
+            parent = null;
+        } else {
+            parent = null;
+        }
+
+        if (parent == null) {
+            Notifications.create().title("Could not open EpisodeView").show();
+            return;
+        }
+        Stage stage = new Stage();
+        stage.setScene(new Scene(parent));
+        stage.show();
     }
 }
