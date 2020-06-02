@@ -114,8 +114,7 @@ public class TasksHelper {
         double totalProgress = 0;
 
         for (Service<?> service : this.services) {
-            final Worker.State state = service.getState();
-            if (state == Worker.State.SUCCEEDED) {
+            if (!service.isRunning()) {
                 totalProgress += 1;
             } else if (service.getProgress() >= 0) {
                 totalProgress += service.getProgress();
