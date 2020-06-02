@@ -11,14 +11,16 @@ import java.io.IOException;
 import java.net.*;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 class ServerDiscovery {
 
     private static final boolean isDev = false;
     private final int maxAddress = 50;
     private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress);
-    private final ExecutorService broadCastExecutor = Executors.newSingleThreadExecutor();
 
     Server discover(InetAddress broadcastAddress) {
         Set<Server> discoveredServer = Collections.synchronizedSet(new HashSet<>());
@@ -32,12 +34,11 @@ class ServerDiscovery {
         }
         Server server = null;
         try {
-            Future<Void> future = this.broadCastExecutor.submit(() -> this.discoverLocalNetworkServerPerUdp(broadcastAddress, discoveredServer), null);
+            final Thread discoverThread = new BroadcastDiscoverThread(broadcastAddress, discoveredServer);
             try {
-                future.get(2, TimeUnit.SECONDS);
-                this.broadCastExecutor.shutdownNow();
-            } catch (TimeoutException ignored) {
-
+                discoverThread.start();
+                discoverThread.join(2000);
+                discoverThread.interrupt();
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -106,107 +107,126 @@ class ServerDiscovery {
         return null;
     }
 
-    /**
-     * Modified Version from
-     * <a href="https://michieldemey.be/blog/network-discovery-using-udp-broadcast/">
-     * Network discovery using UDP Broadcast (Java)
-     * </a>
-     */
-    private void discoverLocalNetworkServerPerUdp(InetAddress broadcastAddress, Set<Server> discoveredServer) {
-        // Find the server using UDP broadcast
-        //Open a random port to send the package
-        try (DatagramSocket c = new DatagramSocket()) {
-            c.setBroadcast(true);
-
-            byte[] sendData = "DISCOVER_SERVER_REQUEST_ENTERPRISE".getBytes();
-
-            int udpServerPort = 3001;
-            //Try the some 'normal' ip addresses first
-            try {
-                this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getLocalHost());
-                this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("255.255.255.255"));
-                this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("192.168.255.255"));
-
-                for (int i = 1; i < 50; i++) {
-                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("192.168.1." + i));
-                }
-
-                if (broadcastAddress != null) {
-                    this.sendUDPPacket(c, sendData, udpServerPort, broadcastAddress);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            // Broadcast the message over all the network interfaces
-            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-
-            for (NetworkInterface networkInterface : interfaces) {
-                if (!networkInterface.isUp()) {
-                    continue; // Don't want to broadcast to the loopback interface
-                }
-
-                for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-                    InetAddress broadcast = interfaceAddress.getBroadcast();
-                    if (broadcast == null) {
-                        continue;
-                    }
-
-                    // Send the broadcast package!
-                    try {
-                        sendUDPPacket(c, sendData, udpServerPort, broadcast);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
-            }
-
-            //Wait for a response
-            byte[] recvBuf = new byte[15000];
-
-            //noinspection InfiniteLoopStatement
-            while (true) {
-                DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-                c.receive(receivePacket);
-
-                //Check if the message is correct
-                String message = new String(receivePacket.getData()).trim();
-
-                // the weird thing is if the message is over 34 bytes long
-                // e.g. 'DISCOVER_SERVER_RESPONSE_ENTERPRISE' the last character will be cut off
-                // either the node server does not send correctly
-                // or java client does not receive correctly
-                if ("ENTERPRISE_DEV".equals(message)) {
-                    Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, true);
-                    discoveredServer.add(server);
-                } else if ("ENTERPRISE_PROD".equals(message)) {
-                    Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, false);
-                    discoveredServer.add(server);
-                }
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
     private Server discoverInternetServerPerUdp() {
         // TODO: 27.07.2019 check if internet server is reachable
         return null;
     }
 
-    private void sendUDPPacket(DatagramSocket c, byte[] data, int port, InetAddress address) throws IOException {
-//        System.out.println("Sending Msg to " + address.getHostAddress() + ":" + port);
-        try {
-            c.send(new DatagramPacket(data, data.length, address, port));
-        } catch (SocketException ignored) {
-        }
-    }
+    private static class BroadcastDiscoverThread extends Thread {
+        private final InetAddress broadcastAddress;
+        private final Set<Server> discoveredServer;
+        private DatagramSocket socket;
 
-    boolean isReachable(Server server) {
-        if (server == null) {
-            return false;
+        private BroadcastDiscoverThread(InetAddress broadcastAddress, Set<Server> discoveredServer) {
+            super("Local-Server-UDP-Discovery");
+            this.broadcastAddress = broadcastAddress;
+            this.discoveredServer = discoveredServer;
         }
-        return server.isReachable();
+
+        @Override
+        public void run() {
+            this.discoverLocalNetworkServerPerUdp(this.broadcastAddress, this.discoveredServer);
+        }
+
+        @Override
+        public void interrupt() {
+            super.interrupt();
+
+            if (this.socket != null) {
+                this.socket.close();
+            }
+        }
+
+        /**
+         * Modified Version from
+         * <a href="https://michieldemey.be/blog/network-discovery-using-udp-broadcast/">
+         * Network discovery using UDP Broadcast (Java)
+         * </a>
+         */
+        private void discoverLocalNetworkServerPerUdp(InetAddress broadcastAddress, Set<Server> discoveredServer) {
+            // Find the server using UDP broadcast
+            //Open a random port to send the package
+            try (DatagramSocket c = new DatagramSocket()) {
+                this.socket = c;
+                c.setBroadcast(true);
+
+                byte[] sendData = "DISCOVER_SERVER_REQUEST_ENTERPRISE".getBytes();
+
+                int udpServerPort = 3001;
+                //Try the some 'normal' ip addresses first
+                try {
+                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getLocalHost());
+                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("255.255.255.255"));
+                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("192.168.255.255"));
+
+                    for (int i = 1; i < 50; i++) {
+                        this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("192.168.1." + i));
+                    }
+
+                    if (broadcastAddress != null) {
+                        this.sendUDPPacket(c, sendData, udpServerPort, broadcastAddress);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // Broadcast the message over all the network interfaces
+                List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+
+                for (NetworkInterface networkInterface : interfaces) {
+                    if (!networkInterface.isUp()) {
+                        continue; // Don't want to broadcast to the loopback interface
+                    }
+
+                    for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+                        InetAddress broadcast = interfaceAddress.getBroadcast();
+                        if (broadcast == null) {
+                            continue;
+                        }
+
+                        // Send the broadcast package!
+                        try {
+                            sendUDPPacket(c, sendData, udpServerPort, broadcast);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                }
+
+                //Wait for a response
+                byte[] recvBuf = new byte[15000];
+
+                while (!this.isInterrupted()) {
+                    DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
+                    c.receive(receivePacket);
+
+                    //Check if the message is correct
+                    String message = new String(receivePacket.getData()).trim();
+
+                    // the weird thing is if the message is over 34 bytes long
+                    // e.g. 'DISCOVER_SERVER_RESPONSE_ENTERPRISE' the last character will be cut off
+                    // either the node server does not send correctly
+                    // or java client does not receive correctly
+                    if ("ENTERPRISE_DEV".equals(message)) {
+                        Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, true);
+                        discoveredServer.add(server);
+                    } else if ("ENTERPRISE_PROD".equals(message)) {
+                        Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, false);
+                        discoveredServer.add(server);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        private void sendUDPPacket(DatagramSocket c, byte[] data, int port, InetAddress address) throws IOException {
+//        System.out.println("Sending Msg to " + address.getHostAddress() + ":" + port);
+            try {
+                c.send(new DatagramPacket(data, data.length, address, port));
+            } catch (SocketException ignored) {
+            }
+        }
     }
 }
