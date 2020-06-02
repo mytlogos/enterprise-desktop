@@ -23,8 +23,6 @@ public interface Repository {
 
     boolean isClientAuthenticated();
 
-    LoadWorker getLoadWorker();
-
     LiveData<HomeStats> getHomeStats();
 
     LiveData<User> getUser();
@@ -76,8 +74,6 @@ public interface Repository {
     boolean isLoading();
 
     void refreshNews(LocalDateTime latest) throws IOException;
-
-    void loadInvalidated() throws IOException;
 
     List<Integer> getSavedEpisodes();
 
@@ -224,18 +220,6 @@ public interface Repository {
     void deleteLocalEpisodesWithHigherIndex(double combiIndex, int mediumId) throws IOException;
 
     void deleteLocalEpisodes(Set<Integer> episodeId, int mediumId) throws IOException;
-
-    void addProgressListener(Consumer<Integer> consumer);
-
-    void removeProgressListener(Consumer<Integer> consumer);
-
-    void addTotalWorkListener(Consumer<Integer> consumer);
-
-    void removeTotalWorkListener(Consumer<Integer> consumer);
-
-    int getLoadWorkerProgress();
-
-    int getLoadWorkerTotalWork();
 
     void syncProgress();
 

@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.controller;
 
+import com.mytlogos.enterprisedesktop.background.TaskManager;
 import com.mytlogos.enterprisedesktop.worker.DownloadWorker;
 import com.mytlogos.enterprisedesktop.worker.SynchronizeService;
 import javafx.application.Platform;
@@ -39,8 +40,10 @@ public class TaskController {
 
     public void startDownloadTask(int medium, List<Integer> episodeIds) {
         final DownloadWorker worker = new DownloadWorker(medium, episodeIds);
-        this.helper.addService(worker);
-        this.listenOnce(worker);
+        TaskManager.runFxTask(() -> {
+            this.helper.addService(worker);
+            this.listenOnce(worker);
+        });
     }
 
     private void listenOnce(Service<?> service) {

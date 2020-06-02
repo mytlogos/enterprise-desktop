@@ -41,6 +41,14 @@ public class TaskManager {
         }
     }
 
+    public static void runFxTask(Runnable runnable) {
+        if (Platform.isFxApplicationThread()) {
+            runnable.run();
+        } else {
+            Platform.runLater(runnable);
+        }
+    }
+
     public static Future<?> runAsyncTask(Runnable runnable) {
         return INSTANCE.service.submit(runnable);
     }

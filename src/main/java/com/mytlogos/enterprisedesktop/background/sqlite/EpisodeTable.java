@@ -271,6 +271,15 @@ class EpisodeTable extends AbstractTable {
         this.update(update, "episode", attrMap, keyExtractors);
     }
 
+    public Collection<Integer> getMediumEpisodeIds(int mediumId) {
+        return new QueryBuilder<Integer>("Select Medium Episode Ids",
+                "SELECT episodeId FROM part \n" +
+                        "INNER JOIN episode ON part.partId=episode.partId \n" +
+                        "WHERE part.mediumId=?")
+                .setValues(value -> value.setInt(1, mediumId))
+                .queryListIgnoreError();
+    }
+
 
     LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
         return LiveData.create(() -> {

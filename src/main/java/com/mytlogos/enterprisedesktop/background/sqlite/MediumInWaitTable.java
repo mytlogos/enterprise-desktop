@@ -66,6 +66,11 @@ class MediumInWaitTable extends AbstractTable {
                 .queryListIgnoreError();
     }
 
+    public void delete(Collection<MediumInWait> toDelete) {
+        // TODO 02.6.2020: implement this
+//        this.executeDMLQuery(toDelete, new QueryBuilder<MediumInWait>("Delete MediumInWaits", "DELETE FROM medium_in_wait WHERE"));
+    }
+
     void insert(MediumInWait mediumInWait) {
         this.executeDMLQuery(mediumInWait, this.insertMediumInWaitQuery);
     }

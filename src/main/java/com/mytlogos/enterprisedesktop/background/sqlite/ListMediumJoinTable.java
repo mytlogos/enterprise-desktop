@@ -12,7 +12,7 @@ import java.util.List;
  */
 class ListMediumJoinTable extends AbstractTable {
     private final QueryBuilder<ListMediumJoin> insertListMediumJoinQuery = new QueryBuilder<ListMediumJoin>(
-            "Select ListJoin",
+            "Insert ListJoin",
             "INSERT OR IGNORE INTO list_medium (listId, mediumId) VALUES (?,?)"
     ).setValueSetter((statement, listMediumJoin) -> {
         statement.setInt(1, listMediumJoin.getListId());

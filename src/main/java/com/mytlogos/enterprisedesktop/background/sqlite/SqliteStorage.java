@@ -313,7 +313,11 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void addItemsToList(int listId, Collection<Integer> ids) {
-
+        List<ListMediumJoin> joins = new ArrayList<>(ids.size());
+        for (Integer id : ids) {
+            joins.add(new ListMediumJoin(listId, id, false));
+        }
+        this.listMediumJoinTable.insert(joins);
     }
 
     @Override
@@ -348,7 +352,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void deleteMediaInWait(Collection<MediumInWait> toDelete) {
-
+        this.mediumInWaitTable.delete(toDelete);
     }
 
     @Override
@@ -383,7 +387,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public int getMediumType(Integer mediumId) {
-        return 0;
+        return this.mediumTable.getSimpleMedium(mediumId).getMedium();
     }
 
     @Override
@@ -438,7 +442,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public Collection<Integer> getAllEpisodes(int mediumId) {
-        return null;
+        return this.episodeTable.getMediumEpisodeIds(mediumId);
     }
 
     @Override
@@ -1040,7 +1044,7 @@ public class SqliteStorage implements DatabaseStorage {
 
         @Override
         public void finish() {
-            this.repository.getLoadWorker().work();
+
         }
 
         @Override
@@ -1078,16 +1082,17 @@ public class SqliteStorage implements DatabaseStorage {
             List<ListMediumJoin> newInternalJoins = new LinkedList<>();
             List<ListMediumJoin> toDeleteInternalJoins = this.filterListMediumJoins(stat, deletedLists, newInternalJoins, false);
             List<ListMediumJoin> newExternalJoins = new LinkedList<>();
-            List<ListMediumJoin> toDeleteExternalJoins = this.filterListMediumJoins(stat, deletedLists, newInternalJoins, true);
+            List<ListMediumJoin> toDeleteExternalJoins = this.filterListMediumJoins(stat, deletedExLists, newExternalJoins, true);
 
             listUser.forEach(user -> {
                 List<Integer> listIds = stat.extUser.get(user.uuid);
                 if (listIds == null) {
                     deletedExUser.add(user.uuid);
+                    deletedExLists.add(user.listId);
                     return;
                 }
                 if (!listIds.contains(user.listId)) {
-                    deletedLists.add(user.listId);
+                    deletedExLists.add(user.listId);
                 }
             });
 
@@ -1114,12 +1119,13 @@ public class SqliteStorage implements DatabaseStorage {
             }
             final Map<Integer, Set<Integer>> previousListJoinMap = new HashMap<>();
 
-
             previousListJoins.removeIf(join -> {
                 previousListJoinMap.computeIfAbsent(join.listId, integer -> new HashSet<>()).add(join.mediumId);
                 final List<Integer> currentListItems = currentJoins.get(join.listId);
                 if (currentListItems == null) {
                     deletedLists.add(join.listId);
+                    // TODO 02.6.2020: should maybe return 'false', to not remove it,
+                    //  so that this join may be deleted later, as the list is also deleted
                     return true;
                 }
                 return currentListItems.contains(join.mediumId);

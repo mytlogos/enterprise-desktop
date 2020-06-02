@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
 /**
  *
@@ -35,7 +34,6 @@ class RepositoryImpl implements Repository {
     private final ClientModelPersister persister;
     private final LiveData<User> storageUserLiveData;
     private final LoadData loadedData;
-    private final LoadWorker loadWorker;
     private final EditService editService;
 
     RepositoryImpl() {
@@ -51,16 +49,7 @@ class RepositoryImpl implements Repository {
             }
             return value;
         });
-
-        DependantGenerator dependantGenerator = this.storage.getDependantGenerator(this.loadedData);
-        this.loadWorker = new BlockingLoadWorker(
-                this.loadedData,
-                this,
-                this.persister,
-                dependantGenerator
-        );
         this.editService = new EditService(this.client, this.storage, this.persister);
-
     }
 
     @Override
@@ -71,11 +60,6 @@ class RepositoryImpl implements Repository {
     @Override
     public boolean isClientAuthenticated() {
         return this.client.isAuthenticated();
-    }
-
-    @Override
-    public LoadWorker getLoadWorker() {
-        return loadWorker;
     }
 
     @Override
@@ -165,13 +149,8 @@ class RepositoryImpl implements Repository {
             if (mediaIds == null) {
                 return;
             }
-            for (Integer mediumId : mediaIds) {
-                if (this.loadedData.getMedia().contains(mediumId) || this.loadWorker.isMediumLoading(mediumId)) {
-                    continue;
-                }
-                this.loadWorker.addIntegerIdTask(mediumId, null, this.loadWorker.MEDIUM_LOADER);
-            }
-            this.loadWorker.work();
+            // TODO 02.6.2020: implement this
+            throw new UnsupportedOperationException();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -312,53 +291,6 @@ class RepositoryImpl implements Repository {
         if (news != null) {
             this.persister.persistNews(news);
         }
-    }
-
-    @Override
-    public void loadInvalidated() throws IOException {
-        List<InvalidatedData> invalidatedData = this.client.getInvalidated().body();
-
-        if (invalidatedData == null || invalidatedData.isEmpty()) {
-            return;
-        }
-
-        boolean userUpdated = false;
-        LoadWorker loadWorker = this.getLoadWorker();
-
-        for (InvalidatedData datum : invalidatedData) {
-            if (datum.isUserUuid()) {
-                userUpdated = true;
-
-            } else if (datum.getEpisodeId() > 0) {
-                loadWorker.addIntegerIdTask(datum.getEpisodeId(), null, loadWorker.EPISODE_LOADER);
-
-            } else if (datum.getPartId() > 0) {
-                loadWorker.addIntegerIdTask(datum.getPartId(), null, loadWorker.PART_LOADER);
-
-            } else if (datum.getMediumId() > 0) {
-                loadWorker.addIntegerIdTask(datum.getMediumId(), null, loadWorker.MEDIUM_LOADER);
-
-            } else if (datum.getListId() > 0) {
-                loadWorker.addIntegerIdTask(datum.getListId(), null, loadWorker.MEDIALIST_LOADER);
-
-            } else if (datum.getExternalListId() > 0) {
-                loadWorker.addIntegerIdTask(datum.getExternalListId(), null, loadWorker.EXTERNAL_MEDIALIST_LOADER);
-
-            } else if (datum.getExternalUuid() != null && !datum.getExternalUuid().isEmpty()) {
-                loadWorker.addStringIdTask(datum.getExternalUuid(), null, loadWorker.EXTERNAL_USER_LOADER);
-
-            } else if (datum.getNewsId() > 0) {
-                loadWorker.addIntegerIdTask(datum.getNewsId(), null, loadWorker.NEWS_LOADER);
-            } else {
-                System.out.println("unknown invalid data: " + datum);
-            }
-        }
-
-        if (userUpdated) {
-            ClientSimpleUser user = this.client.checkLogin().body();
-            this.persister.persist(user);
-        }
-        loadWorker.work();
     }
 
     @Override
@@ -862,36 +794,6 @@ class RepositoryImpl implements Repository {
 
         contentTool.removeMediaEpisodes(mediumId, episodeIds);
         this.updateSaved(episodeIds, false);
-    }
-
-    @Override
-    public void addProgressListener(Consumer<Integer> consumer) {
-        this.loadWorker.addProgressListener(consumer);
-    }
-
-    @Override
-    public void removeProgressListener(Consumer<Integer> consumer) {
-        this.loadWorker.removeProgressListener(consumer);
-    }
-
-    @Override
-    public void addTotalWorkListener(Consumer<Integer> consumer) {
-        this.loadWorker.addTotalWorkListener(consumer);
-    }
-
-    @Override
-    public void removeTotalWorkListener(Consumer<Integer> consumer) {
-        this.loadWorker.removeTotalWorkListener(consumer);
-    }
-
-    @Override
-    public int getLoadWorkerProgress() {
-        return this.loadWorker.getProgress();
-    }
-
-    @Override
-    public int getLoadWorkerTotalWork() {
-        return this.loadWorker.getTotalWork();
     }
 
     @Override
