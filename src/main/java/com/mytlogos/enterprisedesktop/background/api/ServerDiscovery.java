@@ -11,16 +11,21 @@ import java.io.IOException;
 import java.net.*;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class ServerDiscovery {
 
     private static final boolean isDev = false;
     private final int maxAddress = 50;
-    private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress);
+    private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress, new ThreadFactory() {
+        private final AtomicInteger count = new AtomicInteger();
+
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, String.format("Server-Discovery-%d", this.count.getAndIncrement()));
+        }
+    });
 
     Server discover(InetAddress broadcastAddress) {
         Set<Server> discoveredServer = Collections.synchronizedSet(new HashSet<>());
