@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.controller;
 
+import com.sun.corba.se.spi.orbutil.threadpool.Work;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
@@ -160,9 +161,26 @@ public class TasksHelper {
             service.stateProperty().addListener(this.stateListener);
             service.progressProperty().addListener(this.progressListener);
 
-            value.progressProperty().bind(service.progressProperty());
-            value.messageProperty().bind(service.messageProperty());
-            value.titleProperty().bind(service.titleProperty());
+            service.progressProperty().addListener(observable -> {
+                final double progress = service.getProgress();
+                if (service.getState() == Worker.State.RUNNING) {
+                    value.progressProperty().set(progress);
+                } else {
+                    value.progressProperty().set(1);
+                }
+            });
+            service.messageProperty().addListener(observable -> {
+                final String message = service.getMessage();
+                if (service.getState() == Worker.State.RUNNING) {
+                    value.messageProperty().set(message);
+                }
+            });
+            service.titleProperty().addListener(observable -> {
+                final String title = service.getTitle();
+                if (service.getState() == Worker.State.RUNNING) {
+                    value.titleProperty().set(title);
+                }
+            });
 
             final ObservableList<Node> children = this.popupRoot.getChildren();
 
