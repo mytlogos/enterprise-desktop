@@ -14,15 +14,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -362,7 +354,7 @@ public class ImageContentTool extends ContentTool {
         return files.length == 0 ? 0 : sum / files.length;
     }
 
-    public Map<Integer, Set<ChapterPage>> getEpisodePagePaths(String mediumDir) {
+    public Map<Integer, List<ChapterPage>> getEpisodePagePaths(String mediumDir) {
         File file = new File(mediumDir);
 
         if (!file.exists() || !file.isDirectory()) {
@@ -371,7 +363,7 @@ public class ImageContentTool extends ContentTool {
         Pattern pagePattern = Pattern.compile("^(\\d+)-(\\d+)\\.(png|jpg)$");
 
 
-        Map<Integer, Set<ChapterPage>> episodePages = new HashMap<>();
+        Map<Integer, List<ChapterPage>> episodePages = new HashMap<>();
 
         final String[] files = file.list();
 
@@ -394,8 +386,11 @@ public class ImageContentTool extends ContentTool {
             String absolutePath = new File(file, episodePath).getAbsolutePath();
 
             episodePages
-                    .computeIfAbsent(episodeId, integer -> new HashSet<>())
+                    .computeIfAbsent(episodeId, integer -> new ArrayList<>())
                     .add(new ChapterPage(episodeId, page, absolutePath));
+        }
+        for (List<ChapterPage> pages : episodePages.values()) {
+            pages.sort(Comparator.comparingInt(ChapterPage::getPage));
         }
         return episodePages;
     }

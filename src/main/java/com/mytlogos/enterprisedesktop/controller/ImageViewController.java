@@ -78,7 +78,7 @@ public class ImageViewController {
             }
         }
     };
-    private Map<Integer, Set<ChapterPage>> episodePagePaths;
+    private Map<Integer, List<ChapterPage>> episodePagePaths;
     private List<SimpleEpisode> simpleEpisodes;
 
     public void open(int mediumId, int currentEpisode) {
