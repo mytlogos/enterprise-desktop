@@ -464,7 +464,8 @@ public class EpisodeViewController implements Attachable {
                 if (!event.getButton().equals(MouseButton.PRIMARY) || event.getClickCount() < 2) {
                     return;
                 }
-                ControllerUtils.openEpisode(item, item.getMedium(), item.getMediumId());
+                final int mediumType = ApplicationConfig.getRepository().getMediumType(item.getMediumId());
+                ControllerUtils.openEpisode(item, mediumType, item.getMediumId());
             });
         }
 
@@ -488,18 +489,18 @@ public class EpisodeViewController implements Attachable {
                     this.setText("Could not load Item Graphic");
                 } else {
                     this.setGraphic(this.root);
-                    final String title = item.getMediumTitle() + " - " + item.getTitle();
+                    final String title = item.getTitle();
 
                     final String latestRelease = Formatter.format(item.getReleaseDate());
 
-                    this.topLeftContent.setText(Formatter.format(item));
+                    this.topLeftContent.setText(item.getCombiIndex());
 
                     this.topRightContent.setText(latestRelease);
                     this.content.setText(title);
 
                     this.lockedView.setVisible(item.isLocked());
                     this.readView.setOpacity(item.isRead() ? 1 : 0.25);
-                    this.onlineView.setOpacity(item.getUrl() != null && !item.getUrl().isEmpty() ? 1 : 0.25);
+                    this.onlineView.setOpacity(1);
                     this.localView.setOpacity(item.isSaved() ? 1 : 0.25);
                 }
             }
