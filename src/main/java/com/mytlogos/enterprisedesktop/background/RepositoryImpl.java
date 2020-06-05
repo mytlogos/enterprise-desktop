@@ -896,11 +896,14 @@ class RepositoryImpl implements Repository {
     public List<SearchResponse> requestSearch(SearchRequest searchRequest) {
         try {
             final Response<List<SearchResponse>> response = this.client.searchRequest(searchRequest);
-            final List<SearchResponse> body = response.body();
-            return body;
+            if (response.isSuccessful()) {
+                return response.body();
+            } else {
+                return Collections.emptyList();
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
     }
 
