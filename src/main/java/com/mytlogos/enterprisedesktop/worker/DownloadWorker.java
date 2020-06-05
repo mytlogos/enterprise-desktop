@@ -47,12 +47,10 @@ public class DownloadWorker extends ScheduledService<Void> {
 
                     if (!repository.isClientAuthenticated()) {
                         this.updateTitle("No Download: Not Authenticated");
-                        cleanUp();
                         return null;
                     }
                     if (!repository.isClientOnline()) {
                         this.updateTitle("Download: Server not in reach");
-                        cleanUp();
                         return null;
                     }
                     this.updateTitle("Getting Data for Download");
@@ -68,7 +66,6 @@ public class DownloadWorker extends ScheduledService<Void> {
                 } catch (Throwable e) {
                     e.printStackTrace();
                 }
-                cleanUp();
                 return null;
             }
 
@@ -270,14 +267,6 @@ public class DownloadWorker extends ScheduledService<Void> {
                 this.downloadEpisodes(Collections.singleton(download), repository, episodeIds.size());
             }
         };
-    }
-
-    private void cleanUp() {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     private void filterMediumConstraints(MediumDownload mediumDownload) {

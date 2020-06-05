@@ -328,14 +328,6 @@ public class SynchronizeService extends ScheduledService<Void> {
     private void cleanUp() {
         Repository repository = ApplicationConfig.getRepository();
         repository.syncProgress();
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-//        if (this.notificationManager != null) {
-//            this.notificationManager.cancel(this.syncNotificationId);
-//        }
     }
 
     private void append(StringBuilder builder, String prefix, int i) {
