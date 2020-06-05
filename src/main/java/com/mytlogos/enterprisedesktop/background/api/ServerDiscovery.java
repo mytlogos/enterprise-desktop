@@ -218,7 +218,9 @@ class ServerDiscovery {
                     }
                 }
             } catch (IOException ex) {
-                ex.printStackTrace();
+                if (!this.isInterrupted()) {
+                    ex.printStackTrace();
+                }
             }
         }
 
