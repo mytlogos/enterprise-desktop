@@ -93,14 +93,13 @@ public abstract class LiveData<T> {
 
     public CompletableFuture<T> firstElement() {
         CompletableFuture<T> future = new CompletableFuture<>();
-        final Observer<T> complete = new Observer<T>() {
+        this.observe(new Observer<T>() {
             @Override
             public void onChanged(T t) {
-                future.complete(t);
                 LiveData.this.removeObserver(this);
+                future.complete(t);
             }
-        };
-        this.observe(complete);
+        });
         return future;
     }
 
