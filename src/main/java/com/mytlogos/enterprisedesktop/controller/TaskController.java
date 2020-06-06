@@ -63,19 +63,7 @@ public class TaskController {
     }
 
     private void removeService(Service<?> service) {
-        DELAY_TIMER.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Runnable r = () -> helper.removeService(service);
-
-                // We must make sure that it is called from the FX thread.
-                if (Platform.isFxApplicationThread()) {
-                    r.run();
-                } else {
-                    Platform.runLater(r);
-                }
-            }
-        }, 10_000);
+        DELAY_TIMER.schedule(new RemoveServiceTask(service), 10_000);
     }
 
     void setTasksHelper(TasksHelper helper) {
@@ -95,6 +83,26 @@ public class TaskController {
             this.message = message;
             this.total = total;
             this.progress = progress;
+        }
+    }
+
+    private class RemoveServiceTask extends TimerTask {
+        private final Service<?> service;
+
+        public RemoveServiceTask(Service<?> service) {
+            this.service = service;
+        }
+
+        @Override
+        public void run() {
+            Runnable r = () -> helper.removeService(this.service);
+
+            // We must make sure that it is called from the FX thread.
+            if (Platform.isFxApplicationThread()) {
+                r.run();
+            } else {
+                Platform.runLater(r);
+            }
         }
     }
 }
