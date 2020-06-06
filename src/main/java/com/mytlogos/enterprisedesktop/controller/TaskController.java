@@ -1,7 +1,8 @@
 package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.background.TaskManager;
-import com.mytlogos.enterprisedesktop.worker.DownloadWorker;
+import com.mytlogos.enterprisedesktop.worker.AutoDownloadService;
+import com.mytlogos.enterprisedesktop.worker.SingleDownloadService;
 import com.mytlogos.enterprisedesktop.worker.SynchronizeService;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
@@ -19,14 +20,14 @@ import java.util.TimerTask;
 public class TaskController {
     private static final Timer DELAY_TIMER = new Timer("Tasks Remove Delay Timer", true);
     private final SynchronizeService synchronizeService;
-    private final DownloadWorker autoDownloadService;
+    private final AutoDownloadService autoDownloadService;
     private TasksHelper helper;
 
     public TaskController() {
         this.synchronizeService = new SynchronizeService();
         this.synchronizeService.setOnFailed(event -> event.getSource().getException().printStackTrace());
 
-        this.autoDownloadService = new DownloadWorker();
+        this.autoDownloadService = new AutoDownloadService();
         this.autoDownloadService.setOnFailed(event -> event.getSource().getException().printStackTrace());
     }
 
@@ -39,7 +40,7 @@ public class TaskController {
     }
 
     public void startDownloadTask(int medium, List<Integer> episodeIds) {
-        final DownloadWorker worker = new DownloadWorker(medium, episodeIds);
+        final SingleDownloadService worker = new SingleDownloadService(medium, episodeIds);
         TaskManager.runFxTask(() -> {
             this.helper.addService(worker);
             this.listenOnce(worker);
@@ -47,6 +48,7 @@ public class TaskController {
     }
 
     private void listenOnce(Service<?> service) {
+        service.setOnFailed(event -> event.getSource().getException().printStackTrace());
         service.stateProperty().addListener(new InvalidationListener() {
             @Override
             public void invalidated(Observable observable) {
