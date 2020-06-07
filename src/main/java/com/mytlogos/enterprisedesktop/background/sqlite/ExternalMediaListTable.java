@@ -7,6 +7,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.ExternalMediaList;
 import com.mytlogos.enterprisedesktop.model.ExternalMediaListImpl;
 import com.mytlogos.enterprisedesktop.model.MediumItem;
+import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -105,6 +106,23 @@ class ExternalMediaListTable extends AbstractTable {
         return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
     });
 
+    private final QueryBuilder<SimpleMedium> getSimpleMediumItemsQuery = new QueryBuilder<SimpleMedium>(
+            "Select MediumItems",
+            "SELECT title, medium.mediumId, medium " +
+                    "FROM medium INNER JOIN external_list_medium " +
+                    "ON external_list_medium.mediumId=medium.mediumId " +
+                    "WHERE listId=? " +
+                    "ORDER BY title"
+    ).setDependencies(
+            MediumTable.class,
+            ExternalListMediumJoinTable.class
+    ).setConverter(value -> {
+        final String title = value.getString(1);
+        final int mediumId = value.getInt(2);
+        final int medium = value.getInt(3);
+        return new SimpleMedium(mediumId, title, medium);
+    });
+
     ExternalMediaListTable() {
         super("external_media_list");
     }
@@ -114,7 +132,7 @@ class ExternalMediaListTable extends AbstractTable {
     }
 
     public List<ListUser> getListUser() {
-        return new QueryBuilder<ListUser>("Select ExternalListUser","SELECT externalListId as listId, uuid FROM external_media_list")
+        return new QueryBuilder<ListUser>("Select ExternalListUser", "SELECT externalListId as listId, uuid FROM external_media_list")
                 .setConverter(value -> new ListUser(value.getInt(1), value.getString(2)))
                 .queryListIgnoreError();
     }
@@ -122,7 +140,7 @@ class ExternalMediaListTable extends AbstractTable {
     public void delete(Set<Integer> deletedExLists) {
         this.executeDMLQuery(
                 deletedExLists,
-                new QueryBuilder<Integer>("Delete ExternalListId","DELETE FROM external_media_list WHERE externalListId = ?")
+                new QueryBuilder<Integer>("Delete ExternalListId", "DELETE FROM external_media_list WHERE externalListId = ?")
                         .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
         );
     }
@@ -136,6 +154,10 @@ class ExternalMediaListTable extends AbstractTable {
         final Map<String, Function<ClientExternalMediaList, ?>> keyExtractors = new HashMap<>();
         keyExtractors.put("externalListId", (IntProducer<ClientExternalMediaList>) ClientExternalMediaList::getId);
         this.update(update, "external_media_list", attrMap, keyExtractors);
+    }
+
+    public LiveData<List<SimpleMedium>> getSimpleMediumItems(int listId) {
+        return this.getSimpleMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
 
     LiveData<List<MediumItem>> getMediumItems(int listId) {

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Rectangle2D?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+
+<HBox styleClass="mediumToggles" stylesheets="@mediumTypes.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MediumTypes">
+    <ToggleButton fx:id="textButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false" styleClass="first">
+        <graphic>
+            <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                <Image url="@icon-text.png" />
+            </ImageView>
+        </graphic>
+      <tooltip>
+         <Tooltip text="Select Text Media" />
+      </tooltip>
+    </ToggleButton>
+    <ToggleButton fx:id="imageButton" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
+        <graphic>
+            <ImageView fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true">
+                <Image url="@icons8-image-24.png" />
+            <viewport>
+               <Rectangle2D />
+            </viewport>
+            </ImageView>
+        </graphic>
+      <tooltip>
+         <Tooltip text="Select Image Media" />
+      </tooltip>
+    </ToggleButton>
+    <ToggleButton fx:id="videoButton" layoutX="46.0" layoutY="10.0" maxHeight="1.7976931348623157E308" mnemonicParsing="false">
+        <graphic>
+            <ImageView fitHeight="20.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                <Image url="@icons8-video-50.png" />
+            </ImageView>
+        </graphic>
+      <tooltip>
+         <Tooltip text="Select Video Media" />
+      </tooltip>
+    </ToggleButton>
+    <ToggleButton fx:id="audioButton" layoutX="82.0" layoutY="10.0" maxHeight="1.7976931348623157E308" mnemonicParsing="false" styleClass="last">
+        <graphic>
+            <ImageView fitHeight="20.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                <Image url="@icons8-audio-26.png" />
+            </ImageView>
+        </graphic>
+      <tooltip>
+         <Tooltip text="Select Audio Media" />
+      </tooltip>
+    </ToggleButton>
+</HBox>

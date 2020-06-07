@@ -6,6 +6,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.MediaList;
 import com.mytlogos.enterprisedesktop.model.MediaListImpl;
 import com.mytlogos.enterprisedesktop.model.MediumItem;
+import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -111,6 +112,23 @@ class MediaListTable extends AbstractTable {
         return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
     });
 
+    private final QueryBuilder<SimpleMedium> getSimpleMediumItemsQuery = new QueryBuilder<SimpleMedium>(
+            "Select MediumItems",
+            "SELECT title, medium.mediumId, medium " +
+                    "FROM medium INNER JOIN list_medium " +
+                    "ON list_medium.mediumId=medium.mediumId " +
+                    "WHERE listId=? " +
+                    "ORDER BY title"
+    ).setDependencies(
+            MediumTable.class,
+            ListMediumJoinTable.class
+    ).setConverter(value -> {
+        final String title = value.getString(1);
+        final int mediumId = value.getInt(2);
+        final int medium = value.getInt(3);
+        return new SimpleMedium(mediumId, title, medium);
+    });
+
     MediaListTable() {
         super("media_list");
     }
@@ -126,7 +144,7 @@ class MediaListTable extends AbstractTable {
     public void delete(Set<Integer> deletedLists) {
         this.executeDMLQuery(
                 deletedLists,
-                new QueryBuilder<Integer>("Delete ListIds","DELETE FROM media_list WHERE listId = ?")
+                new QueryBuilder<Integer>("Delete ListIds", "DELETE FROM media_list WHERE listId = ?")
                         .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
         );
     }
@@ -143,6 +161,10 @@ class MediaListTable extends AbstractTable {
 
     public LiveData<List<Integer>> getMediumItemsIds(Collection<Integer> listIds) {
         return this.getListsMediaItemsIdsQuery.setQueryIn(listIds, QueryBuilder.Type.INT).setConverter(value -> value.getInt(1)).selectInLiveDataList();
+    }
+
+    public LiveData<List<SimpleMedium>> getSimpleMediumItems(int listId) {
+        return this.getSimpleMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
 
     LiveData<List<MediumItem>> getMediumItems(int listId) {

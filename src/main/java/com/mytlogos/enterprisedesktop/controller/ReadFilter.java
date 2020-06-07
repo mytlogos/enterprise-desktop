@@ -16,6 +16,15 @@ public enum ReadFilter implements MainController.DisplayValue {
         this.value = value;
     }
 
+    public static ReadFilter getValue(byte readFilter) {
+        for (ReadFilter value : ReadFilter.values()) {
+            if (value.value == readFilter) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("unknown value");
+    }
+
     @Override
     public String getDisplayValue() {
         return this.display;

@@ -6,6 +6,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.Release;
+import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -89,7 +90,7 @@ class ReleaseTable extends AbstractTable {
                 .queryListIgnoreError();
     }
 
-    LiveData<PagedList<DisplayRelease>> getReleases(ReleaseFilter filter) {
+    LiveData<PagedList<DisplayRelease>> getReleases(DisplayEpisodeProfile filter) {
         return this.getReleasesQuery
                 .setQueryIn(filter.mediumIds, QueryBuilder.Type.INT)
                 .setValues(value -> {

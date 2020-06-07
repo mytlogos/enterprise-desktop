@@ -1,0 +1,19 @@
+.mediumToggles {
+    -fx-background: transparent;
+    -fx-max-height: 25;
+    -fx-pref-height: 25;
+}
+
+.mediumToggles .toggle-button {
+    -fx-background-radius: 0;
+    -fx-pref-height: 25;
+    -fx-max-height: 25;
+}
+
+.mediumToggles .toggle-button.first {
+    -fx-background-radius: 5 0 0 5
+}
+
+.mediumToggles .toggle-button.last {
+    -fx-background-radius: 0 5 5 0
+}

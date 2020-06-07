@@ -4,14 +4,12 @@ import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.api.Client;
 import com.mytlogos.enterprisedesktop.background.api.DesktopNetworkIdentificator;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
-import com.mytlogos.enterprisedesktop.background.resourceLoader.BlockingLoadWorker;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
-import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.SqliteStorage;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
+import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.ContentTool;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
@@ -361,7 +359,7 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter) {
+    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(DisplayEpisodeProfile filter) {
         return this.storage.getDisplayEpisodes(filter);
     }
 
@@ -423,6 +421,11 @@ class RepositoryImpl implements Repository {
     @Override
     public LiveData<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
         return this.storage.getMediumItems(listId, isExternal);
+    }
+
+    @Override
+    public LiveData<List<SimpleMedium>> getSimpleMediumItems(int listId, boolean external) {
+        return this.storage.getSimpleMediumItems(listId, external);
     }
 
     @Override

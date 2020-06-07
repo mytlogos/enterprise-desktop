@@ -2,12 +2,15 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.MediatorLiveData;
-import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.MediumType;
 import com.mytlogos.enterprisedesktop.model.OpenableEpisode;
+import com.mytlogos.enterprisedesktop.tools.BidirectionalMap;
 import com.mytlogos.enterprisedesktop.tools.TriFunction;
 import impl.org.controlsfx.autocompletion.AutoCompletionTextFieldBinding;
+import javafx.beans.Observable;
+import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -23,10 +26,8 @@ import org.controlsfx.control.Notifications;
 import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,6 +37,55 @@ import java.util.function.UnaryOperator;
  *
  */
 public class ControllerUtils {
+
+    /**
+     * Set the Items to the ListView, but retain as much selected Items as possible.
+     *
+     * @param listView The ListView to set the Items to
+     * @param items    the Items to replace the Old ones
+     * @param <T>      the generic Type of the Items
+     */
+    public static <T> void setItems(ListView<T> listView, List<T> items) {
+        setItems(listView.getSelectionModel(), listView.getItems(), items);
+    }
+
+    /**
+     * Set the Items to the ListView, but retain as much selected Items as possible.
+     *
+     * @param items          the Items to replace the Old ones
+     * @param selectionModel
+     * @param <T>            the generic Type of the Items
+     */
+    public static <T> void setItems(MultipleSelectionModel<T> selectionModel, ObservableList<T> listViewItems, List<T> items) {
+        final List<T> selectedItems = new ArrayList<>(selectionModel.getSelectedItems());
+        List<Integer> newSelectedIndices = new ArrayList<>(selectedItems.size());
+        int firstIndex = -1;
+        T currentSelectedItem = selectionModel.getSelectedItem();
+        int currentSelectedIndex = -1;
+
+        for (T selectedItem : selectedItems) {
+            final int index = items.indexOf(selectedItem);
+
+            if (index >= 0) {
+                if (Objects.equals(currentSelectedItem, selectedItem)) {
+                    currentSelectedIndex = index;
+                }
+                if (firstIndex < 0) {
+                    firstIndex = index;
+                } else {
+                    newSelectedIndices.add(index);
+                }
+            }
+        }
+        listViewItems.setAll(items);
+        final int[] selectedIndices = newSelectedIndices.stream().mapToInt(Integer::intValue).toArray();
+        selectionModel.selectIndices(firstIndex, selectedIndices);
+
+        if (currentSelectedIndex >= 0) {
+            selectionModel.selectIndices(currentSelectedIndex);
+        }
+    }
+
     public static <R> LiveData<R> fxObservableToLiveData(ObservableValue<R> value) {
         MediatorLiveData<R> mediatorLiveData = new MediatorLiveData<>();
         value.addListener(observable -> mediatorLiveData.postValue(value.getValue()));
@@ -77,20 +127,6 @@ public class ControllerUtils {
         return loader.getController();
     }
 
-    public static <P, T extends Node> T loadNode(String fxmlFile, Consumer<P> consumer) {
-        final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
-        try {
-            final T load = loader.load();
-            if (consumer != null) {
-                consumer.accept(loader.getController());
-            }
-            return load;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     public static <P extends Node> P load(String fxmlFile, Object controller) {
         final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
         loader.setController(controller);
@@ -100,6 +136,45 @@ public class ControllerUtils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void initReadController(Property<ReadFilter> property, ThreeStatesController controller) {
+        controller.setText("Read");
+        ControllerUtils.bindBidirectional(
+                property,
+                controller.statesProperty(),
+                getReadMap()
+        );
+    }
+
+    public static <K, V> void bindBidirectional(Property<K> property1, Property<V> property2, BidirectionalMap<K, V> map) {
+        property1.addListener((observable, oldK, newK) -> property2.setValue(map.getValue(newK)));
+        property2.addListener((observable, oldV, newV) -> property1.setValue(map.getKey(newV)));
+    }
+
+    private static BidirectionalMap<ReadFilter, ThreeStatesController.State> getReadMap() {
+        final BidirectionalMap<ReadFilter, ThreeStatesController.State> map = new BidirectionalMap<>();
+        map.put(ReadFilter.READ_ONLY, ThreeStatesController.State.YES);
+        map.put(ReadFilter.UNREAD_ONLY, ThreeStatesController.State.NO);
+        map.put(ReadFilter.IGNORE, ThreeStatesController.State.IGNORE);
+        return map;
+    }
+
+    public static void initSavedController(Property<SavedFilter> property, ThreeStatesController controller) {
+        controller.setText("Saved");
+        ControllerUtils.bindBidirectional(
+                property,
+                controller.statesProperty(),
+                getSavedMap()
+        );
+    }
+
+    private static BidirectionalMap<SavedFilter, ThreeStatesController.State> getSavedMap() {
+        final BidirectionalMap<SavedFilter, ThreeStatesController.State> map = new BidirectionalMap<>();
+        map.put(SavedFilter.SAVED_ONLY, ThreeStatesController.State.YES);
+        map.put(SavedFilter.UNSAVED_ONLY, ThreeStatesController.State.NO);
+        map.put(SavedFilter.IGNORE, ThreeStatesController.State.IGNORE);
+        return map;
     }
 
     public static int getMedium(CheckBox text, CheckBox image, CheckBox video, CheckBox audio) {
@@ -126,7 +201,22 @@ public class ControllerUtils {
         return toggleValue(audio.isSelected(), medium, MediumType.AUDIO);
     }
 
+    public static int getMedium(ToggleButton text, ToggleButton image, ToggleButton video, ToggleButton audio) {
+        int medium = 0;
+        medium = toggleValue(text.isSelected(), medium, MediumType.TEXT);
+        medium = toggleValue(image.isSelected(), medium, MediumType.IMAGE);
+        medium = toggleValue(video.isSelected(), medium, MediumType.VIDEO);
+        return toggleValue(audio.isSelected(), medium, MediumType.AUDIO);
+    }
+
     public static void setMedium(int medium, CheckBox text, CheckBox image, CheckBox video, CheckBox audio) {
+        text.setSelected(MediumType.is(medium, MediumType.TEXT));
+        image.setSelected(MediumType.is(medium, MediumType.IMAGE));
+        video.setSelected(MediumType.is(medium, MediumType.VIDEO));
+        audio.setSelected(MediumType.is(medium, MediumType.AUDIO));
+    }
+
+    public static void setMedium(int medium, ToggleButton text, ToggleButton image, ToggleButton video, ToggleButton audio) {
         text.setSelected(MediumType.is(medium, MediumType.TEXT));
         image.setSelected(MediumType.is(medium, MediumType.IMAGE));
         video.setSelected(MediumType.is(medium, MediumType.VIDEO));
@@ -317,5 +407,25 @@ public class ControllerUtils {
         Stage stage = new Stage();
         stage.setScene(new Scene(parent));
         stage.show();
+    }
+
+    public static <P, T extends Node> T loadNode(String fxmlFile, Consumer<P> consumer) {
+        final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
+        try {
+            final T load = loader.load();
+            if (consumer != null) {
+                consumer.accept(loader.getController());
+            }
+            return load;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static void listen(Runnable runnable, Observable... observables) {
+        for (Observable observable : observables) {
+            observable.addListener(o -> runnable.run());
+        }
     }
 }

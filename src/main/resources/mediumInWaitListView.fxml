@@ -15,13 +15,11 @@
         <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
         </padding>
-        <CheckBox fx:id="showTextBox" mnemonicParsing="false" text="Text" />
-        <CheckBox fx:id="showImageBox" mnemonicParsing="false" text="Image" />
-        <CheckBox fx:id="showVideoBox" mnemonicParsing="false" text="Video" />
-        <CheckBox fx:id="showAudioBox" mnemonicParsing="false" text="Audio" />
+        <fx:include source="mediumTypes.fxml" fx:id="showMedium"/>
         <TextField fx:id="nameFilter" promptText="Name" />
         <TextField fx:id="hostFilter" promptText="Host" />
       <TextField fx:id="ignoreNameFilter" layoutX="238.0" layoutY="15.0" promptText="Ignore Name" />
+      <CheckBox fx:id="groupByName" mnemonicParsing="false" text="Group By Name" />
     </FlowPane>
     <HBox alignment="CENTER" VBox.vgrow="ALWAYS">
          <ListView fx:id="mediumInWaitListView" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />

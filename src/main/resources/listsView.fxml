@@ -54,9 +54,9 @@
                 </padding>
                 <ChoiceBox fx:id="episodeSorting" prefWidth="150.0" />
                 <ToggleButton fx:id="episodeAscendingBtn" mnemonicParsing="false" text="Ascending" />
-                <ChoiceBox fx:id="savedFilterBox" prefWidth="150.0" />
+                <fx:include source="threeStates.fxml" fx:id="readFilterState"/>
+                <fx:include source="threeStates.fxml" fx:id="savedFilterState"/>
                 <TextField fx:id="scrollToEpisodeField" onAction="#scrollToEpisode" promptText="Scroll To" />
-                <ChoiceBox fx:id="readFilterBox" layoutX="247.0" layoutY="15.0" prefWidth="150.0" />
             </FlowPane>
             <StackPane VBox.vgrow="ALWAYS">
                 <ListView fx:id="mediumContentView" />

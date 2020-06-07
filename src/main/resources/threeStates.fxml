@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.text.Text?>
+
+<HBox alignment="CENTER_LEFT" spacing="5.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.ThreeStatesController">
+    <Text fx:id="text" strokeType="OUTSIDE" strokeWidth="0.0" />
+    <HBox styleClass="mediumToggles" stylesheets="@mediumTypes.css">
+        <ToggleButton fx:id="yes" mnemonicParsing="false" styleClass="first">
+            <toggleGroup>
+                <ToggleGroup fx:id="statesGroup" />
+            </toggleGroup>
+            <graphic>
+                <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@icons8-checkmark-yes-32.png" />
+                </ImageView>
+            </graphic>
+            <tooltip>
+                <Tooltip text="Only" />
+            </tooltip>
+        </ToggleButton>
+        <ToggleButton fx:id="no" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" toggleGroup="$statesGroup">
+            <graphic>
+                <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@icons8-cancel-24.png" />
+                </ImageView>
+            </graphic>
+            <tooltip>
+                <Tooltip text="Only Not" />
+            </tooltip>
+        </ToggleButton>
+        <ToggleButton fx:id="ignore" layoutX="99.0" layoutY="10.0" mnemonicParsing="false" styleClass="last" toggleGroup="$statesGroup">
+            <graphic>
+                <ImageView fitHeight="15.0" fitWidth="15.0" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@icons8-minus-32.png" />
+                </ImageView>
+            </graphic>
+            <tooltip>
+                <Tooltip text="Ignore" />
+            </tooltip>
+        </ToggleButton>
+    </HBox>
+</HBox>

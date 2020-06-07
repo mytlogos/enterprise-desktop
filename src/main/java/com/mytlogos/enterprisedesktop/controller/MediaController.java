@@ -36,8 +36,8 @@ import java.util.concurrent.CompletableFuture;
  *
  */
 public class MediaController implements Attachable {
-    private final ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
-    private final ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<SavedFilter> savedFilterProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<ReadFilter> readFilterProperty = new SimpleObjectProperty<>();
     private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private final ObservableList<MediumItem> observableMediaItems = FXCollections.observableArrayList();
     private final Observer<List<MediaList>> listObserver = Utils.emptyObserver();
@@ -57,21 +57,13 @@ public class MediaController implements Attachable {
     @FXML
     private VBox mediumDisplay;
     @FXML
-    private RadioButton readOnly;
+    private HBox readFilterState;
     @FXML
-    private ToggleGroup readFilter;
+    private ThreeStatesController readFilterStateController;
     @FXML
-    private RadioButton notReadOnly;
+    private HBox savedFilterState;
     @FXML
-    private RadioButton ignoreRead;
-    @FXML
-    private RadioButton savedOnly;
-    @FXML
-    private ToggleGroup savedFilter;
-    @FXML
-    private RadioButton notSavedOnly;
-    @FXML
-    private RadioButton ignoreSaved;
+    private ThreeStatesController savedFilterStateController;
     @FXML
     private ScrollPane detailPane;
     @FXML
@@ -81,13 +73,10 @@ public class MediaController implements Attachable {
             this.mediumContentView.getItems().setAll(episodes);
         }
     };
-    private final Observer<List<MediumItem>> mediaItemsObserver = mediumItems -> {
-        this.mediumContentView.getItems().clear();
-        if (mediumItems != null) {
-            this.mediaLoadPane.setVisible(false);
-            this.observableMediaItems.setAll(mediumItems);
-        }
-    };
+    @FXML
+    private HBox showMedium;
+    @FXML
+    private MediumTypes showMediumController;
     @FXML
     private TextField scrollToEpisodeField;
     @FXML
@@ -96,18 +85,23 @@ public class MediaController implements Attachable {
     private ChoiceBox<EpisodeSorting> episodeSorting;
     @FXML
     private ListView<MediumItem> mediaView;
+    private final Observer<List<MediumItem>> mediaItemsObserver = mediumItems -> {
+        if (mediumItems != null) {
+            final MultipleSelectionModel<MediumItem> selectionModel = this.mediaView.getSelectionModel();
+            final MediumItem selectedItem = selectionModel.getSelectedItem();
+
+            this.mediaLoadPane.setVisible(false);
+            ControllerUtils.setItems(selectionModel, this.observableMediaItems, mediumItems);
+
+            if (!Objects.equals(selectedItem, selectionModel.getSelectedItem())) {
+                this.mediumContentView.getItems().clear();
+            }
+        }
+    };
     @FXML
     private ToggleButton mediumAscendingBtn;
     @FXML
     private ChoiceBox<MediumSorting> mediumSorting;
-    @FXML
-    private CheckBox showAudioBox;
-    @FXML
-    private CheckBox showVideoBox;
-    @FXML
-    private CheckBox showImageBox;
-    @FXML
-    private CheckBox showTextBox;
     @FXML
     private Spinner<Integer> maxEpisodeIndex;
     @FXML
@@ -126,17 +120,15 @@ public class MediaController implements Attachable {
     private LiveData<List<MediaList>> listLiveData;
 
     public void initialize() {
+        this.showMediumController.setMedium(0);
         this.mediumFilter = Bindings.createObjectBinding(() -> new MediumFilter(
                         this.nameFilter.getText(),
-                        ControllerUtils.getMedium(this.showTextBox, this.showImageBox, this.showVideoBox, this.showAudioBox),
+                        this.showMediumController.getMedium(),
                         -1,
                         -1
                 ),
                 this.nameFilter.textProperty(),
-                this.showAudioBox.selectedProperty(),
-                this.showImageBox.selectedProperty(),
-                this.showTextBox.selectedProperty(),
-                this.showVideoBox.selectedProperty()
+                this.showMediumController.mediumProperty()
         );
 
         FilteredList<MediumItem> itemFilteredList = new FilteredList<>(this.observableMediaItems);
@@ -249,30 +241,16 @@ public class MediaController implements Attachable {
         this.episodeSorting.setConverter(new MainController.DisplayConverter<>(EpisodeSorting.values()));
         this.episodeSorting.getItems().setAll(EpisodeSorting.values());
         this.episodeSorting.getSelectionModel().select(EpisodeSorting.INDEX_DESC);
-
-        this.readFilter.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == readOnly) {
-                this.readFilterObjectProperty.set(ReadFilter.READ_ONLY);
-            } else if (newValue == notReadOnly) {
-                this.readFilterObjectProperty.set(ReadFilter.UNREAD_ONLY);
-            } else {
-                this.readFilterObjectProperty.set(ReadFilter.IGNORE);
-            }
-        });
-        this.savedFilter.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == savedOnly) {
-                this.savedFilterObjectProperty.set(SavedFilter.SAVED_ONLY);
-            } else if (newValue == notSavedOnly) {
-                this.savedFilterObjectProperty.set(SavedFilter.UNSAVED_ONLY);
-            } else {
-                this.savedFilterObjectProperty.set(SavedFilter.IGNORE);
-            }
-        });
+        ControllerUtils.initSavedController(this.savedFilterProperty, this.savedFilterStateController);
+        ControllerUtils.initReadController(this.readFilterProperty, this.readFilterStateController);
         this.episodeFilterBinding = Bindings.createObjectBinding(
-                () -> new EpisodeFilter(this.readFilterObjectProperty.getValue(), this.savedFilterObjectProperty.getValue()),
-                this.readFilterObjectProperty,
-                this.savedFilterObjectProperty
+                () -> new EpisodeFilter(this.readFilterProperty.getValue(), this.savedFilterProperty.getValue()),
+                this.readFilterProperty,
+                this.savedFilterProperty
         );
+        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
+        this.mediaLoadPane.setVisible(true);
+        this.mediaItems = repositorySingle.flatMap(repository -> repository.getAllMedia(this.mediumSorting.getValue()));
     }
 
     private void setMediaViewContextMenu() {
@@ -458,11 +436,10 @@ public class MediaController implements Attachable {
             Log.severe("onAttach called before initialize");
             return;
         }
-        this.mediaLoadPane.setVisible(true);
-        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
 
-        this.mediaItems = repositorySingle.flatMap(repository -> repository.getAllMedia(this.mediumSorting.getValue()));
-        this.mediaItems.observe(this.mediaItemsObserver);
+        if (this.mediaItems != null) {
+            this.mediaItems.observe(this.mediaItemsObserver);
+        }
 
         // first remove, then add to ensure that it is registered only once
         this.mediaView.getSelectionModel().selectedItemProperty().removeListener(this.mediumListener);

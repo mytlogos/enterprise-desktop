@@ -7,8 +7,8 @@ import com.mytlogos.enterprisedesktop.background.resourceLoader.DependencyTask;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
+import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
 import java.time.LocalDateTime;
@@ -184,7 +184,7 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter) {
+    public LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(DisplayEpisodeProfile filter) {
         return this.releaseTable.getReleases(filter);
     }
 
@@ -199,11 +199,8 @@ public class SqliteStorage implements DatabaseStorage {
         final LiveData<List<MediaList>> mediaLists = this.mediaListTable.getLists();
 
         return mediaLists.map(externalMediaLists, (mediaLists1, externalMediaLists1) -> {
-            if (mediaLists1 == null) {
-                mediaLists1 = Collections.emptyList();
-            }
-            if (externalMediaLists1 == null) {
-                externalMediaLists1 = Collections.emptyList();
+            if (mediaLists1 == null || externalMediaLists1 == null) {
+                return null;
             }
             List<MediaList> lists = new ArrayList<>(mediaLists1);
             lists.addAll(externalMediaLists1);
@@ -264,6 +261,11 @@ public class SqliteStorage implements DatabaseStorage {
     @Override
     public LiveData<List<MediumItem>> getMediumItems(int listId, boolean isExternal) {
         return isExternal ? this.externalMediaListTable.getMediumItems(listId) : this.mediaListTable.getMediumItems(listId);
+    }
+
+    @Override
+    public LiveData<List<SimpleMedium>> getSimpleMediumItems(int listId, boolean external) {
+        return external ? this.externalMediaListTable.getSimpleMediumItems(listId) : this.mediaListTable.getSimpleMediumItems(listId);
     }
 
     @Override

@@ -9,14 +9,12 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.MediaList;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
-import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
-import com.mytlogos.enterprisedesktop.tools.Log;
-import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
-import com.mytlogos.enterprisedesktop.tools.Utils;
+import com.mytlogos.enterprisedesktop.preferences.ProfilePreferences;
+import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
+import com.mytlogos.enterprisedesktop.tools.*;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -31,13 +29,13 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import org.controlsfx.control.Notifications;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  *
@@ -46,6 +44,8 @@ public class EpisodeViewController implements Attachable {
     private final ObjectProperty<SavedFilter> savedFilterObjectProperty = new SimpleObjectProperty<>();
     private final ObjectProperty<ReadFilter> readFilterObjectProperty = new SimpleObjectProperty<>();
     private final ObservableList<DisplayRelease> releases = FXCollections.observableArrayList();
+    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
+    private final BooleanProperty latestOnlyFilterNeeded = new SimpleBooleanProperty();
     private final Observer<PagedList<DisplayRelease>> pagedListObserver = releases -> {
         Log.info("Receiving new Releases: %d", releases == null ? -1 : releases.size());
         if (releases == null) {
@@ -54,59 +54,46 @@ public class EpisodeViewController implements Attachable {
         }
         this.latestOnlyFilterNeeded.set(true);
     };
-    private final Observer<List<Integer>> listItemsObserver = Utils.emptyObserver();
+    private final ObservableList<Integer> filterListIds = FXCollections.observableArrayList();
+    private final ObservableList<Integer> filterMediumIds = FXCollections.observableArrayList();
+    @FXML
+    private HBox savedFilterState;
+    @FXML
+    private ThreeStatesController savedFilterStateController;
+    @FXML
+    private HBox readFilterState;
+    @FXML
+    private ThreeStatesController readFilterStateController;
+    @FXML
+    private HBox showMedium;
+    @FXML
+    private MediumTypes showMediumController;
     @FXML
     private ToggleButton ignoreMedium;
     @FXML
     private ToggleButton ignoreLists;
     @FXML
-    private RadioButton readOnly;
-    @FXML
-    private RadioButton notReadOnly;
-    @FXML
-    private RadioButton ignoreRead;
-    @FXML
-    private RadioButton savedOnly;
-    @FXML
-    private RadioButton notSavedOnly;
-    @FXML
-    private RadioButton ignoreSaved;
-    @FXML
     private TextField listFilter;
     @FXML
     private ListView<MediaList> listFilterView;
+    private final Observer<List<MediaList>> listObserver = this::updateFilteredListView;
     @FXML
     private TextField mediumFilter;
     @FXML
     private ListView<SimpleMedium> mediumFilterView;
+    private final Observer<List<SimpleMedium>> mediumObserver = this::updateFilteredMediaView;
     @FXML
     private ListView<DisplayRelease> episodes;
-    @FXML
-    private ToggleGroup readFilter;
-    @FXML
-    private ToggleGroup savedFilter;
     @FXML
     private Spinner<Integer> minEpisodeIndex;
     @FXML
     private Spinner<Integer> maxEpisodeIndex;
     @FXML
-    private CheckBox showTextBox;
-    @FXML
-    private CheckBox showImageBox;
-    @FXML
-    private CheckBox showVideoBox;
-    @FXML
-    private CheckBox showAudioBox;
-    @FXML
     private CheckBox latestOnly;
-    private ObjectBinding<ReleaseFilter> episodeFilterBinding;
     private LiveData<PagedList<DisplayRelease>> episodesLiveData;
     private LiveData<List<Integer>> listItemsLiveData;
     private LiveData<List<MediaList>> listLiveData;
     private LiveData<List<SimpleMedium>> mediumLiveData;
-    private Observer<List<MediaList>> listObserver;
-    private Observer<List<SimpleMedium>> mediumObserver;
-    private final BooleanProperty latestOnlyFilterNeeded = new SimpleBooleanProperty();
 
     public void initialize() {
         this.latestOnly.selectedProperty().addListener(o -> this.latestOnlyFilterNeeded.set(true));
@@ -195,24 +182,6 @@ public class EpisodeViewController implements Attachable {
         this.maxEpisodeIndex.setTooltip(new Tooltip("Maximum Episode Index\n-1 or leave it empty to ignore"));
         this.minEpisodeIndex.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(-1, 99999, -1));
         this.maxEpisodeIndex.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(-1, 99999, -1));
-        this.readFilter.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == readOnly) {
-                this.readFilterObjectProperty.set(ReadFilter.READ_ONLY);
-            } else if (newValue == notReadOnly) {
-                this.readFilterObjectProperty.set(ReadFilter.UNREAD_ONLY);
-            } else {
-                this.readFilterObjectProperty.set(ReadFilter.IGNORE);
-            }
-        });
-        this.savedFilter.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == savedOnly) {
-                this.savedFilterObjectProperty.set(SavedFilter.SAVED_ONLY);
-            } else if (newValue == notSavedOnly) {
-                this.savedFilterObjectProperty.set(SavedFilter.UNSAVED_ONLY);
-            } else {
-                this.savedFilterObjectProperty.set(SavedFilter.IGNORE);
-            }
-        });
 
         Image lockedImage = new Image("/ic_lock_dark.png", true);
         Image readImage = new Image("/ic_episode_read_icon.png", true);
@@ -220,30 +189,6 @@ public class EpisodeViewController implements Attachable {
         Image localImage = new Image("/ic_open_local_icon.png", true);
 
         this.setEpisodeViewContextMenu();
-        this.episodeFilterBinding = Bindings.createObjectBinding(
-                () -> new ReleaseFilter(
-                        this.readFilterObjectProperty.getValue(),
-                        this.savedFilterObjectProperty.getValue(),
-                        ControllerUtils.getMedium(this.showTextBox, this.showImageBox, this.showVideoBox, this.showAudioBox),
-                        this.minEpisodeIndex.getValue(),
-                        this.maxEpisodeIndex.getValue(),
-                        this.latestOnly.isSelected(),
-                        this.listFilterView.getItems().stream().map(MediaList::getListId).collect(Collectors.toList()),
-                        this.mediumFilterView.getItems().stream().map(SimpleMedium::getMediumId).collect(Collectors.toList()),
-                        this.ignoreMedium.isSelected(),
-                        this.ignoreLists.isSelected()
-                ),
-                this.readFilterObjectProperty,
-                this.savedFilterObjectProperty,
-                this.showAudioBox.selectedProperty(),
-                this.showImageBox.selectedProperty(),
-                this.showTextBox.selectedProperty(),
-                this.showVideoBox.selectedProperty(),
-                this.minEpisodeIndex.valueProperty(),
-                this.maxEpisodeIndex.valueProperty(),
-                this.ignoreMedium.selectedProperty(),
-                this.mediumFilterView.getItems()
-        );
         this.episodes.setCellFactory(param -> new DisplayReleaseCell(lockedImage, readImage, onlineImage, localImage));
 
         final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
@@ -257,21 +202,65 @@ public class EpisodeViewController implements Attachable {
 
             return ControllerUtils.combineLatest(
                     repositorySingle,
-                    this.episodeFilterBinding,
+                    getProfilePreferences().displayEpisodeProfileProperty(),
                     (repository, releaseFilter) -> {
                         Log.info("fetching all episodes");
                         return repository.getDisplayEpisodes(releaseFilter);
                     });
         }).flatMap(pagedListLiveData -> pagedListLiveData);
 
-        listObserver = mediaLists -> {
-        };
+        // todo save list and medium ids as fields and read,write changes to these lists to the corresponding list views
         this.listLiveData.observe(this.listObserver);
-        mediumObserver = simpleMedia -> {
-        };
         this.mediumLiveData.observe(this.mediumObserver);
-        ControllerUtils.addAutoCompletionBinding(this.listFilter, this.listLiveData, MediaList::getName, mediaList -> this.listFilterView.getItems().add(mediaList));
-        ControllerUtils.addAutoCompletionBinding(this.mediumFilter, this.mediumLiveData, SimpleMedium::getTitle, simpleMedium -> this.mediumFilterView.getItems().add(simpleMedium));
+        this.filterListIds.addListener((InvalidationListener) observable -> {
+            final List<MediaList> mediaLists = this.listLiveData.getValue();
+            updateFilteredListView(mediaLists);
+        });
+        this.filterMediumIds.addListener((InvalidationListener) observable -> {
+            final List<SimpleMedium> mediaLists = this.mediumLiveData.getValue();
+
+            updateFilteredMediaView(mediaLists);
+        });
+        ControllerUtils.addAutoCompletionBinding(
+                this.listFilter,
+                this.listLiveData,
+                MediaList::getName,
+                mediaList -> this.filterListIds.add(mediaList.getListId())
+        );
+        ControllerUtils.addAutoCompletionBinding(
+                this.mediumFilter,
+                this.mediumLiveData,
+                SimpleMedium::getTitle,
+                medium -> this.filterMediumIds.add(medium.getMediumId())
+        );
+        ControllerUtils.initReadController(this.readFilterObjectProperty, this.readFilterStateController);
+        ControllerUtils.initSavedController(this.savedFilterObjectProperty, this.savedFilterStateController);
+        this.updateFromProfile(getProfilePreferences().getDisplayEpisodeProfile());
+        ControllerUtils.listen(
+                () -> getProfilePreferences().setDisplayEpisodeProfile(
+                        new DisplayEpisodeProfile(
+                                this.showMediumController.getMedium(),
+                                this.minEpisodeIndex.getValue(),
+                                this.maxEpisodeIndex.getValue(),
+                                this.latestOnly.isSelected(),
+                                new ArrayList<>(this.filterListIds),
+                                new ArrayList<>(this.filterMediumIds),
+                                this.ignoreMedium.isSelected(),
+                                this.ignoreLists.isSelected(),
+                                this.readFilterObjectProperty.getValue(),
+                                this.savedFilterObjectProperty.getValue()
+                        )),
+                this.latestOnly.selectedProperty(),
+                this.readFilterObjectProperty,
+                this.savedFilterObjectProperty,
+                this.showMediumController.mediumProperty(),
+                this.minEpisodeIndex.valueProperty(),
+                this.maxEpisodeIndex.valueProperty(),
+                this.ignoreMedium.selectedProperty(),
+                this.ignoreLists.selectedProperty(),
+                this.filterListIds,
+                this.filterMediumIds
+        );
     }
 
     private void filterLatestOnly() {
@@ -336,6 +325,49 @@ public class EpisodeViewController implements Attachable {
 
         contextMenu.getItems().addAll(setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
         this.episodes.setContextMenu(contextMenu);
+    }
+
+    private ProfilePreferences getProfilePreferences() {
+        return ApplicationConfig.getMainPreferences().getProfilePreferences();
+    }
+
+    private void updateFilteredListView(List<MediaList> mediaLists) {
+        if (mediaLists == null) {
+            return;
+        }
+        List<MediaList> lists = new ArrayList<>(this.filterListIds.size());
+        for (MediaList mediaList : mediaLists) {
+            if (this.filterListIds.contains(mediaList.getListId())) {
+                lists.add(mediaList);
+            }
+        }
+        this.listFilterView.getItems().setAll(lists);
+    }
+
+    private void updateFilteredMediaView(List<SimpleMedium> mediaList) {
+        if (mediaList == null) {
+            return;
+        }
+        List<SimpleMedium> media = new ArrayList<>(this.filterMediumIds.size());
+        for (SimpleMedium medium : mediaList) {
+            if (this.filterMediumIds.contains(medium.getMediumId())) {
+                media.add(medium);
+            }
+        }
+        this.mediumFilterView.getItems().setAll(media);
+    }
+
+    private void updateFromProfile(DisplayEpisodeProfile profile) {
+        this.showMediumController.setMedium(profile.medium);
+        this.minEpisodeIndex.getValueFactory().setValue(profile.minEpisodeIndex);
+        this.maxEpisodeIndex.getValueFactory().setValue(profile.maxEpisodeIndex);
+        this.latestOnly.setSelected(profile.latestOnly);
+        this.filterListIds.setAll(profile.listsIds);
+        this.filterMediumIds.setAll(profile.mediumIds);
+        this.ignoreMedium.setSelected(profile.ignoreMedia);
+        this.ignoreLists.setSelected(profile.ignoreLists);
+        this.readFilterObjectProperty.set(ReadFilter.getValue(profile.readFilter));
+        this.savedFilterObjectProperty.set(SavedFilter.getValue(profile.savedFilter));
     }
 
     private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {

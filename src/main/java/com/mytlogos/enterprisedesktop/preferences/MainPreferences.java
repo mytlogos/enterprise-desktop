@@ -12,6 +12,7 @@ import java.util.prefs.Preferences;
 public class MainPreferences {
     private static final String LAST_SYNC = "last_time_sync";
     private final DownloadPreferences downloadPreferences = new DownloadPreferences();
+    private final ProfilePreferences profilePreferences = new ProfilePreferences(Preferences.userRoot().node("profile"));
 
     public static LocalDateTime getLastSync() {
         final String value = Preferences.userRoot().get(LAST_SYNC, null);
@@ -27,6 +28,10 @@ public class MainPreferences {
                 Starter.class,
                 this.downloadPreferences.getCategory()
         );
+    }
+
+    public ProfilePreferences getProfilePreferences() {
+        return profilePreferences;
     }
 
     public DownloadPreferences getDownloadPreferences() {

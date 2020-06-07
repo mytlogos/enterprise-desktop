@@ -6,6 +6,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
+import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
 import java.time.LocalDateTime;
@@ -68,7 +69,7 @@ public interface DatabaseStorage {
 
     List<Integer> getDownloadableEpisodes(Collection<Integer> mediumId);
 
-    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(ReleaseFilter filter);
+    LiveData<PagedList<DisplayRelease>> getDisplayEpisodes(DisplayEpisodeProfile filter);
 
     LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium);
 
@@ -95,6 +96,8 @@ public interface DatabaseStorage {
     LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved);
 
     LiveData<List<MediumItem>> getMediumItems(int listId, boolean isExternal);
+
+    LiveData<List<SimpleMedium>> getSimpleMediumItems(int listId, boolean external);
 
     boolean listExists(String listName);
 

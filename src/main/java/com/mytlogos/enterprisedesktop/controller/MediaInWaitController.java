@@ -16,18 +16,23 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
 import javafx.util.Callback;
 import org.controlsfx.control.Notifications;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
  *
  */
 public class MediaInWaitController implements Attachable {
+    @FXML
+    private CheckBox groupByName;
     @FXML
     private Text title;
     @FXML
@@ -44,39 +49,35 @@ public class MediaInWaitController implements Attachable {
     private TextField ignoreNameFilter;
     @FXML
     private ListView<MediumInWait> mediumInWaitListView;
+    private final Observer<List<MediumInWait>> mediumInWaitObserver = this::setItems;
     @FXML
-    private CheckBox showTextBox;
+    private HBox showMedium;
     @FXML
-    private CheckBox showImageBox;
-    @FXML
-    private CheckBox showVideoBox;
-    @FXML
-    private CheckBox showAudioBox;
+    private MediumTypes showMediumController;
     @FXML
     private TextField nameFilter;
     @FXML
     private TextField hostFilter;
     private LiveData<PagedList<MediumInWait>> mediumInWaitLiveData;
-    private final Observer<List<MediumInWait>> mediumInWaitObserver = mediumInWaits -> this.mediumInWaitListView.getItems().setAll(mediumInWaits);
     private MediaList selectedList;
     private SimpleMedium selectedMedium;
     private boolean running;
     private MediumInWait mediumInWait;
 
     public void initialize() {
+        this.showMediumController.setMedium(0);
         final Repository repository = ApplicationConfig.getRepository();
-        final ObjectBinding<LiveData<PagedList<MediumInWait>>> binding = Bindings.createObjectBinding(() -> repository.getMediaInWaitBy(
-                this.nameFilter.getText(),
-                ControllerUtils.getMedium(showTextBox, showImageBox, showVideoBox, showAudioBox),
-                this.hostFilter.getText(),
-                AllSortings.TITLE_AZ
+        final ObjectBinding<LiveData<PagedList<MediumInWait>>> binding = Bindings.createObjectBinding(
+                () -> repository.getMediaInWaitBy(
+                        this.nameFilter.getText(),
+                        this.showMediumController.getMedium(),
+                        this.hostFilter.getText(),
+                        AllSortings.TITLE_AZ
                 ),
-                hostFilter.textProperty(),
-                nameFilter.textProperty(),
-                showAudioBox.selectedProperty(),
-                showVideoBox.selectedProperty(),
-                showImageBox.selectedProperty(),
-                showTextBox.selectedProperty()
+                this.hostFilter.textProperty(),
+                this.nameFilter.textProperty(),
+                this.showMediumController.mediumProperty(),
+                this.groupByName.selectedProperty()
         );
         final ChangeListener<LiveData<PagedList<MediumInWait>>> changeListener = (observable, oldValue, newValue) -> {
             if (oldValue != null) {
@@ -215,5 +216,20 @@ public class MediaInWaitController implements Attachable {
         if (item != null) {
             ControllerUtils.openUrl(item.getLink());
         }
+    }
+
+    private void setItems(List<MediumInWait> mediumInWaits) {
+        if (this.groupByName.isSelected()) {
+            List<MediumInWait> filtered = new ArrayList<>(mediumInWaits.size());
+            Set<String> uniqueNames = new HashSet<>();
+
+            for (MediumInWait inWait : mediumInWaits) {
+                if (uniqueNames.add(inWait.getTitle())) {
+                    filtered.add(inWait);
+                }
+            }
+            mediumInWaits = filtered;
+        }
+        this.mediumInWaitListView.getItems().setAll(mediumInWaits);
     }
 }

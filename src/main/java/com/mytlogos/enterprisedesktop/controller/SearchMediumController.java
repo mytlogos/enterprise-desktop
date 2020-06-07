@@ -36,6 +36,7 @@ public class SearchMediumController implements Attachable {
     @FXML
     private ChoiceBox<Integer> mediumChoiceBox;
     private Disposable debouncedRequest;
+    private ObjectBinding<SearchRequest> requestBinding;
 
     public void initialize() {
         this.resultsView.setCellFactory(param -> new ResultCell());
@@ -117,17 +118,17 @@ public class SearchMediumController implements Attachable {
                 return this.map.get(string);
             }
         });
-    }
-
-    @Override
-    public void onAttach() {
-        final ObjectBinding<SearchRequest> requestBinding = Bindings.createObjectBinding(
+        this.requestBinding = Bindings.createObjectBinding(
                 () -> new SearchRequest(this.searchField.getText(), this.mediumChoiceBox.getValue()),
                 this.mediumChoiceBox.valueProperty(),
                 this.searchField.textProperty()
         );
-        this.debouncedRequest = JavaFxObservable.valuesOf(requestBinding)
-                .debounce(2, TimeUnit.SECONDS)
+    }
+
+    @Override
+    public void onAttach() {
+        this.debouncedRequest = JavaFxObservable.valuesOf(this.requestBinding)
+                .debounce(1, TimeUnit.SECONDS)
                 .observeOn(Schedulers.io())
                 .map(searchRequest -> {
                     if (searchRequest.title.isEmpty()) {

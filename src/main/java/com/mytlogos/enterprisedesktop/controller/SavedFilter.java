@@ -16,6 +16,15 @@ public enum SavedFilter implements MainController.DisplayValue {
         this.value = value;
     }
 
+    public static SavedFilter getValue(byte savedFilter) {
+        for (SavedFilter value : SavedFilter.values()) {
+            if (value.value == savedFilter) {
+                return value;
+            }
+        }
+        throw new IllegalArgumentException("unknown value");
+    }
+
     @Override
     public String getDisplayValue() {
         return this.display;

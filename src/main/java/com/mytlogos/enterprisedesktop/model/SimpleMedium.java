@@ -1,6 +1,6 @@
 package com.mytlogos.enterprisedesktop.model;
 
-public class SimpleMedium {
+public class SimpleMedium implements Medium {
     private final int mediumId;
     private final String title;
     private final int medium;
@@ -15,8 +15,58 @@ public class SimpleMedium {
         return medium;
     }
 
+    @Override
+    public String getArtist() {
+        return null;
+    }
+
+    @Override
+    public String getLang() {
+        return null;
+    }
+
+    @Override
+    public int getStateOrigin() {
+        return 0;
+    }
+
+    @Override
+    public int getStateTL() {
+        return 0;
+    }
+
+    @Override
+    public String getSeries() {
+        return null;
+    }
+
+    @Override
+    public String getUniverse() {
+        return null;
+    }
+
+    @Override
+    public Integer getCurrentRead() {
+        return null;
+    }
+
     public int getMediumId() {
         return mediumId;
+    }
+
+    @Override
+    public String getCountryOfOrigin() {
+        return null;
+    }
+
+    @Override
+    public String getLanguageOfOrigin() {
+        return null;
+    }
+
+    @Override
+    public String getAuthor() {
+        return null;
     }
 
     public String getTitle() {

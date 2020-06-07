@@ -13,13 +13,18 @@ import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import org.controlsfx.control.Notifications;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,8 +33,17 @@ import java.util.regex.Pattern;
  *
  */
 public class ListViewController implements Attachable {
-    public ChoiceBox<SavedFilter> savedFilterBox;
-    public ChoiceBox<ReadFilter> readFilterBox;
+    private final ObjectProperty<SavedFilter> savedFilterProperty = new SimpleObjectProperty<>();
+    private final ObjectProperty<ReadFilter> readFilterProperty = new SimpleObjectProperty<>();
+    private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
+    @FXML
+    private HBox readFilterState;
+    @FXML
+    private ThreeStatesController readFilterStateController;
+    @FXML
+    private HBox savedFilterState;
+    @FXML
+    private ThreeStatesController savedFilterStateController;
     @FXML
     private StackPane listLoadPane;
     @FXML
@@ -52,31 +66,23 @@ public class ListViewController implements Attachable {
     private ToggleButton enableSelectBtn;
     @FXML
     private ListView<MediaList> listsView;
+    private final Observer<List<MediaList>> listObserver = mediaLists -> {
+        if (mediaLists != null) {
+            this.listsLoadPane.setVisible(false);
+            ControllerUtils.setItems(this.listsView, mediaLists);
+        }
+    };
     @FXML
     private ListView<Medium> listMediaView;
     @FXML
     private ListView<TocEpisode> mediumContentView;
-
-    private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
-    private ObjectBinding<EpisodeFilter> episodeFilterBinding;
-    private MediumDisplayController mediumDisplayController = null;
     private final Observer<PagedList<TocEpisode>> episodesObserver = episodes -> {
         if (episodes != null) {
             this.mediumLoadPane.setVisible(false);
             this.mediumContentView.getItems().setAll(episodes);
         }
     };
-    private LiveData<PagedList<TocEpisode>> episodesLiveData;
-    private LiveData<MediumSetting> mediumSettingLiveData;
-    private final Observer<MediumSetting> settingObserver = mediumSetting -> {
-        if (this.mediumDisplayController == null) {
-            this.mediumDisplayController = ControllerUtils.load("/mediumDisplay.fxml");
-            this.detailPane.setContent(this.mediumDisplayController.getRoot());
-        }
-        this.mediumDisplayController.setMedium(mediumSetting);
-    };
-    private LiveData<List<MediumItem>> listItemsLiveData;
-    private final Observer<List<MediumItem>> listItemsObserver = mediumItems -> {
+    private final Observer<List<SimpleMedium>> listItemsObserver = mediumItems -> {
         if (mediumItems != null) {
             this.listLoadPane.setVisible(false);
             if (!this.listMediaView.getItems().equals(mediumItems)) {
@@ -87,14 +93,18 @@ public class ListViewController implements Attachable {
             this.mediumContentView.getItems().clear();
         }
     };
-    private LiveData<List<MediaList>> listLiveData;
-    private final Observer<List<MediaList>> listObserver = mediaLists -> {
-        if (mediaLists != null) {
-            this.listsLoadPane.setVisible(false);
+    private ObjectBinding<EpisodeFilter> episodeFilterBinding;
+    private MediumDisplayController mediumDisplayController = null;
+    private final Observer<MediumSetting> settingObserver = mediumSetting -> {
+        if (this.mediumDisplayController == null) {
+            this.mediumDisplayController = ControllerUtils.load("/mediumDisplay.fxml", node -> this.detailPane.setContent(node));
         }
-        this.listsView.getItems().setAll(mediaLists == null ? Collections.emptyList() : mediaLists);
+        this.mediumDisplayController.setMedium(mediumSetting);
     };
+    private LiveData<PagedList<TocEpisode>> episodesLiveData;
+    private LiveData<MediumSetting> mediumSettingLiveData;
     private final InvalidationListener mediumListener = observable -> selectMedium();
+    private LiveData<List<SimpleMedium>> listItemsLiveData;
     private final InvalidationListener listsListener = observable -> {
         final MediaList item = this.listsView.getSelectionModel().getSelectedItem();
 
@@ -106,13 +116,14 @@ public class ListViewController implements Attachable {
         }
         this.listItemsLiveData = ApplicationConfig
                 .getLiveDataRepository()
-                .flatMap(repository -> repository.getMediumItems(
+                .flatMap(repository -> repository.getSimpleMediumItems(
                         item.getListId(),
                         item instanceof ExternalMediaList
                 ));
         this.listLoadPane.setVisible(true);
         this.listItemsLiveData.observe(this.listItemsObserver);
     };
+    private LiveData<List<MediaList>> listLiveData;
 
     public void initialize() {
         this.listsView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -141,11 +152,18 @@ public class ListViewController implements Attachable {
         this.episodeSorting.setConverter(new MainController.DisplayConverter<>(EpisodeSorting.values()));
         this.episodeSorting.getItems().setAll(EpisodeSorting.values());
         this.episodeSorting.getSelectionModel().select(EpisodeSorting.INDEX_DESC);
+
+        ControllerUtils.initSavedController(this.savedFilterProperty, this.savedFilterStateController);
+        ControllerUtils.initReadController(this.readFilterProperty, this.readFilterStateController);
+
         this.episodeFilterBinding = Bindings.createObjectBinding(
-                () -> new EpisodeFilter(this.readFilterBox.getValue(), this.savedFilterBox.getValue()),
-                this.readFilterBox.valueProperty(),
-                this.savedFilterBox.valueProperty()
+                () -> new EpisodeFilter(this.readFilterProperty.getValue(), this.savedFilterProperty.getValue()),
+                this.readFilterProperty,
+                this.savedFilterProperty
         );
+        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
+        this.listsLoadPane.setVisible(true);
+        this.listLiveData = repositorySingle.flatMap(Repository::getLists);
     }
 
     private void setListsViewContextMenu() {
@@ -235,11 +253,9 @@ public class ListViewController implements Attachable {
             Log.severe("onAttach called before initialize");
             return;
         }
-        this.listsLoadPane.setVisible(true);
-        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
-
-        this.listLiveData = repositorySingle.flatMap(Repository::getLists);
-        this.listLiveData.observe(this.listObserver);
+        if (this.listLiveData != null) {
+            this.listLiveData.observe(this.listObserver);
+        }
 
         // first remove, then add to ensure that it is registered only once
         this.listMediaView.getSelectionModel().selectedItemProperty().removeListener(this.mediumListener);
