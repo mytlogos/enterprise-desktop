@@ -22,6 +22,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -54,8 +55,8 @@ public class EpisodeViewController implements Attachable {
         }
         this.latestOnlyFilterNeeded.set(true);
     };
-    private final ObservableList<Integer> filterListIds = FXCollections.observableArrayList();
-    private final ObservableList<Integer> filterMediumIds = FXCollections.observableArrayList();
+    private final ObservableSet<Integer> filterListIds = FXCollections.observableSet();
+    private final ObservableSet<Integer> filterMediumIds = FXCollections.observableSet();
     @FXML
     private HBox savedFilterState;
     @FXML
@@ -237,19 +238,21 @@ public class EpisodeViewController implements Attachable {
         ControllerUtils.initSavedController(this.savedFilterObjectProperty, this.savedFilterStateController);
         this.updateFromProfile(getProfilePreferences().getDisplayEpisodeProfile());
         ControllerUtils.listen(
-                () -> getProfilePreferences().setDisplayEpisodeProfile(
-                        new DisplayEpisodeProfile(
-                                this.showMediumController.getMedium(),
-                                this.minEpisodeIndex.getValue(),
-                                this.maxEpisodeIndex.getValue(),
-                                this.latestOnly.isSelected(),
-                                new ArrayList<>(this.filterListIds),
-                                new ArrayList<>(this.filterMediumIds),
-                                this.ignoreMedium.isSelected(),
-                                this.ignoreLists.isSelected(),
-                                this.readFilterObjectProperty.getValue(),
-                                this.savedFilterObjectProperty.getValue()
-                        )),
+                () -> {
+                    getProfilePreferences().setDisplayEpisodeProfile(
+                            new DisplayEpisodeProfile(
+                                    this.showMediumController.getMedium(),
+                                    this.minEpisodeIndex.getValue(),
+                                    this.maxEpisodeIndex.getValue(),
+                                    this.latestOnly.isSelected(),
+                                    new ArrayList<>(this.filterListIds),
+                                    new ArrayList<>(this.filterMediumIds),
+                                    this.ignoreMedium.isSelected(),
+                                    this.ignoreLists.isSelected(),
+                                    this.readFilterObjectProperty.getValue(),
+                                    this.savedFilterObjectProperty.getValue()
+                            ));
+                },
                 this.latestOnly.selectedProperty(),
                 this.readFilterObjectProperty,
                 this.savedFilterObjectProperty,
@@ -362,8 +365,10 @@ public class EpisodeViewController implements Attachable {
         this.minEpisodeIndex.getValueFactory().setValue(profile.minEpisodeIndex);
         this.maxEpisodeIndex.getValueFactory().setValue(profile.maxEpisodeIndex);
         this.latestOnly.setSelected(profile.latestOnly);
-        this.filterListIds.setAll(profile.listsIds);
-        this.filterMediumIds.setAll(profile.mediumIds);
+        this.filterListIds.clear();
+        this.filterListIds.addAll(profile.listsIds);
+        this.filterMediumIds.clear();
+        this.filterMediumIds.addAll(profile.mediumIds);
         this.ignoreMedium.setSelected(profile.ignoreMedia);
         this.ignoreLists.setSelected(profile.ignoreLists);
         this.readFilterObjectProperty.set(ReadFilter.getValue(profile.readFilter));
