@@ -1,0 +1,33 @@
+.filter-item {
+    -fx-border-style: solid;
+    -fx-border-radius: 20;
+    -fx-background-radius: 20;
+    -fx-padding: 0 3;
+    -fx-spacing: 5;
+    -fx-pref-height: 25;
+    -fx-max-height: 25;
+    -fx-background-color: #bfe597;
+    -fx-alignment: center;
+}
+
+.filter-item .text {
+    -fx-text-alignment: center;
+}
+
+.filter-item.ignore {
+    -fx-background-color: #fac588;
+}
+
+.filter-item .button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 100;
+    -fx-padding: 1 5;
+}
+
+.filter-item .button:hover {
+    -fx-background-color: rgba(0,0,0,0.20);
+}
+
+.filter-item .button:armed {
+    -fx-background-color: rgba(0,0,0,0.40);
+}

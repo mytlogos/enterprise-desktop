@@ -1,47 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-<VBox xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1"
-      fx:controller="com.mytlogos.enterprisedesktop.controller.EpisodeViewController">
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.EpisodeViewController">
     <FlowPane hgap="5.0" vgap="5.0" VBox.vgrow="SOMETIMES">
         <padding>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
         </padding>
-        <fx:include source="threeStates.fxml" fx:id="readFilterState"/>
-        <fx:include source="threeStates.fxml" fx:id="savedFilterState"/>
-        <Spinner fx:id="minEpisodeIndex" editable="true"/>
-        <Spinner fx:id="maxEpisodeIndex" editable="true"/>
-        <fx:include source="mediumTypes.fxml" fx:id="showMedium"/>
-        <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only"/>
-    </FlowPane>
-    <HBox spacing="5.0">
-        <padding>
-            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
-        </padding>
+        <fx:include fx:id="readFilterState" source="threeStates.fxml" />
+        <fx:include fx:id="savedFilterState" source="threeStates.fxml" />
+        <Spinner fx:id="minEpisodeIndex" editable="true" />
+        <Spinner fx:id="maxEpisodeIndex" editable="true" />
+        <fx:include fx:id="showMedium" source="mediumTypes.fxml" />
+        <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only" />
         <VBox spacing="5.0">
             <padding>
-                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
             <HBox spacing="5.0">
-                <TextField fx:id="listFilter" promptText="List Name"/>
-                <ToggleButton fx:id="ignoreLists" mnemonicParsing="false" text="Ignore"/>
+                <TextField fx:id="listFilter" promptText="List Name" />
+                <ToggleButton fx:id="ignoreLists" mnemonicParsing="false" text="Ignore" />
             </HBox>
-            <ListView fx:id="listFilterView" maxHeight="-Infinity" prefHeight="100.0" prefWidth="200.0"/>
+            <FlowPane fx:id="listFlowFilter" hgap="5.0" prefWrapLength="0.0" vgap="5.0" />
         </VBox>
         <VBox layoutX="10.0" layoutY="10.0" spacing="5.0">
             <padding>
-                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
             </padding>
             <HBox spacing="5.0">
-                <TextField fx:id="mediumFilter" promptText="Medium Name"/>
-                <ToggleButton fx:id="ignoreMedium" mnemonicParsing="false" text="Ignore"/>
+                <TextField fx:id="mediumFilter" promptText="Medium Name" />
+                <ToggleButton fx:id="ignoreMedium" mnemonicParsing="false" text="Ignore" />
             </HBox>
-            <ListView fx:id="mediumFilterView" maxHeight="-Infinity" prefHeight="100.0" prefWidth="200.0"/>
+            <FlowPane fx:id="mediumFlowFilter" hgap="5.0" prefWrapLength="0.0" vgap="5.0" />
         </VBox>
-    </HBox>
+    </FlowPane>
     <StackPane VBox.vgrow="ALWAYS">
-        <ListView fx:id="episodes"/>
+        <ListView fx:id="episodes" />
     </StackPane>
 </VBox>

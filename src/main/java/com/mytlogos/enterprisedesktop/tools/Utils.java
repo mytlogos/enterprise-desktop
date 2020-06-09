@@ -10,6 +10,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -57,6 +58,15 @@ public class Utils {
             domain = host;
         }
         return domain;
+    }
+
+    public static <T, K> boolean contains(Collection<T> collection, K value, Function<T, K> extractor) {
+        for (T t : collection) {
+            if (Objects.equals(extractor.apply(t), value)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static String externalUserTypeToName(int type) {

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.text.Text?>
+
+<HBox styleClass="filter-item" stylesheets="@filterItem.css" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1">
+    <Text fx:id="text" strokeType="OUTSIDE" strokeWidth="0.0" />
+    <Button mnemonicParsing="false" onAction="#close">
+        <graphic>
+            <StackPane>
+                <Line endX="8.0" endY="8.0" />
+                <Line endY="8.0" startX="8.0" />
+            </StackPane>
+        </graphic>
+    </Button>
+</HBox>

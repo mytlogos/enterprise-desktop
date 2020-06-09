@@ -12,7 +12,7 @@ import java.util.prefs.Preferences;
  */
 public class ProfilePreferences {
     private final Preferences preferences;
-    private ObjectProperty<DisplayEpisodeProfile> displayEpisodeProfile;
+    private final ObjectProperty<DisplayEpisodeProfile> displayEpisodeProfile;
 
     public ProfilePreferences(Preferences preferences) {
         this.preferences = preferences;

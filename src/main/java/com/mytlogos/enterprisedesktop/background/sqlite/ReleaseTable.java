@@ -3,7 +3,6 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.SmallRelease;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.DisplayRelease;
 import com.mytlogos.enterprisedesktop.model.Release;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
@@ -48,7 +47,7 @@ class ReleaseTable extends AbstractTable {
                     "AND (? < 0 OR episode.combiIndex >= ?)\n" +
                     "AND (? < 0 OR episode.combiIndex <= ?)\n" +
 //                    "AND (? = 1 OR (list_medium.listId $? AND NOT ?))" +
-                    "AND (? = 1 OR (CASE medium.mediumId $? WHEN 1 THEN NOT ? ELSE ? END))" +
+                    "AND (? = 1 OR medium.mediumId $?)" +
                     "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC"
     ).setDependencies(
             EpisodeTable.class,
@@ -92,7 +91,7 @@ class ReleaseTable extends AbstractTable {
 
     LiveData<PagedList<DisplayRelease>> getReleases(DisplayEpisodeProfile filter) {
         return this.getReleasesQuery
-                .setQueryIn(filter.mediumIds, QueryBuilder.Type.INT)
+                .setQueryIn(filter.filterMediumIds, QueryBuilder.Type.INT)
                 .setValues(value -> {
                     value.setInt(1, filter.readFilter);
                     value.setInt(2, filter.medium);
@@ -105,9 +104,7 @@ class ReleaseTable extends AbstractTable {
                     value.setInt(9, filter.maxEpisodeIndex);
 //                    value.setBoolean(10, filter.listsIds.isEmpty());
 //                    value.setBoolean(11, filter.ignoreLists);
-                    value.setBoolean(10, filter.mediumIds.isEmpty());
-                    value.setBoolean(11, filter.ignoreMedia);
-                    value.setBoolean(12, filter.ignoreMedia);
+                    value.setBoolean(10, filter.filterMediumIds.isEmpty());
                 })
                 .doEmpty()
                 .selectInLiveDataList()
