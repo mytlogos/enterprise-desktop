@@ -162,23 +162,23 @@ public class MediaInWaitController implements Attachable {
         }
 
         if (this.selectedList != null) {
-            List<MediumInWait> mediumInWaits = this.mediumInWaitListView.getItems();
+            List<MediumInWait> similarMediumInWaits = new ArrayList<>(this.similarMedia.getItems());
+            similarMediumInWaits.add(this.mediumInWait);
             MediaList item = this.selectedList;
 
-            CompletableFuture<Boolean> success = repository.createMedium(this.mediumInWait, mediumInWaits, item);
+            CompletableFuture<Boolean> success = repository.createMedium(this.mediumInWait, similarMediumInWaits, item);
             success.whenComplete((aBoolean, throwable) -> {
                 String msg;
                 if (aBoolean == null || !aBoolean || throwable != null) {
                     msg = "Could not create Medium";
                 } else {
-                    msg = "Created a Medium and consumed " + mediumInWaits.size() + " other unused Media";
+                    msg = "Created a Medium and consumed " + similarMediumInWaits.size() + " other unused Media";
                 }
                 this.running = false;
                 Platform.runLater(() -> Notifications.create().title(msg).show());
             });
         } else if (this.selectedMedium != null) {
             List<MediumInWait> similarMediumInWaits = new ArrayList<>(this.similarMedia.getItems());
-
             similarMediumInWaits.add(this.mediumInWait);
 
             CompletableFuture<Boolean> success = repository.consumeMediumInWait(this.selectedMedium, similarMediumInWaits);
