@@ -130,63 +130,6 @@ public abstract class AbstractTable {
         }
     }
 
-    <T> void execute(String sql, T value, SqlBiConsumer<PreparedStatement, T> consumer) {
-        try (Connection connection = this.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                consumer.accept(statement, value);
-                Log.info(sql);
-                if (!statement.execute() && statement.getUpdateCount() > 0) {
-                    this.setInvalidated();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    <T> void execute(T value, PreparedQuery<T> preparedQuery) {
-        try (Connection connection = this.getConnection()) {
-            try (PreparedStatement statement = connection.prepareStatement(preparedQuery.getQuery())) {
-                Log.info(preparedQuery.getQuery());
-
-                preparedQuery.setValues(statement, value);
-                if (!statement.execute() && statement.getUpdateCount() > 0) {
-                    this.setInvalidated();
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    <T> void execute(Collection<? extends T> value, PreparedQuery<T> preparedQuery) {
-        try (Connection connection = this.getConnection()) {
-            connection.setAutoCommit(false);
-
-            try (PreparedStatement statement = connection.prepareStatement(preparedQuery.getQuery())) {
-                for (T t : value) {
-                    preparedQuery.setValues(statement, t);
-                    statement.addBatch();
-                }
-                final int[] execute = statement.executeBatch();
-                Log.info("%s: %s", preparedQuery.getQuery(), Arrays.toString(execute));
-
-                for (int insertInfo : execute) {
-                    if (insertInfo > 0) {
-                        this.setInvalidated();
-                        break;
-                    }
-                }
-                connection.commit();
-            } catch (SQLException e) {
-                connection.rollback();
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
     <T> void update(Collection<T> values, String table, Map<String, Function<T, ?>> attrExtractors, Map<String, Function<T, ?>> keyExtractors) {
         // TODO 02.3.2020: use something else maybe, as this may be used for SQLInjection?
         if (attrExtractors.isEmpty()) {
@@ -253,111 +196,6 @@ public abstract class AbstractTable {
         }
     }
 
-    <T> void execute(String sql, Collection<T> collection, SqlBiConsumer<PreparedStatement, T> consumer) {
-        try (Connection connection = this.getConnection()) {
-            connection.setAutoCommit(false);
-
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                for (T t : collection) {
-                    consumer.accept(statement, t);
-                    statement.addBatch();
-                }
-                final int[] execute = statement.executeBatch();
-                Log.info("%s: %s", sql, Arrays.toString(execute));
-                for (int insertInfo : execute) {
-                    if (insertInfo > 0) {
-                        this.setInvalidated();
-                        break;
-                    }
-                }
-                connection.commit();
-            } catch (SQLException e) {
-                connection.rollback();
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    <T> void execute(String sql, SqlConsumer<PreparedStatement> consumer) {
-        try (Connection connection = this.getConnection()) {
-            connection.setAutoCommit(false);
-
-            try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                consumer.accept(statement);
-
-                final int[] execute = statement.executeBatch();
-                Log.info("%s: %s", sql, Arrays.toString(execute));
-
-                for (int insertInfo : execute) {
-                    if (insertInfo > 0) {
-                        this.setInvalidated();
-                        break;
-                    }
-                }
-                connection.commit();
-            } catch (SQLException e) {
-                connection.rollback();
-                e.printStackTrace();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    <T> T selectSingle(String sql, SqlFunction<ResultSet, T> function) throws SQLException {
-        try (Connection connection = this.getConnection()) {
-            try (ResultSet set = connection.createStatement().executeQuery(sql)) {
-                Log.info(sql);
-                T value = null;
-
-                if (set.next()) {
-                    value = function.apply(set);
-                }
-                return value;
-            }
-        }
-    }
-
-    <T> T selectSingle(String sql, SqlConsumer<PreparedStatement> querySetter, SqlFunction<ResultSet, T> function) throws SQLException {
-        try (Connection connection = this.getConnection()) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                querySetter.accept(preparedStatement);
-
-                try (ResultSet set = preparedStatement.executeQuery()) {
-                    Log.info(sql);
-
-                    T value = null;
-
-                    if (set.next()) {
-                        value = function.apply(set);
-                    }
-                    return value;
-                }
-            }
-        }
-    }
-
-    <T> List<T> selectList(String sql, SqlConsumer<PreparedStatement> querySetter, SqlFunction<ResultSet, T> function) throws SQLException {
-        try (Connection connection = this.getConnection()) {
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                querySetter.accept(preparedStatement);
-
-                try (ResultSet set = preparedStatement.executeQuery()) {
-                    List<T> values = new ArrayList<>();
-
-                    while (set.next()) {
-                        T value = function.apply(set);
-                        values.add(value);
-                    }
-                    Log.info("%s: %d Results", sql, values.size());
-                    return values;
-                }
-            }
-        }
-    }
-
     interface IntProducer<R> extends Function<R, Integer> {
     }
 
@@ -380,11 +218,5 @@ public abstract class AbstractTable {
     }
 
     interface BooleanProducer<R> extends Function<R, Boolean> {
-    }
-
-    protected interface PreparedQuery<T> {
-        String getQuery();
-
-        void setValues(PreparedStatement statement, T value) throws SQLException;
     }
 }
