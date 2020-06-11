@@ -72,6 +72,9 @@ public abstract class AbstractTable {
     }
 
     <R> void executeDMLQuery(Collection<? extends R> value, QueryBuilder<R> queryBuilder) {
+        if (value.isEmpty()) {
+            return;
+        }
         try {
             if (queryBuilder.setValue(value).execute(this.getConnection())) {
                 this.setInvalidated();
