@@ -63,11 +63,12 @@ public class MediaInWaitController implements Attachable {
     private SimpleMedium selectedMedium;
     private boolean running;
     private MediumInWait mediumInWait;
+    private ObjectBinding<LiveData<PagedList<MediumInWait>>> binding;
 
     public void initialize() {
         this.showMediumController.setMedium(0);
         final Repository repository = ApplicationConfig.getRepository();
-        final ObjectBinding<LiveData<PagedList<MediumInWait>>> binding = Bindings.createObjectBinding(
+        this.binding = Bindings.createObjectBinding(
                 () -> repository.getMediaInWaitBy(
                         this.nameFilter.getText(),
                         this.showMediumController.getMedium(),
@@ -174,8 +175,13 @@ public class MediaInWaitController implements Attachable {
                 } else {
                     msg = "Created a Medium and consumed " + similarMediumInWaits.size() + " other unused Media";
                 }
-                this.running = false;
-                Platform.runLater(() -> Notifications.create().title(msg).show());
+                Platform.runLater(() -> {
+                    this.running = false;
+                    this.selectedList = null;
+                    this.selectList.clear();
+                    this.mediumInWaitListView.getItems().clear();
+                    Notifications.create().title(msg).show();
+                });
             });
         } else if (this.selectedMedium != null) {
             List<MediumInWait> similarMediumInWaits = new ArrayList<>(this.similarMedia.getItems());
@@ -189,8 +195,13 @@ public class MediaInWaitController implements Attachable {
                 } else {
                     msg = "Consumed " + similarMediumInWaits.size() + " Media";
                 }
-                this.running = false;
-                Platform.runLater(() -> Notifications.create().title(msg).show());
+                Platform.runLater(() -> {
+                    this.running = false;
+                    this.selectedMedium = null;
+                    this.selectMedium.clear();
+                    this.mediumInWaitListView.getItems().clear();
+                    Notifications.create().title(msg).show();
+                });
             });
         }
     }
@@ -206,7 +217,7 @@ public class MediaInWaitController implements Attachable {
     @Override
     public void onDetach() {
         if (this.mediumInWaitLiveData != null) {
-            this.mediumInWaitLiveData.observe(this.mediumInWaitObserver);
+            this.mediumInWaitLiveData.removeObserver(this.mediumInWaitObserver);
         }
     }
 
