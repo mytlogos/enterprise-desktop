@@ -305,8 +305,8 @@ public class SynchronizeTask extends Task<Void> {
     }
 
     private void cleanUp() {
-        Repository repository = ApplicationConfig.getRepository();
-        repository.syncProgress();
+//        Repository repository = ApplicationConfig.getRepository();
+//        repository.syncProgress();
     }
 
     private void append(StringBuilder builder, String prefix, int i) {

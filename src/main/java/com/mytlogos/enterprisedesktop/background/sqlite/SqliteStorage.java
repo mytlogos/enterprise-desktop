@@ -10,6 +10,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -72,12 +73,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<HomeStats> getHomeStats() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteAllUser() {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -92,17 +93,17 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void deleteOldNews() {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public boolean isLoading() {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public void setLoading(boolean loading) {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -120,7 +121,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<PagedList<News>> getNews() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -130,12 +131,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public List<Integer> getToDeleteEpisodes() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public void updateSaved(int episodeId, boolean saved) {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -150,7 +151,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void removeToDownloads(Collection<ToDownload> toDownloads) {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -160,7 +161,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<List<Integer>> getLiveListItems(Integer listId) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -170,7 +171,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<List<Integer>> getLiveExternalListItems(Integer externalListId) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -180,7 +181,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public List<Integer> getDownloadableEpisodes(Collection<Integer> mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -190,7 +191,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<PagedList<DisplayEpisode>> getDisplayEpisodesGrouped(int saved, int medium) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -210,32 +211,32 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void insertDanglingMedia(Collection<Integer> mediaIds) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void removeDanglingMedia(Collection<Integer> mediaIds) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public LiveData<? extends MediaListSetting> getListSetting(int id, boolean isExternal) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public MediaListSetting getListSettingNow(int id, boolean isExternal) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public void updateToDownload(boolean add, ToDownload toDownload) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public LiveData<PagedList<MediumItem>> getAllMedia(Sorting sortings, String title, int medium, String author, LocalDateTime lastUpdate, int minCountEpisodes, int minCountReadEpisodes) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -250,7 +251,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public MediumSetting getMediumSettingsNow(int mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -270,12 +271,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public boolean listExists(String listName) {
-        return false;
+        throw new NotImplementedException();
     }
 
     @Override
     public int countSavedEpisodes(Integer mediumId) {
-        return 0;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -285,7 +286,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public Episode getEpisode(int episodeId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -305,7 +306,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<PagedList<ReadEpisode>> getReadTodayEpisodes() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -329,27 +330,27 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<List<SimpleMedium>> getMediaSuggestions(String title, int medium) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public LiveData<List<MediumInWait>> getMediaInWaitSuggestions(String title, int medium) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public LiveData<List<MediaList>> getListSuggestion(String name) {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public LiveData<Boolean> onDownloadAble() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public void clearMediaInWait() {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -359,7 +360,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<List<MediumItem>> getAllDanglingMedia() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -392,12 +393,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public LiveData<PagedList<DisplayExternalUser>> getExternalUser() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
     public SpaceMedium getSpaceMedium(int mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
@@ -412,12 +413,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void clearLocalMediaData() {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public LiveData<PagedList<NotificationItem>> getNotifications() {
-        return LiveData.empty();
+        throw new NotImplementedException();
     }
 
     @Override
@@ -447,12 +448,12 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void clearNotifications() {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void clearFailEpisodes() {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -462,77 +463,77 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void syncProgress() {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void updateDataStructure(List<Integer> mediaIds, List<Integer> partIds) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Integer> getEpisodeIdsWithHigherIndex(double combiIndex, int mediumId, boolean read) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Integer> getEpisodeIdsWithHigherIndex(double combiIndex, int mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Integer> getEpisodeIdsWithLowerIndex(double combiIndex, int mediumId, boolean read) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Integer> getEpisodeIdsWithLowerIndex(double combiIndex, int mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public Collection<Integer> getSavedEpisodeIdsWithHigherIndex(double combiIndex, int mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public Collection<Integer> getSavedEpisodeIdsWithLowerIndex(double combiIndex, int mediumId) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public void removeEpisodes(List<Integer> episodeIds) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void removeParts(Collection<Integer> partIds) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public List<Integer> getReadEpisodes(Collection<Integer> episodeIds, boolean read) {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public void insertEditEvent(EditEvent event) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void insertEditEvent(Collection<EditEvent> events) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public List<? extends EditEvent> getEditEvents() {
-        return null;
+        throw new NotImplementedException();
     }
 
     @Override
     public void removeEditEvents(Collection<EditEvent> editEvents) {
-
+        throw new NotImplementedException();
     }
 
     @Override
@@ -570,37 +571,37 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void deleteMedia(Collection<Integer> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteParts(Collection<Integer> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteEpisodes(Collection<Integer> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteReleases(Collection<Release> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteList(Collection<Integer> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteExternalList(Collection<Integer> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
     public void deleteExternalUser(Collection<Integer> toDelete) {
-
+        throw new NotImplementedException();
     }
 
     @Override
