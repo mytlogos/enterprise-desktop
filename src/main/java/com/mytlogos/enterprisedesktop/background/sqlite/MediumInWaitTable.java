@@ -67,8 +67,19 @@ class MediumInWaitTable extends AbstractTable {
     }
 
     public void delete(Collection<MediumInWait> toDelete) {
-        // TODO 02.6.2020: implement this
-//        this.executeDMLQuery(toDelete, new QueryBuilder<MediumInWait>("Delete MediumInWaits", "DELETE FROM medium_in_wait WHERE"));
+        this.executeDMLQuery(
+                toDelete,
+                new QueryBuilder<MediumInWait>(
+                        "Delete MediumInWaits",
+                        "DELETE FROM medium_in_wait WHERE title=? AND medium=? AND link=?"
+                )
+                        .setValueSetter((statement, mediumInWait) -> {
+                            statement.setString(1, mediumInWait.getTitle());
+                            statement.setInt(2, mediumInWait.getMedium());
+                            statement.setString(3, mediumInWait.getLink());
+                        })
+                        .setValue(toDelete)
+        );
     }
 
     void insert(MediumInWait mediumInWait) {
