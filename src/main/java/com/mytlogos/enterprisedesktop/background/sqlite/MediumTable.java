@@ -159,25 +159,27 @@ class MediumTable extends AbstractTable {
                     "WHEN 9 THEN lastUpdated \n" +
                     "ELSE title \n" +
                     "END ASC"
-    ).setConverter(value -> {
-        final String title = value.getString(1);
-        final int mediumId = value.getInt(2);
-        final String author = value.getString(3);
-        final String artist = value.getString(4);
-        final int medium = value.getInt(5);
-        final int stateTl = value.getInt(6);
-        final int stateOrigin = value.getInt(7);
-        final String countryOfOrigin = value.getString(8);
-        final String languageOfOrigin = value.getString(9);
-        final String language = value.getString(10);
-        final String series = value.getString(11);
-        final String universe = value.getString(12);
-        final int currentRead = value.getInt(13);
-        final int currentReadEpisode = value.getInt(14);
-        final int lastEpisode = value.getInt(15);
-        final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
-        return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
-    });
+    )
+            .setDependencies(MediumTable.class)
+            .setConverter(value -> {
+                final String title = value.getString(1);
+                final int mediumId = value.getInt(2);
+                final String author = value.getString(3);
+                final String artist = value.getString(4);
+                final int medium = value.getInt(5);
+                final int stateTl = value.getInt(6);
+                final int stateOrigin = value.getInt(7);
+                final String countryOfOrigin = value.getString(8);
+                final String languageOfOrigin = value.getString(9);
+                final String language = value.getString(10);
+                final String series = value.getString(11);
+                final String universe = value.getString(12);
+                final int currentRead = value.getInt(13);
+                final int currentReadEpisode = value.getInt(14);
+                final int lastEpisode = value.getInt(15);
+                final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
+                return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
+            });
 
     private final QueryBuilder<MediumItem> getAllMediumDescQuery = new QueryBuilder<MediumItem>(
             "Select AllMedia",
