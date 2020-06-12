@@ -50,7 +50,7 @@ public class SearchMediumController implements Attachable {
         });
         final MenuItem addItem = new MenuItem("Add Selected");
         addItem.setOnAction(event -> ApplicationConfig.getRepository().getInternLists()
-                .firstElement()
+                .firstNonNullElement()
                 .thenCompose(mediaLists -> {
                     MediaList list = null;
                     for (MediaList mediaList : mediaLists) {

@@ -103,6 +103,21 @@ public abstract class LiveData<T> {
         return future;
     }
 
+    public CompletableFuture<T> firstNonNullElement() {
+        CompletableFuture<T> future = new CompletableFuture<>();
+        this.observe(new Observer<T>() {
+            @Override
+            public void onChanged(T t) {
+                if (t == null) {
+                    return;
+                }
+                LiveData.this.removeObserver(this);
+                future.complete(t);
+            }
+        });
+        return future;
+    }
+
     /**
      * Removes the given observer from the observers list.
      *
