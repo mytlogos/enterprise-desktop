@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.TaskManager;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
@@ -261,6 +262,36 @@ public class MediaController implements Attachable {
 
     private void setEpisodeViewContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
+        MenuItem openLinkItem = new MenuItem();
+        openLinkItem.setText("Open in Browser");
+        openLinkItem.setOnAction(event -> {
+            OpenableEpisode selectedItem = this.mediumContentView.getSelectionModel().getSelectedItem();
+
+            if (selectedItem == null) {
+                Notifications.create().title("No Episode Selected!").show();
+                return;
+            }
+            TaskManager.runCompletableTask(() -> {
+                final int episodeId = selectedItem.getEpisodeId();
+                final List<String> links = ApplicationConfig.getRepository().getReleaseLinks(episodeId);
+
+                if (!links.isEmpty()) {
+                    ControllerUtils.openUrl(links.get(0));
+                }
+                return null;
+            }).whenComplete((o, throwable) -> {
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                    Platform.runLater(
+                            () -> Notifications
+                                    .create()
+                                    .title("An Error occurred while trying to open Episode in Browser!")
+                                    .show()
+                    );
+                }
+            });
+        });
+
         MenuItem setReadItem = new MenuItem();
         setReadItem.setText("Set Read");
         setReadItem.setOnAction(event -> doEpisodeRepoAction(
@@ -293,33 +324,8 @@ public class MediaController implements Attachable {
                 (repository, episodeIds, mediumId) -> repository.reload(episodeIds)
         ));
 
-        contextMenu.getItems().addAll(setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
+        contextMenu.getItems().addAll(openLinkItem, setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
         this.mediumContentView.setContextMenu(contextMenu);
-    }
-
-    private void doMediumRepoAction(String description, BiConsumerEx<Repository, Set<Integer>> idsConsumer) {
-        final Repository repository = ApplicationConfig.getRepository();
-        List<MediumItem> selectedItems = this.mediaView.getSelectionModel().getSelectedItems();
-        CompletableFuture.runAsync(() -> {
-            Set<Integer> ids = new HashSet<>();
-            for (MediumItem item : selectedItems) {
-                ids.add(item.getMediumId());
-            }
-            try {
-                idsConsumer.accept(repository, ids);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }).whenComplete((aVoid, throwable) -> {
-            if (throwable != null) {
-                throwable.printStackTrace();
-            }
-            Platform.runLater(() -> Notifications
-                    .create()
-                    .title(description + (throwable != null ? "failed" : " succeeded"))
-                    .show()
-            );
-        });
     }
 
     private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {
@@ -385,6 +391,31 @@ public class MediaController implements Attachable {
             this.mediaItems.removeObserver(this.mediaItemsObserver);
         }
         this.mediaView.getSelectionModel().selectedItemProperty().removeListener(this.mediumListener);
+    }
+
+    private void doMediumRepoAction(String description, BiConsumerEx<Repository, Set<Integer>> idsConsumer) {
+        final Repository repository = ApplicationConfig.getRepository();
+        List<MediumItem> selectedItems = this.mediaView.getSelectionModel().getSelectedItems();
+        CompletableFuture.runAsync(() -> {
+            Set<Integer> ids = new HashSet<>();
+            for (MediumItem item : selectedItems) {
+                ids.add(item.getMediumId());
+            }
+            try {
+                idsConsumer.accept(repository, ids);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((aVoid, throwable) -> {
+            if (throwable != null) {
+                throwable.printStackTrace();
+            }
+            Platform.runLater(() -> Notifications
+                    .create()
+                    .title(description + (throwable != null ? "failed" : " succeeded"))
+                    .show()
+            );
+        });
     }
 
     private void selectMedium() {

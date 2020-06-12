@@ -3,12 +3,11 @@ package com.mytlogos.enterprisedesktop.controller;
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.TaskManager;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
-import com.mytlogos.enterprisedesktop.model.DisplayRelease;
-import com.mytlogos.enterprisedesktop.model.MediaList;
-import com.mytlogos.enterprisedesktop.model.SimpleMedium;
+import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.preferences.ProfilePreferences;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
@@ -336,6 +335,36 @@ public class EpisodeViewController implements Attachable {
 
     private void setEpisodeViewContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
+        MenuItem openLinkItem = new MenuItem();
+        openLinkItem.setText("Open in Browser");
+        openLinkItem.setOnAction(event -> {
+            OpenableEpisode selectedItem = this.episodes.getSelectionModel().getSelectedItem();
+
+            if (selectedItem == null) {
+                Notifications.create().title("No Episode Selected!").show();
+                return;
+            }
+            TaskManager.runCompletableTask(() -> {
+                final int episodeId = selectedItem.getEpisodeId();
+                final List<String> links = ApplicationConfig.getRepository().getReleaseLinks(episodeId);
+
+                if (!links.isEmpty()) {
+                    ControllerUtils.openUrl(links.get(0));
+                }
+                return null;
+            }).whenComplete((o, throwable) -> {
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                    Platform.runLater(
+                            () -> Notifications
+                                    .create()
+                                    .title("An Error occurred while trying to open Episode in Browser!")
+                                    .show()
+                    );
+                }
+            });
+        });
+
         MenuItem setReadItem = new MenuItem();
         setReadItem.setText("Set Read");
         setReadItem.setOnAction(event -> doEpisodeRepoAction(
@@ -368,7 +397,7 @@ public class EpisodeViewController implements Attachable {
                 (repository, ids, mediumId) -> repository.reload(ids)
         ));
 
-        contextMenu.getItems().addAll(setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
+        contextMenu.getItems().addAll(openLinkItem, setReadItem, setUnreadItem, downloadItem, deleteItem, reloadItem);
         this.episodes.setContextMenu(contextMenu);
     }
 
