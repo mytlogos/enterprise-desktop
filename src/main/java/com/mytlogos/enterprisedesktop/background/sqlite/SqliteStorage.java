@@ -2,10 +2,7 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.background.*;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
-import com.mytlogos.enterprisedesktop.background.resourceLoader.DependantValue;
-import com.mytlogos.enterprisedesktop.background.resourceLoader.DependencyTask;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
-import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorker;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
@@ -83,12 +80,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public ClientModelPersister getPersister(Repository repository, LoadData loadedData) {
-        return new SqlitePersister(loadedData, repository);
-    }
-
-    @Override
-    public DependantGenerator getDependantGenerator(LoadData loadedData) {
-        return new SqliteDependantGenerator(loadedData);
+        return new SqlitePersister(loadedData);
     }
 
     @Override
@@ -633,190 +625,14 @@ public class SqliteStorage implements DatabaseStorage {
         return this.mediaListTable.getMediumItemsIds(listIds);
     }
 
-    private class SqliteDependantGenerator implements DependantGenerator {
-        private final LoadData loadedData;
-
-        private SqliteDependantGenerator(LoadData loadedData) {
-            this.loadedData = loadedData;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generateReadEpisodesDependant(LoadWorkGenerator.FilteredReadEpisodes readEpisodes) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-            LoadWorker worker = LoadWorker.getWorker();
-
-            for (LoadWorkGenerator.IntDependency<ClientReadEpisode> dependency : readEpisodes.dependencies) {
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(dependency.dependency),
-                        worker.EPISODE_LOADER
-                ));
-            }
-            return tasks;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generatePartsDependant(LoadWorkGenerator.FilteredParts parts) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-
-            LoadWorker worker = LoadWorker.getWorker();
-            for (LoadWorkGenerator.IntDependency<ClientPart> dependency : parts.mediumDependencies) {
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.PART_LOADER
-                        ),
-                        worker.MEDIUM_LOADER
-                ));
-            }
-            return tasks;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generateEpisodesDependant(LoadWorkGenerator.FilteredEpisodes episodes) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-            LoadWorker worker = LoadWorker.getWorker();
-
-            for (LoadWorkGenerator.IntDependency<ClientEpisode> dependency : episodes.partDependencies) {
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.EPISODE_LOADER
-                        ),
-                        worker.PART_LOADER
-                ));
-            }
-            return tasks;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generateMediaDependant(LoadWorkGenerator.FilteredMedia media) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-
-            LoadWorker worker = LoadWorker.getWorker();
-            for (LoadWorkGenerator.IntDependency<ClientMedium> dependency : media.episodeDependencies) {
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.MEDIUM_LOADER
-                        ),
-                        worker.EPISODE_LOADER
-                ));
-            }
-            for (Integer unloadedPart : media.unloadedParts) {
-                tasks.add(new DependencyTask<>(unloadedPart, null, worker.PART_LOADER));
-            }
-            return tasks;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generateMediaListsDependant(LoadWorkGenerator.FilteredMediaList mediaLists) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-
-            LoadWorker worker = LoadWorker.getWorker();
-            for (LoadWorkGenerator.IntDependency<List<ListMediumJoin>> dependency : mediaLists.mediumDependencies) {
-                int tmpListId = 0;
-                if (!dependency.dependency.isEmpty()) {
-                    tmpListId = dependency.dependency.get(0).listId;
-                }
-                int listId = tmpListId;
-
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                () -> SqliteStorage.this.listMediumJoinTable.delete(listId)
-                        ),
-                        worker.MEDIUM_LOADER
-                ));
-            }
-            return tasks;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generateExternalMediaListsDependant(LoadWorkGenerator.FilteredExtMediaList externalMediaLists) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-
-            LoadWorker worker = LoadWorker.getWorker();
-
-            for (LoadWorkGenerator.IntDependency<List<ListMediumJoin>> dependency : externalMediaLists.mediumDependencies) {
-                int tmpListId = 0;
-                if (!dependency.dependency.isEmpty()) {
-                    tmpListId = dependency.dependency.get(0).listId;
-                }
-                int listId = tmpListId;
-
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                () -> SqliteStorage.this.externalListMediumJoinTable.delete(listId)
-                        ),
-                        worker.MEDIUM_LOADER
-                ));
-            }
-            for (LoadWorkGenerator.Dependency<String, ClientExternalMediaList> dependency : externalMediaLists.userDependencies) {
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                dependency.dependency.getId(),
-                                worker.EXTERNAL_MEDIALIST_LOADER
-                        ),
-                        worker.EXTERNAL_USER_LOADER
-                ));
-            }
-            return tasks;
-        }
-
-        @Override
-        public Collection<DependencyTask<?>> generateExternalUsersDependant(LoadWorkGenerator.FilteredExternalUser externalUsers) {
-            Set<DependencyTask<?>> tasks = new HashSet<>();
-
-            LoadWorker worker = LoadWorker.getWorker();
-
-            for (LoadWorkGenerator.IntDependency<List<ListMediumJoin>> dependency : externalUsers.mediumDependencies) {
-                int tmpListId = 0;
-                if (!dependency.dependency.isEmpty()) {
-                    tmpListId = dependency.dependency.get(0).listId;
-                }
-                int listId = tmpListId;
-
-                tasks.add(new DependencyTask<>(
-                        dependency.id,
-                        new DependantValue(
-                                dependency.dependency,
-                                () -> SqliteStorage.this.externalListMediumJoinTable.delete(listId)
-                        ),
-                        worker.MEDIUM_LOADER
-                ));
-            }
-            return tasks;
-        }
-    }
-
-
     private class SqlitePersister implements ClientModelPersister {
         private final LoadData loadedData;
-        private final Repository repository;
         private final LoadWorkGenerator generator;
 
 
-        SqlitePersister(LoadData loadedData, Repository repository) {
+        SqlitePersister(LoadData loadedData) {
             this.loadedData = loadedData;
-            this.repository = repository;
             this.generator = new LoadWorkGenerator(loadedData);
-        }
-
-        @Override
-        public Collection<ClientConsumer<?>> getConsumer() {
-            return Collections.emptyList();
         }
 
         @Override

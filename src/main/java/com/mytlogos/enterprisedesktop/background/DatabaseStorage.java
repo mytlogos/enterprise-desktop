@@ -33,8 +33,6 @@ public interface DatabaseStorage {
 
     ClientModelPersister getPersister(Repository repository, LoadData loadedData);
 
-    DependantGenerator getDependantGenerator(LoadData loadedData);
-
     void deleteOldNews();
 
     boolean isLoading();

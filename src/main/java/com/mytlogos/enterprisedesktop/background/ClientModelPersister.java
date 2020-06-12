@@ -10,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 public interface ClientModelPersister {
-    Collection<ClientConsumer<?>> getConsumer();
-
     default ClientModelPersister persist(ClientEpisode... episode) {
         return this.persistEpisodes(Arrays.asList(episode));
     }
