@@ -26,7 +26,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import org.controlsfx.control.Notifications;
 
 import java.util.*;
@@ -255,43 +254,7 @@ public class MediaController implements Attachable {
 
     private void setMediaViewContextMenu() {
         ContextMenu contextMenu = new ContextMenu();
-        Menu menu = new Menu("Add To List");
-        menu.setOnShowing(event -> {
-            final List<MediaList> value = this.listLiveData.getValue();
-            if (value != null) {
-                for (int i = 0; i < value.size(); i++) {
-                    final MediaList mediaList = value.get(i);
-                    final MenuItem item = new MenuItem(mediaList.getName());
-                    menu.getItems().add(i, item);
-                    item.setOnAction(action -> doMediumRepoAction(
-                            String.format("Added to List '%s'", mediaList.getName()),
-                            (repository, mediumIds) -> repository.addMediumToList(mediaList.getListId(), mediumIds).get()
-                    ));
-                }
-            }
-        });
-        menu.setOnHiding(event -> {
-            // remove all items except the static "create new List" item
-            for (Iterator<MenuItem> iterator = menu.getItems().iterator(); iterator.hasNext(); ) {
-                iterator.next();
-
-                if (iterator.hasNext()) {
-                    iterator.remove();
-                }
-            }
-        });
-        MenuItem createList = new MenuItem();
-        createList.setText("Create new List");
-        createList.setOnAction(event -> {
-            final Optional<MediaList> list = this.createMediaList();
-            list.ifPresent(mediaList -> doMediumRepoAction(
-                    String.format("Added to new List '%s'", mediaList.getName()),
-                    (repository, mediumIds) -> {
-                        final int listId = repository.addList(mediaList, false);
-                        repository.addMediumToList(listId, mediumIds).get();
-                    }));
-        });
-        menu.getItems().add(createList);
+        Menu menu = ControllerUtils.getAddToListMenu(this.listLiveData, this.mediaView.getSelectionModel());
         contextMenu.getItems().add(menu);
         this.mediaView.setContextMenu(contextMenu);
     }
@@ -357,42 +320,6 @@ public class MediaController implements Attachable {
                     .show()
             );
         });
-    }
-
-    private Optional<MediaList> createMediaList() {
-        Dialog<MediaList> mediaListDialog = new Dialog<>();
-        mediaListDialog.setHeaderText("Create Media List");
-        final DialogPane pane = new DialogPane();
-        final TextField nameField = new TextField();
-        CheckBox showTextBox = new CheckBox("Text");
-        CheckBox showImageBox = new CheckBox("Image");
-        CheckBox showVideoBox = new CheckBox("Video");
-        CheckBox showAudioBox = new CheckBox("Audio");
-
-        pane.setContent(new VBox(
-                5,
-                new HBox(5, new Text("Name:"), nameField),
-                new HBox(5, showTextBox, showImageBox, showVideoBox, showAudioBox)
-        ));
-        mediaListDialog.setDialogPane(pane);
-        pane.getButtonTypes().addAll(ButtonType.CLOSE, ButtonType.FINISH);
-        pane.lookupButton(ButtonType.FINISH).disableProperty().bind(
-                nameField.textProperty().isEmpty()
-                        .or(
-                                showAudioBox.selectedProperty().not()
-                                        .and(showImageBox.selectedProperty().not())
-                                        .and(showTextBox.selectedProperty().not())
-                                        .and(showVideoBox.selectedProperty().not())
-                        ));
-        mediaListDialog.setResultConverter(param -> {
-            if (param.getButtonData() == ButtonBar.ButtonData.FINISH) {
-                final int medium = ControllerUtils.getMedium(showTextBox, showImageBox, showVideoBox, showAudioBox);
-                return new MediaListImpl(null, 0, nameField.getText(), medium, 0);
-            } else {
-                return null;
-            }
-        });
-        return mediaListDialog.showAndWait();
     }
 
     private void doEpisodeRepoAction(String description, BiConsumerEx<Repository, Integer> allConsumer, TriConsumerEx<Repository, Set<Integer>, Integer> idsConsumer) {

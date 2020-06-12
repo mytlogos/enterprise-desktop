@@ -1,12 +1,16 @@
 package com.mytlogos.enterprisedesktop.controller;
 
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
+import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.MediatorLiveData;
-import com.mytlogos.enterprisedesktop.model.MediumType;
-import com.mytlogos.enterprisedesktop.model.OpenableEpisode;
+import com.mytlogos.enterprisedesktop.model.*;
+import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.BidirectionalMap;
+import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.TriFunction;
 import impl.org.controlsfx.autocompletion.AutoCompletionTextFieldBinding;
+import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
@@ -16,9 +20,15 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
@@ -28,6 +38,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -177,7 +188,7 @@ public class ControllerUtils {
         return map;
     }
 
-    public static int getMedium(CheckBox text, CheckBox image, CheckBox video, CheckBox audio) {
+    public static int getMedium(RadioButton text, RadioButton image, RadioButton video, RadioButton audio) {
         int medium = 0;
         medium = toggleValue(text.isSelected(), medium, MediumType.TEXT);
         medium = toggleValue(image.isSelected(), medium, MediumType.IMAGE);
@@ -191,14 +202,6 @@ public class ControllerUtils {
         } else {
             return MediumType.removeMediumType(medium, toggleValue);
         }
-    }
-
-    public static int getMedium(RadioButton text, RadioButton image, RadioButton video, RadioButton audio) {
-        int medium = 0;
-        medium = toggleValue(text.isSelected(), medium, MediumType.TEXT);
-        medium = toggleValue(image.isSelected(), medium, MediumType.IMAGE);
-        medium = toggleValue(video.isSelected(), medium, MediumType.VIDEO);
-        return toggleValue(audio.isSelected(), medium, MediumType.AUDIO);
     }
 
     public static int getMedium(ToggleButton text, ToggleButton image, ToggleButton video, ToggleButton audio) {
@@ -427,5 +430,152 @@ public class ControllerUtils {
         for (Observable observable : observables) {
             observable.addListener(o -> runnable.run());
         }
+    }
+
+    static Menu getMoveToListMenu(LiveData<List<MediaList>> listLiveData, MultipleSelectionModel<? extends MediaList> listSelection, MultipleSelectionModel<? extends SmallMedium> selectionModel) {
+        return getSelectListMenu(
+                listLiveData,
+                selectionModel,
+                "Move To List",
+                "Moved to List %s",
+                "Moved to new List %s",
+                (repository, listId, mediumIds) -> {
+                    final MediaList selectedItem = listSelection.getSelectedItem();
+                    if (selectedItem == null) {
+                        System.out.println("Cannot move to List: No Source List selected!");
+                        return;
+                    }
+                    repository.moveMediaToList(selectedItem.getListId(), listId, mediumIds).get();
+                }
+        );
+    }
+
+    static Menu getAddToListMenu(LiveData<List<MediaList>> listLiveData, MultipleSelectionModel<? extends SmallMedium> selectionModel) {
+        return getSelectListMenu(
+                listLiveData,
+                selectionModel,
+                "Add To List",
+                "Added to List %s",
+                "Added to new List %s",
+                (repository, listId, mediumIds) -> repository.addMediumToList(listId, mediumIds).get()
+        );
+    }
+
+    static Menu getSelectListMenu(LiveData<List<MediaList>> listLiveData, MultipleSelectionModel<? extends SmallMedium> selectionModel,
+                                  String text, String oldListFinished, String newListFinished,
+                                  TriConsumerEx<Repository, Integer, Set<Integer>> idsConsumer) {
+        Menu menu = new Menu(text);
+        menu.setOnShowing(event -> {
+            final List<MediaList> value = listLiveData.getValue();
+            if (value != null) {
+                int i = 0;
+                for (MediaList mediaList: value) {
+                    if (mediaList instanceof ExternalMediaList) {
+                        continue;
+                    }
+                    final MenuItem item = new MenuItem(mediaList.getName());
+                    menu.getItems().add(i++, item);
+                    item.setOnAction(action -> doMediumRepoAction(
+                            String.format(oldListFinished, mediaList.getName()),
+                            (repository, mediumIds) -> idsConsumer.accept(repository, mediaList.getListId(), mediumIds),
+                            selectionModel
+                    ));
+                }
+            }
+        });
+        menu.setOnHiding(event -> {
+            // remove all items except the static "create new List" item
+            for (Iterator<MenuItem> iterator = menu.getItems().iterator(); iterator.hasNext(); ) {
+                iterator.next();
+
+                if (iterator.hasNext()) {
+                    iterator.remove();
+                }
+            }
+        });
+        MenuItem createList = new MenuItem();
+        createList.setText("Create new List");
+        createList.setOnAction(event -> {
+            final Optional<MediaList> list = createMediaList();
+            list.ifPresent(mediaList -> doMediumRepoAction(
+                    String.format(newListFinished, mediaList.getName()),
+                    (repository, mediumIds) -> {
+                        final int listId = repository.addList(mediaList, false);
+                        idsConsumer.accept(repository, listId, mediumIds);
+                    },
+                    selectionModel
+            ));
+        });
+        menu.getItems().add(createList);
+        return menu;
+    }
+
+    static void doMediumRepoAction(String description, BiConsumerEx<Repository, Set<Integer>> idsConsumer, MultipleSelectionModel<? extends SmallMedium> selectionModel) {
+        final Repository repository = ApplicationConfig.getRepository();
+        List<? extends SmallMedium> selectedItems = selectionModel.getSelectedItems();
+        CompletableFuture.runAsync(() -> {
+            Set<Integer> ids = new HashSet<>();
+            for (SmallMedium item : selectedItems) {
+                ids.add(item.getMediumId());
+            }
+            try {
+                idsConsumer.accept(repository, ids);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }).whenComplete((aVoid, throwable) -> {
+            if (throwable != null) {
+                throwable.printStackTrace();
+            }
+            Platform.runLater(() -> Notifications
+                    .create()
+                    .title(description + (throwable != null ? "failed" : " succeeded"))
+                    .show()
+            );
+        });
+    }
+
+    static Optional<MediaList> createMediaList() {
+        Dialog<MediaList> mediaListDialog = new Dialog<>();
+        mediaListDialog.setHeaderText("Create Media List");
+        final DialogPane pane = new DialogPane();
+        final TextField nameField = new TextField();
+        CheckBox showTextBox = new CheckBox("Text");
+        CheckBox showImageBox = new CheckBox("Image");
+        CheckBox showVideoBox = new CheckBox("Video");
+        CheckBox showAudioBox = new CheckBox("Audio");
+
+        pane.setContent(new VBox(
+                5,
+                new HBox(5, new Text("Name:"), nameField),
+                new HBox(5, showTextBox, showImageBox, showVideoBox, showAudioBox)
+        ));
+        mediaListDialog.setDialogPane(pane);
+        pane.getButtonTypes().addAll(ButtonType.CLOSE, ButtonType.FINISH);
+        pane.lookupButton(ButtonType.FINISH).disableProperty().bind(
+                nameField.textProperty().isEmpty()
+                        .or(
+                                showAudioBox.selectedProperty().not()
+                                        .and(showImageBox.selectedProperty().not())
+                                        .and(showTextBox.selectedProperty().not())
+                                        .and(showVideoBox.selectedProperty().not())
+                        ));
+        mediaListDialog.setResultConverter(param -> {
+            if (param.getButtonData() == ButtonBar.ButtonData.FINISH) {
+                final int medium = getMedium(showTextBox, showImageBox, showVideoBox, showAudioBox);
+                return new MediaListImpl(null, 0, nameField.getText(), medium, 0);
+            } else {
+                return null;
+            }
+        });
+        return mediaListDialog.showAndWait();
+    }
+
+    public static int getMedium(CheckBox text, CheckBox image, CheckBox video, CheckBox audio) {
+        int medium = 0;
+        medium = toggleValue(text.isSelected(), medium, MediumType.TEXT);
+        medium = toggleValue(image.isSelected(), medium, MediumType.IMAGE);
+        medium = toggleValue(video.isSelected(), medium, MediumType.VIDEO);
+        return toggleValue(audio.isSelected(), medium, MediumType.AUDIO);
     }
 }

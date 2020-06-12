@@ -126,6 +126,10 @@ public class ListViewController implements Attachable {
     private LiveData<List<MediaList>> listLiveData;
 
     public void initialize() {
+        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
+        this.listLiveData = repositorySingle.flatMap(Repository::getLists);
+        this.listsLoadPane.setVisible(true);
+
         this.listsView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.listMediaView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         this.mediumContentView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -161,9 +165,6 @@ public class ListViewController implements Attachable {
                 this.readFilterProperty,
                 this.savedFilterProperty
         );
-        final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
-        this.listsLoadPane.setVisible(true);
-        this.listLiveData = repositorySingle.flatMap(Repository::getLists);
     }
 
     private void setListsViewContextMenu() {
@@ -171,7 +172,34 @@ public class ListViewController implements Attachable {
     }
 
     private void setMediaViewContextMenu() {
+        ContextMenu contextMenu = new ContextMenu();
+        Menu addToListMenu = ControllerUtils.getAddToListMenu(this.listLiveData, this.listMediaView.getSelectionModel());
+        contextMenu.getItems().add(addToListMenu);
 
+        Menu moveToListMenu = ControllerUtils.getMoveToListMenu(
+                this.listLiveData,
+                this.listsView.getSelectionModel(),
+                this.listMediaView.getSelectionModel()
+        );
+        contextMenu.getItems().add(moveToListMenu);
+
+        final MenuItem remove = new MenuItem("Remove from List");
+        remove.setOnAction(event -> {
+            final MediaList list = this.listsView.getSelectionModel().getSelectedItem();
+
+            if (list == null) {
+                System.out.println("Cannot remove from a List: No List selected");
+                return;
+            }
+            ControllerUtils.doMediumRepoAction(
+                    String.format("Removed from List %s", list.getName()),
+                    (repository, mediumIds) -> repository.removeItemFromList(list.getListId(), mediumIds),
+                    this.listMediaView.getSelectionModel()
+            );
+        });
+        contextMenu.getItems().add(remove);
+
+        this.listMediaView.setContextMenu(contextMenu);
     }
 
     private void setEpisodeViewContextMenu() {

@@ -1,6 +1,6 @@
 package com.mytlogos.enterprisedesktop.model;
 
-public interface Medium {
+public interface Medium extends SmallMedium {
     Integer getCurrentRead();
 
     int getMediumId();

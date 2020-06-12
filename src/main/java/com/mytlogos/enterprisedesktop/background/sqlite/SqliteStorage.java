@@ -364,17 +364,30 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void removeItemFromList(int listId, int mediumId) {
-
+        this.listMediumJoinTable.removeJoin(Collections.singletonList(new ListMediumJoin(listId, mediumId, false)));
     }
 
     @Override
-    public void removeItemFromList(int listId, Collection<Integer> mediumId) {
+    public void removeItemFromList(int listId, Collection<Integer> mediumIds) {
+        List<ListMediumJoin> removeJoins = new ArrayList<>(mediumIds.size());
 
+        for (Integer id : mediumIds) {
+            removeJoins.add(new ListMediumJoin(listId, id, false));
+        }
+        this.listMediumJoinTable.removeJoin(removeJoins);
     }
 
     @Override
     public void moveItemsToList(int oldListId, int listId, Collection<Integer> ids) {
+        List<ListMediumJoin> removeJoins = new ArrayList<>(ids.size());
+        List<ListMediumJoin> insertJoins = new ArrayList<>(ids.size());
 
+        for (Integer id : ids) {
+            removeJoins.add(new ListMediumJoin(oldListId, id, false));
+            insertJoins.add(new ListMediumJoin(listId, id, false));
+        }
+        this.listMediumJoinTable.removeJoin(removeJoins);
+        this.listMediumJoinTable.insert(insertJoins);
     }
 
     @Override
