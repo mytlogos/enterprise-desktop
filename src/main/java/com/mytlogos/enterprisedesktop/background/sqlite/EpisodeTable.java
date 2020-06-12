@@ -277,6 +277,7 @@ class EpisodeTable extends AbstractTable {
                         "INNER JOIN episode ON part.partId=episode.partId \n" +
                         "WHERE part.mediumId=?")
                 .setValues(value -> value.setInt(1, mediumId))
+                .setConverter(value -> value.getInt(1))
                 .queryListIgnoreError();
     }
 
