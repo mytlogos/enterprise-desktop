@@ -247,7 +247,7 @@ public interface Repository {
 
     LiveData<List<Integer>> getListItems(Collection<Integer> listIds);
 
-    ReloadPart checkReload(ClientStat.ParsedStat parsedStat);
+    ReloadStat checkReload(ClientStat.ParsedStat parsedStat);
 
     boolean isEpisodeLoaded(int id);
 

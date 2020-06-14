@@ -26,6 +26,8 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -122,10 +124,10 @@ public class ControllerUtils {
         return load(fxmlFile, null);
     }
 
-    public static <T, P extends Node> T load(String fxmlFile, Consumer<P> consumer) {
+    public static <Controller, Root extends Node> Controller load(String fxmlFile, Consumer<Root> consumer) {
         final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
         try {
-            final P load = loader.load();
+            final Root load = loader.load();
             if (consumer != null) {
                 consumer.accept(load);
             }
@@ -412,10 +414,10 @@ public class ControllerUtils {
         stage.show();
     }
 
-    public static <P, T extends Node> T loadNode(String fxmlFile, Consumer<P> consumer) {
+    public static <Controller, Root extends Node> Root loadNode(String fxmlFile, Consumer<Controller> consumer) {
         final FXMLLoader loader = new FXMLLoader(ControllerUtils.class.getResource(fxmlFile));
         try {
-            final T load = loader.load();
+            final Root load = loader.load();
             if (consumer != null) {
                 consumer.accept(loader.getController());
             }
@@ -577,5 +579,9 @@ public class ControllerUtils {
         medium = toggleValue(image.isSelected(), medium, MediumType.IMAGE);
         medium = toggleValue(video.isSelected(), medium, MediumType.VIDEO);
         return toggleValue(audio.isSelected(), medium, MediumType.AUDIO);
+    }
+
+    static boolean isDoubleClick(MouseEvent event) {
+        return event.getButton() == MouseButton.PRIMARY && event.getClickCount() == 2;
     }
 }

@@ -15,8 +15,9 @@ public class ClientChangedEntities {
     public final List<ClientExternalUser> extUser;
     public final List<ClientMediumInWait> mediaInWait;
     public final List<ClientNews> news;
+    public final List<ClientToc> tocs;
 
-    public ClientChangedEntities(List<ClientMedium> media, List<ClientRelease> releases, List<ClientEpisode> episodes, List<ClientPart> parts, List<ClientMediaList> lists, List<ClientExternalMediaList> extLists, List<ClientExternalUser> extUser, List<ClientMediumInWait> mediaInWait, List<ClientNews> news) {
+    public ClientChangedEntities(List<ClientMedium> media, List<ClientRelease> releases, List<ClientEpisode> episodes, List<ClientPart> parts, List<ClientMediaList> lists, List<ClientExternalMediaList> extLists, List<ClientExternalUser> extUser, List<ClientMediumInWait> mediaInWait, List<ClientNews> news, List<ClientToc> tocs) {
         this.media = media;
         this.releases = releases;
         this.episodes = episodes;
@@ -26,6 +27,7 @@ public class ClientChangedEntities {
         this.extUser = extUser;
         this.mediaInWait = mediaInWait;
         this.news = news;
+        this.tocs = tocs;
     }
 
     @Override

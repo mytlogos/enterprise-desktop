@@ -251,6 +251,12 @@ public class Client {
         return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPartReleases(url, body));
     }
 
+    public Response<List<ClientToc>> getMediumTocs(Collection<Integer> mediumIds) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("mediumId", mediumIds);
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getToc(url, body));
+    }
+
     public Response<ClientChangedEntities> getNew(LocalDateTime lastSync) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("date", lastSync);

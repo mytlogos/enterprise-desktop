@@ -3,6 +3,7 @@ package com.mytlogos.enterprisedesktop.background;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.background.resourceLoader.LoadWorkGenerator;
 import com.mytlogos.enterprisedesktop.model.ToDownload;
+import com.mytlogos.enterprisedesktop.model.Toc;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -97,4 +98,8 @@ public interface ClientModelPersister {
     Collection<Integer> deleteLeftoverReleases(Map<Integer, List<ClientSimpleRelease>> partReleases);
 
     ClientModelPersister persistReleases(Collection<ClientRelease> releases);
+
+    void deleteLeftoverTocs(Map<Integer, List<String>> mediaTocs);
+
+    ClientModelPersister persistTocs(Collection<? extends Toc> tocs);
 }

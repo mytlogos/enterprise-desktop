@@ -28,6 +28,7 @@ public class SqliteStorage implements DatabaseStorage {
     final MediumInWaitTable mediumInWaitTable;
     final NewsTable newsTable;
     final MediumTable mediumTable;
+    final TocTable tocTable;
     final NotificationTable notificationTable;
     final PartTable partTable;
     final ReleaseTable releaseTable;
@@ -46,6 +47,7 @@ public class SqliteStorage implements DatabaseStorage {
         this.mediumInWaitTable = this.initTable(new MediumInWaitTable());
         this.newsTable = this.initTable(new NewsTable());
         this.mediumTable = this.initTable(new MediumTable());
+        this.tocTable = this.initTable(new TocTable());
         this.notificationTable = this.initTable(new NotificationTable());
         this.partTable = this.initTable(new PartTable());
         this.releaseTable = this.initTable(new ReleaseTable());
@@ -529,7 +531,7 @@ public class SqliteStorage implements DatabaseStorage {
     }
 
     @Override
-    public ReloadPart checkReload(ClientStat.ParsedStat parsedStat) {
+    public ReloadStat checkReload(ClientStat.ParsedStat parsedStat) {
         List<PartStat> roomStats = this.episodeTable.getStat();
 
         Map<Integer, ClientStat.Partstat> partStats = new HashMap<>();
@@ -540,6 +542,7 @@ public class SqliteStorage implements DatabaseStorage {
 
         List<Integer> loadEpisode = new LinkedList<>();
         List<Integer> loadRelease = new LinkedList<>();
+        List<Integer> loadMediumTocs = new LinkedList<>();
 
         for (PartStat roomStat : roomStats) {
             ClientStat.Partstat partstat = partStats.get(roomStat.partId);
@@ -558,7 +561,18 @@ public class SqliteStorage implements DatabaseStorage {
                 loadRelease.add(roomStat.partId);
             }
         }
-        return new ReloadPart(loadEpisode, loadRelease);
+        final Map<Integer, Integer> tocStats = this.tocTable.getStat();
+
+        for (Map.Entry<Integer, ClientMediaStat> entry : parsedStat.mediaStats.entrySet()) {
+            final Integer mediumId = entry.getKey();
+            final ClientMediaStat stats = entry.getValue();
+            final Integer previousTocCount = tocStats.get(mediumId);
+
+            if (previousTocCount == null || stats.tocs != previousTocCount) {
+                loadMediumTocs.add(mediumId);
+            }
+        }
+        return new ReloadStat(loadEpisode, loadRelease, loadMediumTocs);
     }
 
     @Override
@@ -1036,6 +1050,27 @@ public class SqliteStorage implements DatabaseStorage {
         @Override
         public ClientModelPersister persistReleases(Collection<ClientRelease> releases) {
             SqliteStorage.this.releaseTable.insert(releases);
+            return this;
+        }
+
+        @Override
+        public void deleteLeftoverTocs(Map<Integer, List<String>> mediaTocs) {
+            List<Toc> previousTocs = SqliteStorage.this.tocTable.getTocs(mediaTocs.keySet());
+            List<Toc> removeTocs = new ArrayList<>();
+
+            for (Toc entry : previousTocs) {
+                final List<String> currentTocLinks = mediaTocs.get(entry.getMediumId());
+
+                if (currentTocLinks == null || currentTocLinks.contains(entry.getLink())) {
+                    removeTocs.add(entry);
+                }
+            }
+            SqliteStorage.this.tocTable.delete(removeTocs);
+        }
+
+        @Override
+        public ClientModelPersister persistTocs(Collection<? extends Toc> tocs) {
+            SqliteStorage.this.tocTable.insert(tocs);
             return this;
         }
 

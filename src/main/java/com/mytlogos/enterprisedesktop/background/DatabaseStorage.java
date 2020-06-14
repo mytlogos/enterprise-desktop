@@ -4,7 +4,6 @@ package com.mytlogos.enterprisedesktop.background;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientStat;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.controller.ReleaseFilter;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
@@ -197,7 +196,7 @@ public interface DatabaseStorage {
 
     void removeEditEvents(Collection<EditEvent> editEvents);
 
-    ReloadPart checkReload(ClientStat.ParsedStat parsedStat);
+    ReloadStat checkReload(ClientStat.ParsedStat parsedStat);
 
     void deleteMedia(Collection<Integer> toDelete);
 

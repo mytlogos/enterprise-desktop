@@ -2,11 +2,13 @@ package com.mytlogos.enterprisedesktop.worker;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.ClientModelPersister;
-import com.mytlogos.enterprisedesktop.background.ReloadPart;
+import com.mytlogos.enterprisedesktop.background.ReloadStat;
 import com.mytlogos.enterprisedesktop.background.Repository;
+import com.mytlogos.enterprisedesktop.background.SimpleToc;
 import com.mytlogos.enterprisedesktop.background.api.Client;
 import com.mytlogos.enterprisedesktop.background.api.NotConnectedException;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
+import com.mytlogos.enterprisedesktop.model.Toc;
 import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.concurrent.Task;
@@ -31,6 +33,7 @@ public class SynchronizeTask extends Task<Void> {
     private int newsAddedOrUpdated = 0;
     private int mediaInWaitAddedOrUpdated = 0;
     private int totalAddedOrUpdated = 0;
+    private int tocsAddedOrUpdated = 0;
 
     @Override
     protected Void call() throws Exception {
@@ -109,9 +112,10 @@ public class SynchronizeTask extends Task<Void> {
         int extUserSize = this.externalUserAddedOrUpdated = changedEntities.extUser.size();
         int newsSize = this.newsAddedOrUpdated = changedEntities.news.size();
         int mediaInWaitSize = this.mediaInWaitAddedOrUpdated = changedEntities.mediaInWait.size();
+        int tocsSize = this.tocsAddedOrUpdated = changedEntities.tocs.size();
 
         int total = this.totalAddedOrUpdated = mediaSize + partsSize + episodesSize + releasesSize + listsSize
-                + extListSize + extUserSize + newsSize + mediaInWaitSize;
+                + extListSize + extUserSize + newsSize + mediaInWaitSize + tocsSize;
 
         StringBuilder builder = new StringBuilder();
         append(builder, "Media: ", mediaSize);
@@ -131,6 +135,12 @@ public class SynchronizeTask extends Task<Void> {
         persister.persistMedia(changedEntities.media);
         current += mediaSize;
         changedEntities.media.clear();
+
+        this.notify("Persisting Tocs", null, current, total);
+        // persist all new or updated entities, media to releases needs to be in this order
+        persister.persistTocs(changedEntities.tocs);
+        current += tocsSize;
+        changedEntities.tocs.clear();
 
         this.notify("Persisting Parts", null, current, total);
         persistParts(changedEntities.parts, client, persister, repository);
@@ -181,10 +191,10 @@ public class SynchronizeTask extends Task<Void> {
         ClientStat.ParsedStat parsedStat = statBody.parse();
         persister.persist(parsedStat);
 
-        ReloadPart reloadPart = repository.checkReload(parsedStat);
+        ReloadStat reloadStat = repository.checkReload(parsedStat);
 
-        if (!reloadPart.loadPartEpisodes.isEmpty()) {
-            Map<String, List<Integer>> partStringEpisodes = Utils.checkAndGetBody(client.getPartEpisodes(reloadPart.loadPartEpisodes));
+        if (!reloadStat.loadPartEpisodes.isEmpty()) {
+            Map<String, List<Integer>> partStringEpisodes = Utils.checkAndGetBody(client.getPartEpisodes(reloadStat.loadPartEpisodes));
 
             Map<Integer, List<Integer>> partEpisodes = mapStringToInt(partStringEpisodes);
 
@@ -211,12 +221,12 @@ public class SynchronizeTask extends Task<Void> {
                 return false;
             });
 
-            reloadPart = repository.checkReload(parsedStat);
+            reloadStat = repository.checkReload(parsedStat);
         }
 
 
-        if (!reloadPart.loadPartReleases.isEmpty()) {
-            Response<Map<String, List<ClientSimpleRelease>>> partReleasesResponse = client.getPartReleases(reloadPart.loadPartReleases);
+        if (!reloadStat.loadPartReleases.isEmpty()) {
+            Response<Map<String, List<ClientSimpleRelease>>> partReleasesResponse = client.getPartReleases(reloadStat.loadPartReleases);
 
             Map<String, List<ClientSimpleRelease>> partStringReleases = Utils.checkAndGetBody(partReleasesResponse);
 
@@ -245,14 +255,34 @@ public class SynchronizeTask extends Task<Void> {
                 });
             }
 
-            reloadPart = repository.checkReload(parsedStat);
+            reloadStat = repository.checkReload(parsedStat);
+        }
+
+        if (!reloadStat.loadMediumTocs.isEmpty()) {
+            final Response<List<ClientToc>> mediumTocsResponse = client.getMediumTocs(reloadStat.loadMediumTocs);
+            final List<ClientToc> mediumTocs = Utils.checkAndGetBody(mediumTocsResponse);
+            Map<Integer, List<String>> mediaTocs = new HashMap<>();
+
+            for (ClientToc mediumToc : mediumTocs) {
+                mediaTocs.computeIfAbsent(mediumToc.getMediumId(), id -> new ArrayList<>()).add(mediumToc.getLink());
+            }
+            Utils.doPartitionedRethrow(mediaTocs.keySet(), mediaIds-> {
+                Map<Integer, List<String>> partitionedMediaTocs = new HashMap<>();
+
+                for (Integer mediaId : mediaIds) {
+                    partitionedMediaTocs.put(mediaId, mediaTocs.get(mediaId));
+                }
+                this.persistTocs(partitionedMediaTocs, persister);
+                persister.deleteLeftoverTocs(partitionedMediaTocs);
+                return false;
+            });
         }
 
         // as even now some errors crop up, just load all this shit and dump it in 100er steps
-        if (!reloadPart.loadPartEpisodes.isEmpty() || !reloadPart.loadPartReleases.isEmpty()) {
+        if (!reloadStat.loadPartEpisodes.isEmpty() || !reloadStat.loadPartReleases.isEmpty()) {
             Collection<Integer> partsToLoad = new HashSet<>();
-            partsToLoad.addAll(reloadPart.loadPartEpisodes);
-            partsToLoad.addAll(reloadPart.loadPartReleases);
+            partsToLoad.addAll(reloadStat.loadPartEpisodes);
+            partsToLoad.addAll(reloadStat.loadPartReleases);
 
             Utils.doPartitionedRethrow(partsToLoad, ids -> {
                 List<ClientPart> parts = Utils.checkAndGetBody(client.getParts(ids));
@@ -260,24 +290,37 @@ public class SynchronizeTask extends Task<Void> {
                 persistParts(parts, client, persister, repository);
                 return false;
             });
-            reloadPart = repository.checkReload(parsedStat);
+            reloadStat = repository.checkReload(parsedStat);
         }
 
-        if (!reloadPart.loadPartEpisodes.isEmpty()) {
+        if (!reloadStat.loadPartEpisodes.isEmpty()) {
             String msg = String.format(
                     "Episodes of %d Parts to load even after running once",
-                    reloadPart.loadPartEpisodes.size()
+                    reloadStat.loadPartEpisodes.size()
             );
             System.out.println(msg);
         }
 
-        if (!reloadPart.loadPartReleases.isEmpty()) {
+        if (!reloadStat.loadPartReleases.isEmpty()) {
             String msg = String.format(
                     "Releases of %d Parts to load even after running once",
-                    reloadPart.loadPartReleases.size()
+                    reloadStat.loadPartReleases.size()
             );
             System.out.println(msg);
         }
+    }
+
+    private void persistTocs(Map<Integer, List<String>> mediaTocs, ClientModelPersister persister) {
+        List<Toc> inserts = new LinkedList<>();
+
+        for (Map.Entry<Integer, List<String>> entry : mediaTocs.entrySet()) {
+            final int mediumId = entry.getKey();
+
+            for (String tocLink : entry.getValue()) {
+                inserts.add(new SimpleToc(mediumId, tocLink));
+            }
+        }
+        persister.persistTocs(inserts);
     }
 
     private void notify(String title, String contentText, int current, int total) {

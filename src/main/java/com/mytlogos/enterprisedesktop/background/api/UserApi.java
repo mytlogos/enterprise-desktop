@@ -47,5 +47,11 @@ interface UserApi {
     @GET("{start}/new")
     Call<ClientChangedEntities> getNew(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
 
+    @GET("{start}/toc")
+    Call<List<ClientToc>> getToc(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+
+    @POST("{start}/toc")
+    Call<List<ClientToc>> addToc(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
+
     // TODO: 22.07.2019 add toc {uuid, toc: string, mediumId} ?
 }
