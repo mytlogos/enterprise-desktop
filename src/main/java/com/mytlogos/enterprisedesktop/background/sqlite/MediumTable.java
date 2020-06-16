@@ -10,10 +10,7 @@ import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 /**
@@ -243,6 +240,10 @@ class MediumTable extends AbstractTable {
         final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
         return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);
     });
+    private final QueryBuilder<Integer> deleteQuery = new QueryBuilder<Integer>(
+            "Delete Medium",
+            "DELETE FROM medium WHERE mediumId = ?;"
+    ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));;
 
     MediumTable() {
         super("medium");
@@ -293,6 +294,14 @@ class MediumTable extends AbstractTable {
         return queryBuilder.queryLiveDataList();
     }
 
+    public void delete(int mediumId) {
+        this.executeDMLQuery(mediumId, this.deleteQuery);
+    }
+
+    public void delete(Collection<Integer> mediaIds) {
+        this.executeDMLQuery(mediaIds, this.deleteQuery);
+    }
+
     void insert(Medium medium) {
         this.executeDMLQuery(medium, this.insertMediumQuery);
     }
@@ -303,7 +312,24 @@ class MediumTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS medium (`mediumId` INTEGER NOT NULL, `currentRead` INTEGER, `countryOfOrigin` TEXT, `languageOfOrigin` TEXT, `author` TEXT, `title` TEXT, `medium` INTEGER NOT NULL, `artist` TEXT, `lang` TEXT, `stateOrigin` INTEGER NOT NULL, `stateTL` INTEGER NOT NULL, `series` TEXT, `universe` TEXT, PRIMARY KEY(`mediumId`), FOREIGN KEY(`currentRead`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE SET NULL )";
+        return "CREATE TABLE IF NOT EXISTS medium " +
+                "(" +
+                "`mediumId` INTEGER NOT NULL, " +
+                "`currentRead` INTEGER, " +
+                "`countryOfOrigin` TEXT, " +
+                "`languageOfOrigin` TEXT, " +
+                "`author` TEXT, " +
+                "`title` TEXT, " +
+                "`medium` INTEGER NOT NULL, " +
+                "`artist` TEXT, " +
+                "`lang` TEXT, " +
+                "`stateOrigin` INTEGER NOT NULL, " +
+                "`stateTL` INTEGER NOT NULL, " +
+                "`series` TEXT, " +
+                "`universe` TEXT, " +
+                "PRIMARY KEY(`mediumId`), " +
+                "FOREIGN KEY(`currentRead`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE SET NULL " +
+                ")";
     }
 
     @Override

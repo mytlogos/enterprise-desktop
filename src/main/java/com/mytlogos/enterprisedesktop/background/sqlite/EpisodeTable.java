@@ -127,6 +127,15 @@ class EpisodeTable extends AbstractTable {
                 return new TocEpisode(episodeId, progress, partId, partialIndex, totalIndex, localDateTime, savedDb, new ArrayList<>());
             }
     );
+    private final QueryBuilder<Integer> deleteMediumEpisodes = new QueryBuilder<Integer>(
+            "Delete MediumEpisode",
+            "DELETE FROM episode " +
+                    "WHERE partId IN " +
+                    "(" +
+                    "SELECT partId FROM part " +
+                    "WHERE part.mediumId = ?" +
+                    ")"
+    ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));
 
     EpisodeTable() {
         super("episode");
@@ -281,6 +290,10 @@ class EpisodeTable extends AbstractTable {
                 .queryListIgnoreError();
     }
 
+    public void removeMediumEpisodes(int mediumId) {
+        this.executeDMLQuery(mediumId, this.deleteMediumEpisodes);
+    }
+
 
     LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
         return LiveData.create(() -> {
@@ -330,7 +343,19 @@ class EpisodeTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS episode (`episodeId` INTEGER NOT NULL, `progress` REAL NOT NULL, `readDate` TEXT, `partId` INTEGER NOT NULL, `totalIndex` INTEGER NOT NULL, `partialIndex` INTEGER NOT NULL, `combiIndex` REAL NOT NULL, `saved` INTEGER NOT NULL, PRIMARY KEY(`episodeId`), FOREIGN KEY(`partId`) REFERENCES `part`(`partId`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS episode " +
+                "(" +
+                "`episodeId` INTEGER NOT NULL, " +
+                "`progress` REAL NOT NULL, " +
+                "`readDate` TEXT, " +
+                "`partId` INTEGER NOT NULL, " +
+                "`totalIndex` INTEGER NOT NULL, " +
+                "`partialIndex` INTEGER NOT NULL, " +
+                "`combiIndex` REAL NOT NULL, " +
+                "`saved` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`episodeId`), " +
+                "FOREIGN KEY(`partId`) REFERENCES `part`(`partId`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 
     @Override

@@ -92,6 +92,12 @@ class MediumInWaitTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS medium_in_wait (`title` TEXT NOT NULL, `medium` INTEGER NOT NULL, `link` TEXT NOT NULL, PRIMARY KEY(`title`, `medium`, `link`))";
+        return "CREATE TABLE IF NOT EXISTS medium_in_wait " +
+                "(" +
+                "`title` TEXT NOT NULL, " +
+                "`medium` INTEGER NOT NULL, " +
+                "`link` TEXT NOT NULL, " +
+                "PRIMARY KEY(`title`, `medium`, `link`)" +
+                ")";
     }
 }

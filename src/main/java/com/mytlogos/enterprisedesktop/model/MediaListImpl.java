@@ -40,6 +40,11 @@ public class MediaListImpl implements MediaList {
     }
 
     @Override
+    public int hashCode() {
+        return listId;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -50,7 +55,13 @@ public class MediaListImpl implements MediaList {
     }
 
     @Override
-    public int hashCode() {
-        return listId;
+    public String toString() {
+        return "MediaListImpl{" +
+                "uuid='" + uuid + '\'' +
+                ", listId=" + listId +
+                ", name='" + name + '\'' +
+                ", medium=" + medium +
+                ", size=" + size +
+                '}';
     }
 }

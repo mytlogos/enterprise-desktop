@@ -1,19 +1,12 @@
 package com.mytlogos.enterprisedesktop.background.api;
 
 import com.mytlogos.enterprisedesktop.background.api.model.*;
+import com.mytlogos.enterprisedesktop.model.SearchResponse;
+import retrofit2.Call;
+import retrofit2.http.*;
 
 import java.util.List;
 import java.util.Map;
-
-import com.mytlogos.enterprisedesktop.model.SearchResponse;
-import retrofit2.Call;
-import retrofit2.http.Body;
-import retrofit2.http.GET;
-import retrofit2.http.POST;
-import retrofit2.http.PUT;
-import retrofit2.http.Path;
-import retrofit2.http.QueryMap;
-import retrofit2.http.Url;
 
 interface UserApi {
 
@@ -50,8 +43,11 @@ interface UserApi {
     @GET("{start}/toc")
     Call<List<ClientToc>> getToc(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
 
+    @DELETE("{start}/toc")
+    Call<Boolean> removeToc(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+
     @POST("{start}/toc")
-    Call<List<ClientToc>> addToc(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
+    Call<Boolean> addToc(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
 
     // TODO: 22.07.2019 add toc {uuid, toc: string, mediumId} ?
 }

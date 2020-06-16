@@ -51,6 +51,12 @@ class FailedEpisodeTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS `failed_episode` (`episodeId` INTEGER NOT NULL, `failCount` INTEGER NOT NULL, PRIMARY KEY(`episodeId`), FOREIGN KEY(`episodeId`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS `failed_episode` " +
+                "(" +
+                "`episodeId` INTEGER NOT NULL, " +
+                "`failCount` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`episodeId`), " +
+                "FOREIGN KEY(`episodeId`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 }

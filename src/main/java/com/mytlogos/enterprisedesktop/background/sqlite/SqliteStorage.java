@@ -35,6 +35,7 @@ public class SqliteStorage implements DatabaseStorage {
     final ToDownloadTable toDownloadTable;
 
     public SqliteStorage() {
+        ConnectionManager.getManager().enableForeignKeys();
         this.userTable = this.initTable(new UserTable());
         this.editEventTable = this.initTable(new EditEventTable());
         this.episodeTable = this.initTable(new EpisodeTable());
@@ -544,21 +545,42 @@ public class SqliteStorage implements DatabaseStorage {
         List<Integer> loadRelease = new LinkedList<>();
         List<Integer> loadMediumTocs = new LinkedList<>();
 
-        for (PartStat roomStat : roomStats) {
-            ClientStat.Partstat partstat = partStats.get(roomStat.partId);
+        Map<Integer, PartStat> localStatMap = new HashMap<>();
+        for (PartStat localStat : roomStats) {
+            localStatMap.put(localStat.partId, localStat);
+            ClientStat.Partstat partstat = partStats.remove(localStat.partId);
 
             if (partstat == null) {
                 throw new IllegalStateException(String.format(
                         "Local Part %s does not exist on Server, missing local Part Deletion",
-                        roomStat.partId
+                        localStat.partId
                 ));
             }
 
-            if (partstat.episodeCount != roomStat.episodeCount
-                    || partstat.episodeSum != roomStat.episodeSum) {
-                loadEpisode.add(roomStat.partId);
-            } else if (partstat.releaseCount != roomStat.releaseCount) {
-                loadRelease.add(roomStat.partId);
+            if (partstat.episodeCount != localStat.episodeCount
+                    || partstat.episodeSum != localStat.episodeSum) {
+                loadEpisode.add(localStat.partId);
+            } else if (partstat.releaseCount != localStat.releaseCount) {
+                loadRelease.add(localStat.partId);
+            }
+        }
+        Set<Integer> loadPart = new HashSet<>();
+
+        for (Map.Entry<Integer, ClientStat.Partstat> clientStatEntry : partStats.entrySet()) {
+            final Integer partId = clientStatEntry.getKey();
+            ClientStat.Partstat remotePartStat = clientStatEntry.getValue();
+            final PartStat localPartStat = localStatMap.get(partId);
+
+            if (localPartStat == null) {
+                loadPart.add(partId);
+                continue;
+            }
+
+            if (remotePartStat.episodeCount != localPartStat.episodeCount
+                    || remotePartStat.episodeSum != localPartStat.episodeSum) {
+                loadEpisode.add(localPartStat.partId);
+            } else if (remotePartStat.releaseCount != localPartStat.releaseCount) {
+                loadRelease.add(localPartStat.partId);
             }
         }
         final Map<Integer, Integer> tocStats = this.tocTable.getStat();
@@ -572,7 +594,11 @@ public class SqliteStorage implements DatabaseStorage {
                 loadMediumTocs.add(mediumId);
             }
         }
-        return new ReloadStat(loadEpisode, loadRelease, loadMediumTocs);
+        final Set<Integer> loadedMedia = this.mediumTable.getLoadedInt();
+        Set<Integer> missingMedia = new HashSet<>(parsedStat.media.keySet());
+        missingMedia.removeAll(loadedMedia);
+        loadMediumTocs.addAll(missingMedia);
+        return new ReloadStat(loadEpisode, loadRelease, loadMediumTocs, missingMedia, loadPart);
     }
 
     @Override
@@ -637,6 +663,41 @@ public class SqliteStorage implements DatabaseStorage {
     @Override
     public LiveData<List<Integer>> getListItems(Collection<Integer> listIds) {
         return this.mediaListTable.getMediumItemsIds(listIds);
+    }
+
+    @Override
+    public LiveData<List<String>> getToc(int mediumId) {
+        return this.tocTable.getTocs(mediumId);
+    }
+
+    @Override
+    public LiveData<List<MediaList>> getParentLists(int mediumId) {
+        final LiveData<List<ExternalMediaList>> externalMediaLists = this.externalMediaListTable.getParentLists(mediumId);
+        final LiveData<List<MediaList>> mediaLists = this.mediaListTable.getParentLists(mediumId);
+
+        return mediaLists.map(externalMediaLists, (mediaLists1, externalMediaLists1) -> {
+            if (mediaLists1 == null || externalMediaLists1 == null) {
+                return null;
+            }
+            List<MediaList> lists = new ArrayList<>(mediaLists1);
+            lists.addAll(externalMediaLists1);
+            return lists;
+        });
+    }
+
+    @Override
+    public void removeToc(int mediumId, String link) {
+        this.tocTable.delete(new SimpleToc(mediumId, link));
+    }
+
+    @Override
+    public void removeMedium(int mediumId) {
+        this.mediumTable.delete(mediumId);
+//        this.tocTable.delete(mediumId);
+//        this.releaseTable.removeMediumReleases(mediumId);
+//        this.episodeTable.removeMediumEpisodes(mediumId);
+//        this.partTable.removeMediumPart(mediumId);
+//        this.toDownloadTable.removeToDownload(mediumId);
     }
 
     private class SqlitePersister implements ClientModelPersister {
@@ -919,7 +980,12 @@ public class SqliteStorage implements DatabaseStorage {
              * Remove any ExList which is not a key in stat.exLists
              * Remove any List which is not a key in stat.Lists
              * Remove any ExUser which is not a key in stat.exUser
+             * Remove any Media which is not in stat.media.keySet()
              */
+            final Set<Integer> removedMediaIds = new HashSet<>(this.loadedData.getMedia());
+            removedMediaIds.removeAll(stat.media.keySet());
+            SqliteStorage.this.mediumTable.delete(removedMediaIds);
+
             List<ListUser> listUser = SqliteStorage.this.externalMediaListTable.getListUser();
 
             Set<Integer> deletedExLists = new HashSet<>();

@@ -50,7 +50,14 @@ class NewsTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS news (`title` TEXT, `timeStamp` TEXT, `newsId` INTEGER NOT NULL, `read` INTEGER NOT NULL, `link` TEXT, PRIMARY KEY(`newsId`))";
+        return "CREATE TABLE IF NOT EXISTS news " +
+                "(" +
+                "`title` TEXT, " +
+                "`timeStamp` TEXT, " +
+                "`newsId` INTEGER NOT NULL, " +
+                "`read` INTEGER NOT NULL, " +
+                "`link` TEXT, PRIMARY KEY(`newsId`)" +
+                ")";
     }
 
     @Override

@@ -38,6 +38,15 @@ interface MediumApi {
     @POST("{start}/create")
     Call<ClientMedium> createFromMediumInWait(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
 
+    @POST("{start}/merge")
+    Call<Boolean> mergeMedia(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
+
+    @POST("{start}/split")
+    Call<Boolean> splitMedium(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
+
+    @POST("{start}/transfer")
+    Call<Boolean> transferToc(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
+
     @POST
     Call<ClientMedium> addMedia(@Url String url, @Body Map<String, Object> body);
 

@@ -36,6 +36,15 @@ class EditEventTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS `edit_event` (`id` INTEGER NOT NULL, `objectType` INTEGER NOT NULL, `eventType` INTEGER NOT NULL, `dateTime` TEXT NOT NULL, `firstValue` TEXT, `secondValue` TEXT, PRIMARY KEY(`id`, `objectType`, `eventType`, `dateTime`))";
+        return "CREATE TABLE IF NOT EXISTS `edit_event` " +
+                "(" +
+                "`id` INTEGER NOT NULL, " +
+                "`objectType` INTEGER NOT NULL, " +
+                "`eventType` INTEGER NOT NULL, " +
+                "`dateTime` TEXT NOT NULL, " +
+                "`firstValue` TEXT, " +
+                "`secondValue` TEXT, " +
+                "PRIMARY KEY(`id`, `objectType`, `eventType`, `dateTime`)" +
+                ")";
     }
 }

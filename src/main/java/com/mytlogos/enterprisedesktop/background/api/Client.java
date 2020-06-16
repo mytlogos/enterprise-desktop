@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.model.SearchRequest;
 import com.mytlogos.enterprisedesktop.model.SearchResponse;
+import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -249,6 +250,20 @@ public class Client {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("part", partIds);
         return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPartReleases(url, body));
+    }
+
+    public Response<Boolean> removeToc(int mediumId, String link) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("mediumId", mediumId);
+        body.put("link", link);
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.removeToc(url, body));
+    }
+
+    public Response<Boolean> addToc(int mediumId, String link) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("mediumId", mediumId);
+        body.put("toc", link);
+        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.addToc(url, body));
     }
 
     public Response<List<ClientToc>> getMediumTocs(Collection<Integer> mediumIds) throws IOException {
@@ -507,6 +522,29 @@ public class Client {
         body.put("mediumId", mediumId);
         body.put("tocsMedia", others);
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.consumeMediumInWait(url, body));
+    }
+
+    public Response<Boolean> splitMedium(int sourceId, SimpleMedium destination, String toc) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("sourceId", sourceId);
+        body.put("destinationMedium", destination);
+        body.put("toc", toc);
+        return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.transferToc(url, body));
+    }
+
+    public Response<Boolean> mergeMedia(int sourceId, int destinationId) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("sourceId", sourceId);
+        body.put("destinationId", destinationId);
+        return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.mergeMedia(url, body));
+    }
+
+    public Response<Boolean> transferToc(int sourceId, int destinationId, String toc) throws IOException {
+        Map<String, Object> body = this.userAuthenticationMap();
+        body.put("sourceId", sourceId);
+        body.put("destinationId", destinationId);
+        body.put("toc", toc);
+        return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.transferToc(url, body));
     }
 
     public Response<ClientMedium> addMedia(ClientMedium clientMedium) throws IOException {

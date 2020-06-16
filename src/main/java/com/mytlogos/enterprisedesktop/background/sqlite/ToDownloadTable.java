@@ -29,6 +29,11 @@ class ToDownloadTable extends AbstractTable {
         final int externalListId = value.getInt(4);
         return new ToDownload(prohibited, mediumId, listId, externalListId);
     });
+    private final QueryBuilder<Integer> removeToDownloadQuery = new QueryBuilder<Integer>(
+            "Delete MediumToDownload",
+            "DELETE FROM todownload " +
+                    "WHERE mediumId = ? "
+    ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));
 
     ToDownloadTable() {
         super("todownload");
@@ -36,6 +41,10 @@ class ToDownloadTable extends AbstractTable {
 
     public List<ToDownload> getItems() {
         return this.getItemsQuery.queryListIgnoreError();
+    }
+
+    public void removeToDownload(int mediumId) {
+        this.executeDMLQuery(mediumId, this.removeToDownloadQuery);
     }
 
     void insert(ToDownload toDownload) {
@@ -46,9 +55,16 @@ class ToDownloadTable extends AbstractTable {
         this.executeDMLQuery(toDownloads, this.insertToDownloadQuery);
     }
 
-
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS todownload (`toDownloadId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `prohibited` INTEGER NOT NULL, `mediumId` INTEGER, `listId` INTEGER, `externalListId` INTEGER, FOREIGN KEY(`mediumId`) REFERENCES `medium`(`mediumId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`listId`) REFERENCES `media_list`(`listId`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`externalListId`) REFERENCES `external_media_list`(`externalListId`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS todownload " +
+                "(`toDownloadId` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "`prohibited` INTEGER NOT NULL, " +
+                "`mediumId` INTEGER, " +
+                "`listId` INTEGER, " +
+                "`externalListId` INTEGER, " +
+                "FOREIGN KEY(`mediumId`) REFERENCES `medium`(`mediumId`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                "FOREIGN KEY(`listId`) REFERENCES `media_list`(`listId`) ON UPDATE NO ACTION ON DELETE CASCADE , " +
+                "FOREIGN KEY(`externalListId`) REFERENCES `external_media_list`(`externalListId`) ON UPDATE NO ACTION ON DELETE CASCADE )";
     }
 }

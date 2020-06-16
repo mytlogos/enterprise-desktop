@@ -260,4 +260,14 @@ public interface Repository {
     Client getClient(Task<?> worker);
 
     ClientModelPersister getPersister(Task<?> worker);
+
+    LiveData<List<String>> getToc(int mediumId);
+
+    LiveData<List<MediaList>> getParentLists(int mediumId);
+
+    boolean removeToc(int mediumId, String link);
+
+    boolean addToc(int mediumId, String link);
+
+    CompletableFuture<Boolean> mergeMedia(int sourceId, int destinationId);
 }

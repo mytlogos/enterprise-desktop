@@ -956,6 +956,64 @@ class RepositoryImpl implements Repository {
         return this.persister;
     }
 
+    @Override
+    public LiveData<List<String>> getToc(int mediumId) {
+        return this.storage.getToc(mediumId);
+    }
+
+    @Override
+    public LiveData<List<MediaList>> getParentLists(int mediumId) {
+        return this.storage.getParentLists(mediumId);
+    }
+
+    @Override
+    public boolean removeToc(int mediumId, String link) {
+        try {
+            final Response<Boolean> response = this.client.removeToc(mediumId, link);
+            final Boolean body = Utils.checkAndGetBody(response);
+
+            if (body) {
+                this.storage.removeToc(mediumId, link);
+                return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean addToc(int mediumId, String link) {
+        try {
+            final Response<Boolean> response = this.client.removeToc(mediumId, link);
+            final Boolean body = Utils.checkAndGetBody(response);
+
+            if (body) {
+                this.persister.persistTocs(Collections.singleton(new SimpleToc(mediumId, link)));
+                return true;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public CompletableFuture<Boolean> mergeMedia(int sourceId, int destinationId) {
+        return TaskManager.runCompletableTask(() -> {
+            try {
+                final Boolean success = Utils.checkAndGetBody(this.client.mergeMedia(sourceId, destinationId));
+                if (success) {
+                    this.storage.removeMedium(sourceId);
+                }
+                return success;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return false;
+        });
+    }
+
     private void reloadEpisodes(Collection<Integer> episodeIds) throws Exception {
         Utils.doPartitionedEx(episodeIds, integers -> {
             List<ClientEpisode> episodes = this.client.getEpisodes(integers).body();

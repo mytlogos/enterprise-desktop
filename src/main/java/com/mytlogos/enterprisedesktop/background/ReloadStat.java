@@ -7,11 +7,15 @@ public class ReloadStat {
     public final Collection<Integer> loadPartEpisodes;
     public final Collection<Integer> loadPartReleases;
     public final Collection<Integer> loadMediumTocs;
+    public final Collection<Integer> loadMedium;
+    public final Collection<Integer> loadPart;
 
-    public ReloadStat(Collection<Integer> loadPartEpisodes, Collection<Integer> loadPartReleases, Collection<Integer> loadMediumTocs) {
+    public ReloadStat(Collection<Integer> loadPartEpisodes, Collection<Integer> loadPartReleases, Collection<Integer> loadMediumTocs, Collection<Integer> loadMedium, Collection<Integer> loadPart) {
         this.loadPartEpisodes = loadPartEpisodes;
         this.loadPartReleases = loadPartReleases;
         this.loadMediumTocs = loadMediumTocs;
+        this.loadMedium = loadMedium;
+        this.loadPart = loadPart;
     }
 
     @Override

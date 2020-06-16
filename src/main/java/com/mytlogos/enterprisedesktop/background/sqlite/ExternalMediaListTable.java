@@ -46,6 +46,28 @@ class ExternalMediaListTable extends AbstractTable {
         return new ExternalMediaListImpl(uuid, listId, name, medium, url, count);
     });
 
+    private final QueryBuilder<ExternalMediaList> getParentListsQuery = new QueryBuilder<ExternalMediaList>(
+            "Select ParentExternalList",
+            "SELECT external_media_list.*, " +
+                    "(SELECT COUNT(listId) FROM external_list_medium WHERE external_list_medium.listId=external_media_list.externalListId) " +
+                    "as count " +
+                    "FROM external_media_list " +
+                    "WHERE external_media_list.externalListId IN " +
+                    "(" +
+                    "SELECT listId FROM external_list_medium WHERE mediumId = ?" +
+                    ");"
+    ).setDependencies(
+            ExternalMediaListTable.class, ExternalListMediumJoinTable.class
+    ).setConverter(value -> {
+        final int listId = value.getInt("externalListId");
+        final String uuid = value.getString("uuid");
+        final String name = value.getString("name");
+        final int medium = value.getInt("medium");
+        final String url = value.getString("url");
+        final int count = value.getInt("count");
+        return new ExternalMediaListImpl(uuid, listId, name, medium, url, count);
+    });
+
     private final QueryBuilder<MediumItem> getMediumItems = new QueryBuilder<MediumItem>(
             "Select ExternalMediumItem",
             "SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, " +
@@ -160,6 +182,10 @@ class ExternalMediaListTable extends AbstractTable {
         return this.getSimpleMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
 
+    public LiveData<List<ExternalMediaList>> getParentLists(int mediumId) {
+        return this.getParentListsQuery.setValues(value -> value.setInt(1, mediumId)).queryLiveDataList();
+    }
+
     LiveData<List<MediumItem>> getMediumItems(int listId) {
         return this.getMediumItems.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
@@ -174,7 +200,16 @@ class ExternalMediaListTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS external_media_list (`uuid` TEXT, `externalListId` INTEGER NOT NULL, `name` TEXT, `medium` INTEGER NOT NULL, `url` TEXT, PRIMARY KEY(`externalListId`), FOREIGN KEY(`uuid`) REFERENCES `externalUser`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS external_media_list " +
+                "(" +
+                "`uuid` TEXT, " +
+                "`externalListId` INTEGER NOT NULL, " +
+                "`name` TEXT, " +
+                "`medium` INTEGER NOT NULL, " +
+                "`url` TEXT, " +
+                "PRIMARY KEY(`externalListId`), " +
+                "FOREIGN KEY(`uuid`) REFERENCES `external_user`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 
     @Override

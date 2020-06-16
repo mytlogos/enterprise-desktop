@@ -24,6 +24,11 @@ class PartTable extends AbstractTable {
         statement.setInt(5, part.getPartialIndex());
         statement.setDouble(6, part.getCombiIndex());
     });
+    private final QueryBuilder<Integer> removeMediumPartQuery = new QueryBuilder<Integer>(
+            "Delete MediumPart",
+            "DELETE FROM part " +
+                    "WHERE part.mediumId = ?"
+    ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));;
 
     PartTable() {
         super("part");
@@ -41,6 +46,10 @@ class PartTable extends AbstractTable {
         this.update(update, "part", attrMap, keyExtractors);
     }
 
+    public void removeMediumPart(int mediumId) {
+        this.executeDMLQuery(mediumId, this.removeMediumPartQuery);
+    }
+
 
     void insert(Part part) {
         this.executeDMLQuery(part, this.insertPartQuery);
@@ -52,7 +61,17 @@ class PartTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS part (`partId` INTEGER NOT NULL, `mediumId` INTEGER NOT NULL, `title` TEXT, `totalIndex` INTEGER NOT NULL, `partialIndex` INTEGER NOT NULL, `combiIndex` REAL NOT NULL, PRIMARY KEY(`partId`), FOREIGN KEY(`mediumId`) REFERENCES `medium`(`mediumId`) ON UPDATE NO ACTION ON DELETE SET NULL )";
+        return "CREATE TABLE IF NOT EXISTS part " +
+                "(" +
+                "`partId` INTEGER NOT NULL, " +
+                "`mediumId` INTEGER NOT NULL, " +
+                "`title` TEXT, " +
+                "`totalIndex` INTEGER NOT NULL, " +
+                "`partialIndex` INTEGER NOT NULL, " +
+                "`combiIndex` REAL NOT NULL, " +
+                "PRIMARY KEY(`partId`), " +
+                "FOREIGN KEY(`mediumId`) REFERENCES `medium`(`mediumId`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 
     @Override

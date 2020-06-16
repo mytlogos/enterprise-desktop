@@ -66,6 +66,15 @@ class ReleaseTable extends AbstractTable {
 
         return new DisplayRelease(episodeId, title, combiIndex, dbSaved, dbRead, releaseDate, locked, mediumId);
     });
+    private final QueryBuilder<Integer> deleteMediumReleases = new QueryBuilder<Integer>(
+            "Delete MediumRelease",
+            "DELETE FROM episode_release " +
+                    "WHERE episodeId IN " +
+                    "(" +
+                    "SELECT episodeId FROM episode INNER JOIN part ON part.partId = episode.partId " +
+                    "WHERE part.mediumId = ?" +
+                    ")"
+    ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));
 
     ReleaseTable() {
         super("episode_release");
@@ -87,6 +96,10 @@ class ReleaseTable extends AbstractTable {
                 .setValues(value -> value.setInt(1, episodeId))
                 .setConverter(value -> value.getString(1))
                 .queryListIgnoreError();
+    }
+
+    public void removeMediumReleases(int mediumId) {
+        this.executeDMLQuery(mediumId, this.deleteMediumReleases);
     }
 
     LiveData<PagedList<DisplayRelease>> getReleases(DisplayEpisodeProfile filter) {
@@ -121,6 +134,15 @@ class ReleaseTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS episode_release (`episodeId` INTEGER NOT NULL, `title` TEXT NOT NULL, `url` TEXT NOT NULL, `releaseDate` TEXT NOT NULL, `locked` INTEGER NOT NULL, PRIMARY KEY(`episodeId`, `url`), FOREIGN KEY(`episodeId`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS episode_release " +
+                "(" +
+                "`episodeId` INTEGER NOT NULL, " +
+                "`title` TEXT NOT NULL, " +
+                "`url` TEXT NOT NULL, " +
+                "`releaseDate` TEXT NOT NULL, " +
+                "`locked` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`episodeId`, `url`), " +
+                "FOREIGN KEY(`episodeId`) REFERENCES `episode`(`episodeId`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 }

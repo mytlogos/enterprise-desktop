@@ -53,7 +53,15 @@ class ExternalUserTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS external_user (`uuid` TEXT NOT NULL, `userUuid` TEXT NOT NULL, `identifier` TEXT NOT NULL, `type` INTEGER NOT NULL, PRIMARY KEY(`uuid`), FOREIGN KEY(`userUuid`) REFERENCES `user`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS external_user " +
+                "(" +
+                "`uuid` TEXT NOT NULL, " +
+                "`userUuid` TEXT NOT NULL, " +
+                "`identifier` TEXT NOT NULL, " +
+                "`type` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`uuid`), " +
+                "FOREIGN KEY(`userUuid`) REFERENCES `user`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 
     @Override

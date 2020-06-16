@@ -193,6 +193,22 @@ public class SynchronizeTask extends Task<Void> {
 
         ReloadStat reloadStat = repository.checkReload(parsedStat);
 
+        if (!reloadStat.loadMedium.isEmpty()) {
+            final List<ClientMedium> media = Utils.checkAndGetBody(client.getMedia(reloadStat.loadMedium));
+            persister.persistMedia(media);
+
+            reloadStat = repository.checkReload(parsedStat);
+        }
+
+        if (!reloadStat.loadPart.isEmpty()) {
+            Utils.doPartitionedRethrow(reloadStat.loadPart, partIds -> {
+                final List<ClientPart> parts = Utils.checkAndGetBody(client.getParts(partIds));
+                persister.persistParts(parts);
+                return false;
+            });
+            reloadStat = repository.checkReload(parsedStat);
+        }
+
         if (!reloadStat.loadPartEpisodes.isEmpty()) {
             Map<String, List<Integer>> partStringEpisodes = Utils.checkAndGetBody(client.getPartEpisodes(reloadStat.loadPartEpisodes));
 

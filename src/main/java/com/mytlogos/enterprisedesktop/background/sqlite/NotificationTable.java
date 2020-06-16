@@ -31,6 +31,12 @@ class NotificationTable extends AbstractTable {
     }
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS `notification` (`title` TEXT NOT NULL, `description` TEXT NOT NULL, `dateTime` TEXT NOT NULL, PRIMARY KEY(`title`, `dateTime`))";
+        return "CREATE TABLE IF NOT EXISTS `notification` " +
+                "(" +
+                "`title` TEXT NOT NULL, " +
+                "`description` TEXT NOT NULL, " +
+                "`dateTime` TEXT NOT NULL, " +
+                "PRIMARY KEY(`title`, `dateTime`)" +
+                ")";
     }
 }

@@ -217,4 +217,12 @@ public interface DatabaseStorage {
     LiveData<List<SimpleMedium>> getSimpleMedium();
 
     LiveData<List<Integer>> getListItems(Collection<Integer> listIds);
+
+    LiveData<List<String>> getToc(int mediumId);
+
+    LiveData<List<MediaList>> getParentLists(int mediumId);
+
+    void removeToc(int mediumId, String link);
+
+    void removeMedium(int sourceId);
 }

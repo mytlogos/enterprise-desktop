@@ -38,6 +38,25 @@ class MediaListTable extends AbstractTable {
         return new MediaListImpl(uuid, listId, name, medium, count);
     });
 
+    private final QueryBuilder<MediaList> getParentListsQuery = new QueryBuilder<MediaList>(
+            "Select ParentList",
+            "SELECT media_list.*, (SELECT COUNT(listId) FROM list_medium WHERE list_medium.listId=media_list.listId) as count " +
+                    "FROM media_list " +
+                    "WHERE media_list.listId IN " +
+                    "(" +
+                    "SELECT listId FROM list_medium WHERE mediumId = ?" +
+                    ");"
+    )
+            .setDependencies(MediaListTable.class, ListMediumJoinTable.class)
+            .setConverter(value -> {
+                final int listId = value.getInt("listId");
+                final String uuid = value.getString("uuid");
+                final String name = value.getString("name");
+                final int medium = value.getInt("medium");
+                final int count = value.getInt("count");
+                return new MediaListImpl(uuid, listId, name, medium, count);
+            });
+
     private final QueryBuilder<Integer> getMediumItemsIdsQuery = new QueryBuilder<Integer>(
             "Select ListItems",
             "SELECT medium.mediumId FROM medium INNER JOIN list_medium " +
@@ -167,6 +186,10 @@ class MediaListTable extends AbstractTable {
         return this.getSimpleMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
 
+    public LiveData<List<MediaList>> getParentLists(int mediumId) {
+        return this.getParentListsQuery.setValues(value -> value.setInt(1, mediumId)).queryLiveDataList();
+    }
+
     LiveData<List<MediumItem>> getMediumItems(int listId) {
         return this.getMediumItemsQuery.setValues(value -> value.setInt(1, listId)).queryLiveDataList();
     }
@@ -181,7 +204,15 @@ class MediaListTable extends AbstractTable {
 
     @Override
     String createTableSql() {
-        return "CREATE TABLE IF NOT EXISTS media_list (`listId` INTEGER NOT NULL, `uuid` TEXT, `name` TEXT, `medium` INTEGER NOT NULL, PRIMARY KEY(`listId`), FOREIGN KEY(`uuid`) REFERENCES `user`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE )";
+        return "CREATE TABLE IF NOT EXISTS media_list " +
+                "(" +
+                "`listId` INTEGER NOT NULL, " +
+                "`uuid` TEXT, " +
+                "`name` TEXT, " +
+                "`medium` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`listId`), " +
+                "FOREIGN KEY(`uuid`) REFERENCES `user`(`uuid`) ON UPDATE NO ACTION ON DELETE CASCADE " +
+                ")";
     }
 
     @Override

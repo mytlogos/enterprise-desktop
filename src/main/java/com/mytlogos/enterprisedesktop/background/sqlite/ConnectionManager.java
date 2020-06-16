@@ -22,6 +22,14 @@ class ConnectionManager {
         return manager;
     }
 
+    void enableForeignKeys() {
+        try {
+            this.getConnection().createStatement().execute("PRAGMA foreign_keys = ON");
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     ConnectionImpl getConnection() throws SQLException {
         return new ConnectionImpl(this.dataSource.getConnection());
     }
