@@ -19,6 +19,7 @@ import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.model.ToDownload;
 import com.mytlogos.enterprisedesktop.tools.ContentTool;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
+import javafx.concurrent.Task;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -28,51 +29,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class CheckSavedWorker {
+class CheckSavedWorker extends Task<Void> {
     private int correctedSaveState = 0;
     private int clearedLooseEpisodes = 0;
     private int checkedCount;
     private int mediaToCheck;
 
-    public void doWork() {
+    @Override
+    protected Void call() {
+        this.updateTitle("Check Saved");
         Set<ContentTool> tools = FileTools.getSupportedContentTools();
         Repository repository = ApplicationConfig.getRepository();
 
-        Map<Integer, Set<Integer>> mediumSavedEpisodes = new HashMap<>();
+        this.updateMessage("Checking for saved Episodes");
+        Set<Integer> savedEpisodes = new HashSet<>();
 
         for (ContentTool tool : tools) {
-            this.putItemContainer(tool, mediumSavedEpisodes, repository);
-            this.putItemContainer(tool, mediumSavedEpisodes, repository);
+            savedEpisodes.addAll(this.putItemContainer(tool));
         }
+        final List<Integer> previouslySavedEpisodes = repository.getSavedEpisodes();
+        Set<Integer> unsavedEpisodes = new HashSet<>(previouslySavedEpisodes);
+        // get all the unsaved episodes
+        unsavedEpisodes.removeAll(savedEpisodes);
+        // get the newly saved episodes, not visible from database
+        savedEpisodes.removeAll(previouslySavedEpisodes);
 
-        Map<Integer, Map<Integer, Set<Integer>>> typeMediumSavedEpisodes = new HashMap<>();
-
-        for (Map.Entry<Integer, Set<Integer>> entry : mediumSavedEpisodes.entrySet()) {
-            int mediumType = repository.getMediumType(entry.getKey());
-            typeMediumSavedEpisodes
-                    .computeIfAbsent(mediumType, integer -> new HashMap<>())
-                    .put(entry.getKey(), entry.getValue());
-        }
-        this.mediaToCheck = 0;
-
-        for (Map<Integer, Set<Integer>> map : typeMediumSavedEpisodes.values()) {
-            this.mediaToCheck += map.size();
-        }
-
-        this.checkedCount = 0;
-        this.updateNotificationContentText();
-
-        for (Map.Entry<Integer, Map<Integer, Set<Integer>>> entry : typeMediumSavedEpisodes.entrySet()) {
-            Integer mediumType = entry.getKey();
-            ContentTool tool = FileTools.getContentTool(mediumType);
-            checkLocalContentFiles(tool, repository, entry.getValue());
-        }
-
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        this.updateMessage("Persisting");
+        repository.updateSaved(unsavedEpisodes, false);
+        repository.updateSaved(savedEpisodes, true);
+        this.updateMessage("Finished");
+        return null;
     }
 
     private void checkLocalContentFiles(ContentTool tool, Repository repository, Map<Integer, Set<Integer>> mediumSavedEpisodes) {
@@ -106,7 +92,18 @@ public class CheckSavedWorker {
     private void updateNotificationContentText() {
     }
 
-    private void putItemContainer(ContentTool bookTool, Map<Integer, Set<Integer>> mediumSavedEpisodes, Repository repository) {
+    private Set<Integer> putItemContainer(ContentTool bookTool) {
+        final List<String> mediaPaths = bookTool.getMediaPaths();
+        Set<Integer> savedEpisodes = new HashSet<>();
+
+        for (String mediaPath : mediaPaths) {
+            final Map<Integer, String> episodePaths = bookTool.getEpisodePaths(mediaPath);
+            savedEpisodes.addAll(episodePaths.keySet());
+        }
+        return savedEpisodes;
+    }
+
+    private void putItemContainerOld(ContentTool bookTool, Map<Integer, Set<Integer>> mediumSavedEpisodes, Repository repository) {
         for (Map.Entry<Integer, File> entry : bookTool.getItemContainers().entrySet()) {
             Map<Integer, String> episodePaths = bookTool.getEpisodePaths(entry.getValue().getAbsolutePath());
             Set<Integer> episodeIds = new HashSet<>(episodePaths.keySet());

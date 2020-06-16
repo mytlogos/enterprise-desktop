@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.background.TaskManager;
 import com.mytlogos.enterprisedesktop.worker.AutoDownloadService;
+import com.mytlogos.enterprisedesktop.worker.CheckSavedService;
 import com.mytlogos.enterprisedesktop.worker.SingleDownloadService;
 import com.mytlogos.enterprisedesktop.worker.SynchronizeService;
 import javafx.application.Platform;
@@ -21,11 +22,15 @@ public class TaskController {
     private static final Timer DELAY_TIMER = new Timer("Tasks Remove Delay Timer", true);
     private final SynchronizeService synchronizeService;
     private final AutoDownloadService autoDownloadService;
+    private final CheckSavedService checkSavedService;
     private TasksHelper helper;
 
     public TaskController() {
         this.synchronizeService = new SynchronizeService();
         this.synchronizeService.setOnFailed(event -> event.getSource().getException().printStackTrace());
+
+        this.checkSavedService = new CheckSavedService();
+        this.checkSavedService.setOnFailed(event -> event.getSource().getException().printStackTrace());
 
         this.autoDownloadService = new AutoDownloadService();
         this.autoDownloadService.setOnFailed(event -> event.getSource().getException().printStackTrace());
@@ -70,6 +75,7 @@ public class TaskController {
         this.helper = helper;
         this.helper.addService(this.synchronizeService);
         this.helper.addService(this.autoDownloadService);
+        this.helper.addService(this.checkSavedService);
     }
 
     private static class Message {
