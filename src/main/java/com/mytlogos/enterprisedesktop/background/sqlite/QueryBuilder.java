@@ -39,51 +39,65 @@ class QueryBuilder<R> {
         this.isRead = query.substring(0, query.indexOf(" ")).trim().equalsIgnoreCase("select");
     }
 
+    private QueryBuilder(QueryBuilder<R> builder) {
+        this.name = builder.name;
+        this.query = builder.query;
+        this.tables.addAll(builder.tables);
+        this.isRead = builder.isRead;
+        this.singleQuerySetter = builder.singleQuerySetter;
+        this.values = builder.values == null ? null : new ArrayList<>(builder.values);
+        this.multiQuerySetter = builder.multiQuerySetter;
+        this.converter = builder.converter;
+        this.type = builder.type;
+        this.queryInValues = builder.queryInValues == null ? null : new ArrayList<>(builder.queryInValues);
+        this.doEmpty = builder.doEmpty;
+    }
+
     <T> QueryBuilder<R> setValue(Collection<T> value, SqlBiConsumer<PreparedStatement, T> multiQuerySetter) {
         //noinspection unchecked
         this.values = (Collection<Object>) value;
         //noinspection unchecked
         this.multiQuerySetter = (SqlBiConsumer<PreparedStatement, Object>) multiQuerySetter;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> doEmpty() {
         this.doEmpty = true;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> setValue(Collection<? extends R> value) {
         //noinspection unchecked
         this.values = (Collection<Object>) value;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> setValues(SqlConsumer<PreparedStatement> singleQuerySetter) {
         this.singleQuerySetter = singleQuerySetter;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> setValueSetter(SqlBiConsumer<PreparedStatement, R> querySetter) {
         //noinspection unchecked
         this.multiQuerySetter = (SqlBiConsumer<PreparedStatement, Object>) querySetter;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> setConverter(SqlFunction<ResultSet, R> converter) {
         this.converter = converter;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> setDependencies(Class<?>... tables) {
         //noinspection unchecked
         Collections.addAll(this.tables, ((Class<? extends AbstractTable>[]) tables));
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     QueryBuilder<R> setQueryIn(Collection<?> objects, Type type) {
         this.queryInValues = new ArrayList<>(objects);
         this.type = type;
-        return this;
+        return new QueryBuilder<>(this);
     }
 
     List<R> queryListIgnoreError() {
