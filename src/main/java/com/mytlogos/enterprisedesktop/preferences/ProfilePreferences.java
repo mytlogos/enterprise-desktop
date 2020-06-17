@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.preferences;
 
 import com.mytlogos.enterprisedesktop.profile.AbstractProfile;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
+import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfileBuilder;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ObjectPropertyBase;
 
@@ -16,7 +17,7 @@ public class ProfilePreferences {
 
     public ProfilePreferences(Preferences preferences) {
         this.preferences = preferences;
-        this.displayEpisodeProfile = new PreferenceProperty<>("displayEpisodeProfile", new DisplayEpisodeProfile());
+        this.displayEpisodeProfile = new PreferenceProperty<>("displayEpisodeProfile", new DisplayEpisodeProfileBuilder().create());
     }
 
     public DisplayEpisodeProfile getDisplayEpisodeProfile() {

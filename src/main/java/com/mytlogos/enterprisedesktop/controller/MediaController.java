@@ -462,7 +462,15 @@ public class MediaController implements Attachable {
 
     private static class MediumCell extends ListCell<MediumItem> {
         MediumCell() {
+            this.setOnMouseClicked(event -> {
+                if (ControllerUtils.isDoubleClick(event)) {
+                    final MediumItem item = this.getItem();
 
+                    if (item != null) {
+                        ControllerUtils.openMedium(item.getMediumId());
+                    }
+                }
+            });
         }
 
         @Override

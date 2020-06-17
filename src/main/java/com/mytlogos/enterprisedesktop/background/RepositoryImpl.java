@@ -1014,6 +1014,11 @@ class RepositoryImpl implements Repository {
         });
     }
 
+    @Override
+    public List<Toc> getAllTocs() {
+        return this.storage.getAllTocs();
+    }
+
     private void reloadEpisodes(Collection<Integer> episodeIds) throws Exception {
         Utils.doPartitionedEx(episodeIds, integers -> {
             List<ClientEpisode> episodes = this.client.getEpisodes(integers).body();

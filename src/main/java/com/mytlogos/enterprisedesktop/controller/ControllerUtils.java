@@ -16,6 +16,7 @@ import javafx.beans.property.Property;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -29,6 +30,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -122,6 +124,18 @@ public class ControllerUtils {
 
     public static <T> T load(String fxmlFile) {
         return load(fxmlFile, null);
+    }
+
+    public static void openMedium(int mediumId) {
+        final MediumViewController load = ControllerUtils.load("/mediumView.fxml", node -> {
+            Stage stage = new Stage();
+            final StackPane root = new StackPane(node);
+            root.setPadding(new Insets(5));
+            stage.setScene(new Scene(root));
+            stage.toFront();
+            stage.show();
+        });
+        load.setMediumId(mediumId);
     }
 
     public static <Controller, Root extends Node> Controller load(String fxmlFile, Consumer<Root> consumer) {

@@ -34,7 +34,7 @@
             </Tab>
             <Tab fx:id="searchTab" text="Search New Media">
             </Tab>
-            <Tab text="Settings">
+            <Tab fx:id="analyzeTab" text="Analyze">
             </Tab>
         </TabPane>
     </center>

@@ -225,4 +225,6 @@ public interface DatabaseStorage {
     void removeToc(int mediumId, String link);
 
     void removeMedium(int sourceId);
+
+    List<Toc> getAllTocs();
 }

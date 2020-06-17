@@ -725,6 +725,11 @@ public class SqliteStorage implements DatabaseStorage {
 //        this.toDownloadTable.removeToDownload(mediumId);
     }
 
+    @Override
+    public List<Toc> getAllTocs() {
+        return this.tocTable.getTocs();
+    }
+
     private class SqlitePersister implements ClientModelPersister {
         private final LoadData loadedData;
         private final LoadWorkGenerator generator;
@@ -1152,7 +1157,7 @@ public class SqliteStorage implements DatabaseStorage {
             for (Toc entry : previousTocs) {
                 final List<String> currentTocLinks = mediaTocs.get(entry.getMediumId());
 
-                if (currentTocLinks == null || currentTocLinks.contains(entry.getLink())) {
+                if (currentTocLinks == null || !currentTocLinks.contains(entry.getLink())) {
                     removeTocs.add(entry);
                 }
             }

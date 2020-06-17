@@ -270,4 +270,6 @@ public interface Repository {
     boolean addToc(int mediumId, String link);
 
     CompletableFuture<Boolean> mergeMedia(int sourceId, int destinationId);
+
+    List<Toc> getAllTocs();
 }

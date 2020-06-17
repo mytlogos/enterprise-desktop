@@ -34,6 +34,13 @@ public class MediumTypes {
         }
     };
 
+    public void setEditable(boolean editable) {
+        this.textButton.setDisable(!editable);
+        this.imageButton.setDisable(!editable);
+        this.videoButton.setDisable(!editable);
+        this.audioButton.setDisable(!editable);
+    }
+
     public Integer getMedium() {
         return mediumProperty.get();
     }

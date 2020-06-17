@@ -49,6 +49,12 @@ public class TocTable extends AbstractTable {
     )
             .setDependencies(TocTable.class)
             .setConverter((statement) -> new SimpleToc(statement.getInt(1), statement.getString(2)));
+    private final QueryBuilder<Toc> getAllTocsQuery = new QueryBuilder<Toc>(
+            "Select Tocs",
+            "SELECT mediumId, link FROM medium_toc;"
+    )
+            .setDependencies(TocTable.class)
+            .setConverter((statement) -> new SimpleToc(statement.getInt(1), statement.getString(2)));
 
     TocTable() {
         super("medium_toc");
@@ -56,6 +62,10 @@ public class TocTable extends AbstractTable {
 
     public List<Toc> getTocs(Collection<Integer> mediumIds) {
         return this.getTocsQuery.setQueryIn(mediumIds, QueryBuilder.Type.INT).selectInListIgnoreError();
+    }
+
+    public List<Toc> getTocs() {
+        return this.getAllTocsQuery.queryListIgnoreError();
     }
 
     public LiveData<List<String>> getTocs(int mediumId) {

@@ -22,8 +22,11 @@ public class MainController {
     private final TaskController taskController = ApplicationConfig.getTaskController();
     private final MainPreferences mainPreferences = ApplicationConfig.getMainPreferences();
     private final Map<Tab, TabController> tabTabControllerMap = new WeakHashMap<>();
+    TasksHelper helper;
     @FXML
     private ProgressBar taskProgress;
+    @FXML
+    private Tab analyzeTab;
     @FXML
     private Tab mediaTab;
     @FXML
@@ -42,7 +45,6 @@ public class MainController {
     private TabPane tabPane;
     @FXML
     private Text infoText;
-    private TasksHelper helper;
 
     public void initialize() {
         this.initTabMaps();
@@ -61,6 +63,7 @@ public class MainController {
         this.tabTabControllerMap.put(this.mediumInWaitTab, new TabController("/mediumInWaitListView.fxml"));
         this.tabTabControllerMap.put(this.searchTab, new TabController("/searchMedium.fxml"));
         this.tabTabControllerMap.put(this.mediaTab, new TabController("/media.fxml"));
+        this.tabTabControllerMap.put(this.analyzeTab, new TabController("/analyze.fxml"));
     }
 
     private void detachTab(Tab oldValue) {
@@ -103,22 +106,6 @@ public class MainController {
         String getDisplayValue();
     }
 
-    private static class TabController {
-        private final String fxml;
-        private Attachable attachable;
-
-        private TabController(String fxml) {
-            this.fxml = fxml;
-        }
-
-        private Attachable getAttachable(Tab tab) {
-            if (this.attachable == null) {
-                this.attachable = ControllerUtils.load(this.fxml, tab::setContent);
-            }
-            return this.attachable;
-        }
-    }
-
     public static class DisplayConverter<T extends DisplayValue> extends StringConverter<T> {
         private final T[] values;
 
@@ -144,6 +131,23 @@ public class MainController {
                 }
             }
             return null;
+        }
+    }
+
+    private class TabController {
+        private final String fxml;
+        private Attachable attachable;
+
+        private TabController(String fxml) {
+            this.fxml = fxml;
+        }
+
+        private Attachable getAttachable(Tab tab) {
+            if (this.attachable == null) {
+                this.attachable = ControllerUtils.load(this.fxml, tab::setContent);
+                this.attachable.setParentController(MainController.this);
+            }
+            return this.attachable;
         }
     }
 }

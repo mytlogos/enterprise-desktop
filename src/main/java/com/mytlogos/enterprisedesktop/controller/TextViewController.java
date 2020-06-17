@@ -54,6 +54,7 @@ public class TextViewController {
                 this.episodeBox.getSelectionModel().selectNext();
             }
         } else if (event.getCode().isArrowKey()) {
+            this.updateProgress();
             // TODO 08.3.2020: scroll down, up, right, left a fixed amount (especially horizontal) scripts?
         } else if (event.getCode().isNavigationKey()) {
             // TODO 08.3.2020: work on navigation with scripts?
@@ -111,22 +112,7 @@ public class TextViewController {
         WebConsoleListener.setDefaultListener((webView, message, lineNumber, sourceId) -> {
             System.out.println(message + "[at " + lineNumber + "]");
         });
-        this.browser.setOnScroll(event -> {
-            final SimpleEpisode episode = this.episodeBox.getSelectionModel().getSelectedItem();
-            if (episode == null || this.episodePagePaths == null || this.episodePagePaths.isEmpty() || this.browser.getEngine().getLocation().isEmpty()) {
-                return;
-            }
-            final Object result = this.browser.getEngine().executeScript("(window.innerHeight + window.pageYOffset) / document.body.scrollHeight");
-
-            if (!(result instanceof Double)) {
-                return;
-            }
-            float progress = Math.min(((Double) result).floatValue() + 0.01f, 1);
-            if (episode.getProgress() < progress) {
-                System.out.println("progress: " + progress);
-                repository.updateProgress(episode.getEpisodeId(), Math.min(progress, 1));
-            }
-        });
+        this.browser.setOnScroll(event -> updateProgress());
         this.browser.setOnScrollStarted(event -> System.out.println("i started scrolling"));
         this.browser.setOnScrollFinished(event -> System.out.println("i finished scrolling"));
         window.setMember("progress", (Consumer<Double>) aDouble -> {
@@ -213,6 +199,24 @@ public class TextViewController {
         this.previousBtn.setOnAction(event -> this.episodeBox.getSelectionModel().selectPrevious());
         this.nextBtn.setOnAction(event -> this.episodeBox.getSelectionModel().selectNext());
 
+    }
+
+    private void updateProgress() {
+        final Repository repository = ApplicationConfig.getRepository();
+        final SimpleEpisode episode = this.episodeBox.getSelectionModel().getSelectedItem();
+        if (episode == null || this.episodePagePaths == null || this.episodePagePaths.isEmpty() || this.browser.getEngine().getLocation().isEmpty()) {
+            return;
+        }
+        final Object result = this.browser.getEngine().executeScript("(window.innerHeight + window.pageYOffset) / document.body.scrollHeight");
+
+        if (!(result instanceof Double)) {
+            return;
+        }
+        float progress = Math.min(((Double) result).floatValue() + 0.01f, 1);
+        if (episode.getProgress() < progress) {
+            System.out.println("progress: " + progress);
+            repository.updateProgress(episode.getEpisodeId(), Math.min(progress, 1));
+        }
     }
 
     private void zoomBrowser() {

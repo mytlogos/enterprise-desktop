@@ -7,4 +7,8 @@ public interface Attachable {
     void onAttach();
 
     void onDetach();
+
+    default void setParentController(MainController controller) {
+
+    }
 }
