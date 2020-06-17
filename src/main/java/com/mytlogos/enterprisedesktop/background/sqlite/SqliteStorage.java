@@ -551,10 +551,11 @@ public class SqliteStorage implements DatabaseStorage {
             ClientStat.Partstat partstat = partStats.remove(localStat.partId);
 
             if (partstat == null) {
-                throw new IllegalStateException(String.format(
+                System.out.println(String.format(
                         "Local Part %s does not exist on Server, missing local Part Deletion",
                         localStat.partId
                 ));
+                continue;
             }
 
             if (partstat.episodeCount != localStat.episodeCount
@@ -565,6 +566,7 @@ public class SqliteStorage implements DatabaseStorage {
             }
         }
         Set<Integer> loadPart = new HashSet<>();
+        final LoadData loadData = this.getLoadData();
 
         for (Map.Entry<Integer, ClientStat.Partstat> clientStatEntry : partStats.entrySet()) {
             final Integer partId = clientStatEntry.getKey();
@@ -572,7 +574,9 @@ public class SqliteStorage implements DatabaseStorage {
             final PartStat localPartStat = localStatMap.get(partId);
 
             if (localPartStat == null) {
-                loadPart.add(partId);
+                if (!loadData.getPart().contains(partId)) {
+                    loadPart.add(partId);
+                }
                 continue;
             }
 
