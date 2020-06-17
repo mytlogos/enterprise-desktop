@@ -65,7 +65,7 @@ public class SearchMediumController implements Attachable {
                     }
                     List<CompletableFuture<Boolean>> futures = new ArrayList<>();
                     for (SearchResponse item : this.resultsView.getSelectionModel().getSelectedItems()) {
-                        final MediumInWaitImpl mediumInWait = new MediumInWaitImpl(item.title, this.mediumChoiceBox.getValue(), item.coverUrl);
+                        final MediumInWaitImpl mediumInWait = new MediumInWaitImpl(item.title, this.mediumChoiceBox.getValue(), item.link);
                         futures.add(ApplicationConfig.getRepository().createMedium(mediumInWait, Collections.emptyList(), list));
                     }
                     return Utils.finishAll(futures);
