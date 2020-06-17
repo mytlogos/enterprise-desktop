@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.sqlite.life;
 
+import com.mytlogos.enterprisedesktop.background.TaskManager;
 import io.reactivex.annotations.NonNull;
 
 import java.util.HashMap;
@@ -120,7 +121,7 @@ public class MediatorLiveData<T> extends MutableLiveData<T> {
         public void onChanged(V v) {
             if (mVersion != mLiveData.getVersion()) {
                 mVersion = mLiveData.getVersion();
-                mObserver.onChanged(v);
+                TaskManager.runFxTask(() -> mObserver.onChanged(v));
             }
         }
 
