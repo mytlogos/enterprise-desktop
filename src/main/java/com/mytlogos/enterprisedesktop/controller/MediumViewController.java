@@ -6,10 +6,12 @@ import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.sqlite.PagedList;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
-import com.mytlogos.enterprisedesktop.model.DisplayRelease;
-import com.mytlogos.enterprisedesktop.model.MediaList;
-import com.mytlogos.enterprisedesktop.model.MediumSetting;
+import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfileBuilder;
+import com.mytlogos.enterprisedesktop.tools.Utils;
+import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
 import javafx.scene.chart.LineChart;
@@ -22,6 +24,7 @@ import javafx.scene.text.Text;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -229,6 +232,49 @@ public class MediumViewController {
                 .create()
         );
         this.releaseLiveData.observe(this.releaseObserver);
+    }
+
+    @FXML
+    private void mergeWith() {
+        Dialog<SimpleMedium> mediumDialog = new Dialog<>();
+
+        final DialogPane pane = new DialogPane();
+        pane.getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.FINISH);
+        pane.setHeaderText(String.format("Merge another Medium with '%s'", this.titleField.getText()));
+        final TextField item = new TextField();
+
+        final Repository repository = ApplicationConfig.getRepository();
+        ObjectProperty<SimpleMedium> property = new SimpleObjectProperty<>();
+        final Integer medium = this.showMediumController.getMedium();
+        final LiveData<List<SimpleMedium>> data = repository.getSimpleMedium().map(list -> {
+            if (list == null) {
+                return null;
+            }
+            return list.stream().filter(simpleMedium -> MediumType.is(simpleMedium.getMedium(), medium)).collect(Collectors.toList());
+        });
+        ControllerUtils.addAutoCompletionBinding(item, data, SimpleMedium::getTitle, property::setValue);
+        data.observe(Utils.emptyObserver());
+        pane.setContent(item);
+
+        mediumDialog.setDialogPane(pane);
+        mediumDialog.setResultConverter(param -> {
+            if (param == ButtonType.FINISH) {
+                return property.getValue();
+            } else {
+                return null;
+            }
+        });
+        mediumDialog.showAndWait().ifPresent(simpleMedium -> {
+            repository.mergeMedia(simpleMedium.getMediumId(), this.mediumId).whenComplete((aBoolean, throwable) -> {
+                if (throwable != null) {
+                    throwable.printStackTrace();
+                }
+                if (aBoolean == null || !aBoolean) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING, "Could not merge Media", ButtonType.CLOSE);
+                    Platform.runLater(alert::show);
+                }
+            });
+        });
     }
 
     @FXML
