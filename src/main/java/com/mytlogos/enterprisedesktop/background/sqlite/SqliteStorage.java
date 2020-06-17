@@ -594,11 +594,32 @@ public class SqliteStorage implements DatabaseStorage {
                 loadMediumTocs.add(mediumId);
             }
         }
-        final Set<Integer> loadedMedia = this.mediumTable.getLoadedInt();
+        final Set<Integer> loadedMedia = loadData.getMedia();
         Set<Integer> missingMedia = new HashSet<>(parsedStat.media.keySet());
         missingMedia.removeAll(loadedMedia);
         loadMediumTocs.addAll(missingMedia);
-        return new ReloadStat(loadEpisode, loadRelease, loadMediumTocs, missingMedia, loadPart);
+
+        Set<Integer> missingExtLists = new HashSet<>(parsedStat.extLists.keySet());
+        missingExtLists.removeAll(loadData.getExternalMediaList());
+
+        Set<String> loadUser = new HashSet<>(parsedStat.extUser.keySet());
+        loadUser.removeAll(loadData.getExternalUser());
+
+        Set<Integer> missingLists = new HashSet<>(parsedStat.lists.keySet());
+        missingLists.removeAll(loadData.getMediaList());
+
+        for (Map.Entry<String, List<Integer>> entry : parsedStat.extUser.entrySet()) {
+            for (Iterator<Integer> iterator = missingExtLists.iterator(); iterator.hasNext(); ) {
+                Integer listId = iterator.next();
+
+                if (entry.getValue().contains(listId)) {
+                    loadUser.add(entry.getKey());
+                    iterator.remove();
+                }
+            }
+        }
+
+        return new ReloadStat(loadEpisode, loadRelease, loadMediumTocs, missingMedia, loadPart, missingLists, loadUser);
     }
 
     @Override

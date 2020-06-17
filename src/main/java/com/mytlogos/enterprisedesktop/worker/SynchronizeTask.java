@@ -200,6 +200,20 @@ public class SynchronizeTask extends Task<Void> {
             reloadStat = repository.checkReload(parsedStat);
         }
 
+        if (!reloadStat.loadExUser.isEmpty()) {
+            final List<ClientExternalUser> users = Utils.checkAndGetBody(client.getExternalUser(reloadStat.loadExUser));
+            persister.persistExternalUsers(users);
+
+            reloadStat = repository.checkReload(parsedStat);
+        }
+
+        if (!reloadStat.loadLists.isEmpty()) {
+            final ClientMultiListQuery listQuery = Utils.checkAndGetBody(client.getLists(reloadStat.loadLists));
+            persister.persist(listQuery);
+
+            reloadStat = repository.checkReload(parsedStat);
+        }
+
         if (!reloadStat.loadPart.isEmpty()) {
             Utils.doPartitionedRethrow(reloadStat.loadPart, partIds -> {
                 final List<ClientPart> parts = Utils.checkAndGetBody(client.getParts(partIds));
