@@ -272,4 +272,6 @@ public interface Repository {
     CompletableFuture<Boolean> mergeMedia(int sourceId, int destinationId);
 
     List<Toc> getAllTocs();
+
+    List<MediumEpisode> getMediumEpisodes();
 }

@@ -227,4 +227,6 @@ public interface DatabaseStorage {
     void removeMedium(int sourceId);
 
     List<Toc> getAllTocs();
+
+    List<MediumEpisode> getMediumEpisodes();
 }

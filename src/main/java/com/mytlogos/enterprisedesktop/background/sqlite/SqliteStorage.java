@@ -730,6 +730,11 @@ public class SqliteStorage implements DatabaseStorage {
         return this.tocTable.getTocs();
     }
 
+    @Override
+    public List<MediumEpisode> getMediumEpisodes() {
+        return this.episodeTable.getMediumEpisodes();
+    }
+
     private class SqlitePersister implements ClientModelPersister {
         private final LoadData loadedData;
         private final LoadWorkGenerator generator;

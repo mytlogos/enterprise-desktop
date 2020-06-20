@@ -21,6 +21,8 @@ import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -150,7 +152,10 @@ public class AnalyzeController implements Attachable {
         Node getDisplay() {
             if (this.display == null) {
                 this.display = this.createDisplay();
-                this.display.disableProperty().bind(this.resolved);
+
+                if (this.display != null) {
+                    this.display.disableProperty().bind(this.resolved);
+                }
             }
             return this.display;
         }
@@ -188,6 +193,11 @@ public class AnalyzeController implements Attachable {
         @Override
         Collection<? extends AnalyzeResult> getSubResult() {
             return this.results;
+        }
+
+        @Override
+        Node createDisplay() {
+            return null;
         }
     }
 
@@ -426,11 +436,6 @@ public class AnalyzeController implements Attachable {
             }
 
             @Override
-            Node createDisplay() {
-                return null;
-            }
-
-            @Override
             String getTitle() {
                 return String.format("Media without Lists: %d", this.getIssueNumber());
             }
@@ -554,6 +559,11 @@ public class AnalyzeController implements Attachable {
 
                 final Map<Integer, Set<Integer>> map = domainMediumMediaMap.computeIfAbsent(domain, s -> new HashMap<>());
                 final SimpleMedium medium = idMediumMap.get(toc.getMediumId());
+
+                if (medium == null) {
+                    System.out.println("dangling toc detected: " + toc);
+                    continue;
+                }
                 map.computeIfAbsent(medium.getMedium(), i -> new HashSet<>()).add(toc.getMediumId());
             }
 
@@ -606,11 +616,6 @@ public class AnalyzeController implements Attachable {
 
             private TotalMisMatchResult(List<DomainMisMatchResult> results) {
                 super(results);
-            }
-
-            @Override
-            Node createDisplay() {
-                return null;
             }
 
             @Override
@@ -684,6 +689,8 @@ public class AnalyzeController implements Attachable {
             new SimilarMediaTask().work(this);
             new TocMismatchTask().work(this);
             new DanglingMediumTask().work(this);
+            new ReadGapTask().work(this);
+            new EpisodeGapTask().work(this);
             return current;
         }
 
@@ -693,26 +700,14 @@ public class AnalyzeController implements Attachable {
             this.updateValue(this.current);
         }
 
-        private static class TotalResult extends AnalyzeResult {
-            private final List<AnalyzeResult> results;
-
+        private static class TotalResult extends AnalyzeGroupResult {
             private TotalResult(List<AnalyzeResult> results) {
-                this.results = results;
-            }
-
-            @Override
-            Collection<? extends AnalyzeResult> getSubResult() {
-                return this.results;
+                super(results);
             }
 
             @Override
             int getIssueNumber() {
-                return results.stream().mapToInt(AnalyzeResult::getIssueNumber).sum();
-            }
-
-            @Override
-            Node createDisplay() {
-                return null;
+                return this.getSubResult().stream().mapToInt(AnalyzeResult::getIssueNumber).sum();
             }
 
             @Override
@@ -720,5 +715,173 @@ public class AnalyzeController implements Attachable {
                 return "Total possible Issues: " + this.getIssueNumber();
             }
         }
+
+        private static class ReadGapTask extends AnalyzeWork {
+            @Override
+            void work(AnalyzerTask resultTask) {
+                final Repository repository = ApplicationConfig.getRepository();
+                final List<MediumEpisode> mediumEpisodes = repository.getMediumEpisodes();
+                Map<Integer, List<MediumEpisode>> mediumEpisodesMap = new HashMap<>();
+
+                for (MediumEpisode episode : mediumEpisodes) {
+                    mediumEpisodesMap.computeIfAbsent(episode.mediumId, i -> new ArrayList<>()).add(episode);
+                }
+                List<ReadGapResult> gapResults = new ArrayList<>();
+
+                for (Map.Entry<Integer, List<MediumEpisode>> entry : mediumEpisodesMap.entrySet()) {
+                    final Integer mediumId = entry.getKey();
+                    SimpleMedium medium = null;
+                    final List<MediumEpisode> episodes = entry.getValue();
+                    episodes.sort(Comparator.comparingDouble(MediumEpisode::getCombiIndex));
+
+                    double previousReadIndex = -1;
+                    List<MediumEpisode> unreadEpisodes = new ArrayList<>();
+
+                    for (MediumEpisode episode : episodes) {
+                        if (!episode.isRead()) {
+                            unreadEpisodes.add(episode);
+                        } else {
+                            if (!unreadEpisodes.isEmpty()) {
+                                if (medium == null) {
+                                    medium = repository.getSimpleMedium(mediumId);
+                                }
+                                gapResults.add(new ReadGapResult(
+                                        previousReadIndex,
+                                        episode.combiIndex,
+                                        unreadEpisodes,
+                                        medium.getTitle()
+                                ));
+                                unreadEpisodes.clear();
+                            }
+                            previousReadIndex = episode.combiIndex;
+                        }
+                    }
+                }
+                resultTask.update(new TotalReadGaps(gapResults));
+            }
+
+            private static class ReadGapResult extends AnalyzeResult {
+                private final double previousRead;
+                private final double afterRead;
+                private final List<MediumEpisode> betweenUnread;
+                private final String mediumTitle;
+
+                private ReadGapResult(double previousRead, double afterRead, List<MediumEpisode> betweenUnread, String mediumTitle) {
+                    this.previousRead = previousRead;
+                    this.afterRead = afterRead;
+                    this.betweenUnread = new ArrayList<>(betweenUnread);
+                    this.mediumTitle = mediumTitle;
+                }
+
+                @Override
+                Node createDisplay() {
+                    return null;
+                }
+
+                @Override
+                String getTitle() {
+                    return String.format(
+                            "'%s' has a reading gap between %s and %s of %d Episodes",
+                            this.mediumTitle,
+                            new BigDecimal(this.previousRead).stripTrailingZeros().toPlainString(),
+                            new BigDecimal(this.afterRead).stripTrailingZeros().toPlainString(),
+                            this.betweenUnread.size()
+                    );
+                }
+            }
+
+
+            private static class TotalReadGaps extends AnalyzeGroupResult {
+                protected TotalReadGaps(List<ReadGapResult> results) {
+                    super(results);
+                }
+
+                @Override
+                String getTitle() {
+                    return "Media with Reading Gaps: " + this.getIssueNumber();
+                }
+            }
+
+        }
+
+        private static class EpisodeGapTask extends AnalyzeWork {
+            @Override
+            void work(AnalyzerTask resultTask) {
+                final Repository repository = ApplicationConfig.getRepository();
+                final List<MediumEpisode> mediumEpisodes = repository.getMediumEpisodes();
+                Map<Integer, List<MediumEpisode>> mediumEpisodesMap = new HashMap<>();
+
+                for (MediumEpisode episode : mediumEpisodes) {
+                    mediumEpisodesMap.computeIfAbsent(episode.mediumId, i -> new ArrayList<>()).add(episode);
+                }
+                List<EpisodeGapResult> gapResults = new ArrayList<>();
+
+                for (Map.Entry<Integer, List<MediumEpisode>> entry : mediumEpisodesMap.entrySet()) {
+                    final Integer mediumId = entry.getKey();
+                    SimpleMedium medium = null;
+                    final List<MediumEpisode> episodes = entry.getValue();
+                    episodes.sort(Comparator.comparingDouble(MediumEpisode::getCombiIndex));
+
+                    double previousIndex = -1;
+
+                    for (MediumEpisode episode : episodes) {
+                        if (previousIndex >= 0) {
+                            if (Math.abs(previousIndex - episode.combiIndex) >= 2) {
+                                if (medium == null) {
+                                    medium = repository.getSimpleMedium(mediumId);
+                                }
+                                gapResults.add(new EpisodeGapResult(
+                                        previousIndex,
+                                        episode.combiIndex,
+                                        medium.getTitle()
+                                ));
+                            }
+                        }
+                        previousIndex = episode.combiIndex;
+                    }
+                }
+                resultTask.update(new TotalEpisodeGaps(gapResults));
+            }
+
+            private static class EpisodeGapResult extends AnalyzeResult {
+                private final double previousIndex;
+                private final double afterIndex;
+                private final String mediumTitle;
+
+                private EpisodeGapResult(double previousIndex, double afterIndex, String mediumTitle) {
+                    this.previousIndex = previousIndex;
+                    this.afterIndex = afterIndex;
+                    this.mediumTitle = mediumTitle;
+                }
+
+                @Override
+                Node createDisplay() {
+                    return null;
+                }
+
+                @Override
+                String getTitle() {
+                    return String.format(
+                            "'%s' has an episode gap between %s and %s",
+                            this.mediumTitle,
+                            new BigDecimal(this.previousIndex).stripTrailingZeros().toPlainString(),
+                            new BigDecimal(this.afterIndex).stripTrailingZeros().toPlainString()
+                    );
+                }
+            }
+
+            private static class TotalEpisodeGaps extends AnalyzeGroupResult {
+                protected TotalEpisodeGaps(List<? extends AnalyzeResult> results) {
+                    super(results);
+                }
+
+                @Override
+                String getTitle() {
+                    return "Media with Episode Gaps: " + this.getIssueNumber();
+                }
+            }
+
+        }
+
     }
 }

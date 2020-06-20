@@ -294,6 +294,23 @@ class EpisodeTable extends AbstractTable {
         this.executeDMLQuery(mediumId, this.deleteMediumEpisodes);
     }
 
+    List<MediumEpisode> getMediumEpisodes() {
+        return new QueryBuilder<MediumEpisode>(
+                "Select MediumEpisode",
+                //language=SQLite
+                "SELECT episode.episodeId, part.mediumId, " +
+                        "episode.combiIndex, episode.saved, CASE episode.progress WHEN 1 THEN 1 ELSE 0 END as read " +
+                        "FROM episode " +
+                        "INNER JOIN part ON episode.partId=part.partId " +
+                        "INNER JOIN medium ON part.mediumId=medium.mediumId "
+        ).setConverter(value -> new MediumEpisode(
+                value.getInt(1),
+                value.getInt(2),
+                value.getDouble(3),
+                value.getBoolean(4),
+                value.getBoolean(5)
+        )).queryListIgnoreError();
+    }
 
     LiveData<PagedList<TocEpisode>> getToc(int mediumId, Sorting sortings, byte read, byte saved) {
         return LiveData.create(() -> {

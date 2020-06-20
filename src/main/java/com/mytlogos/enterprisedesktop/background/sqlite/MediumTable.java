@@ -3,10 +3,7 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.Formatter;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.model.Medium;
-import com.mytlogos.enterprisedesktop.model.MediumItem;
-import com.mytlogos.enterprisedesktop.model.MediumSetting;
-import com.mytlogos.enterprisedesktop.model.SimpleMedium;
+import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
 import java.time.LocalDateTime;
