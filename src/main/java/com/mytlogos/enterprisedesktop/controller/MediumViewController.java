@@ -55,14 +55,14 @@ public class MediumViewController {
             final Duration duration = Duration.between(previousRelease.getReleaseDate(), release.getReleaseDate());
 
             if (duration.compareTo(dataThreshold) > 0) {
-                this.series.getData().add(new XYChart.Data<>(point++, duration.toHours()));
+                this.series.getData().add(new XYChart.Data<>(point++, duration.toHours() / 24D));
             }
 
             if ((i + 1) == releases.size()) {
                 final Duration current = Duration.between(release.getReleaseDate(), LocalDateTime.now());
 
                 if (current.compareTo(dataThreshold) > 0) {
-                    this.series.getData().add(new XYChart.Data<>(point++, current.toHours()));
+                    this.series.getData().add(new XYChart.Data<>(point++, current.toHours() / 24D));
                 }
             }
         }
