@@ -16,6 +16,8 @@ import javafx.scene.web.WebView;
 import javafx.util.StringConverter;
 import netscape.javascript.JSObject;
 import org.controlsfx.control.Notifications;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,8 @@ public class TextViewController {
     private Button previousBtn;
     @FXML
     private Button nextBtn;
+    private List<SimpleEpisode> simpleEpisodes;
+    private Map<Integer, String> episodePagePaths;
     private final EventHandler<KeyEvent> keyEventEventHandler = event -> {
         if (event.isControlDown()) {
             if (event.getCode() == KeyCode.MINUS) {
@@ -74,8 +78,6 @@ public class TextViewController {
 //            }
         }
     };
-    private List<SimpleEpisode> simpleEpisodes;
-    private Map<Integer, String> episodePagePaths;
 
     public void open(int mediumId, int currentEpisode) {
         final Repository repository = ApplicationConfig.getRepository();
@@ -108,6 +110,16 @@ public class TextViewController {
         final Repository repository = ApplicationConfig.getRepository();
         final JSObject window = (JSObject) this.browser.getEngine().executeScript("window");
         this.browser.getEngine().setOnError(System.out::println);
+        this.browser.getEngine().documentProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue == null) {
+                return;
+            }
+            final NodeList body = newValue.getElementsByTagName("body");
+            for (int i = 0; i < body.getLength(); i++) {
+                final Element item = (Element) body.item(i);
+                item.setAttribute("style", "padding: 5px");
+            }
+        });
 
         WebConsoleListener.setDefaultListener((webView, message, lineNumber, sourceId) -> {
             System.out.println(message + "[at " + lineNumber + "]");
