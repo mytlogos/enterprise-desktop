@@ -32,7 +32,7 @@ public class InvalidationManager {
         final Set<Runnable> values = Collections.newSetFromMap(new WeakHashMap<>());
         this.tableRunnable.put(table, values);
         this.tableInvalidationRunning.put(table, new AtomicBoolean(false));
-        table.getInvalidated().observe(invalidated -> {
+        table.addInvalidationListener(invalidated -> {
             final AtomicBoolean invalidationRunning = this.tableInvalidationRunning.get(table);
 
             if (!invalidated || !invalidationRunning.compareAndSet(false, true)) {

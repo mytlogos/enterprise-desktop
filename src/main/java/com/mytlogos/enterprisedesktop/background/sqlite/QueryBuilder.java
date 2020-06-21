@@ -25,6 +25,7 @@ class QueryBuilder<R> {
     private final String query;
     private final Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
     private final boolean isRead;
+    private final ConnectionManager manager;
     private SqlConsumer<PreparedStatement> singleQuerySetter;
     private Collection<Object> values;
     private SqlBiConsumer<PreparedStatement, Object> multiQuerySetter;
@@ -33,10 +34,11 @@ class QueryBuilder<R> {
     private List<?> queryInValues;
     private boolean doEmpty = false;
 
-    QueryBuilder(String name, String query) {
+    QueryBuilder(String name, String query, ConnectionManager manager) {
         this.name = name;
         this.query = query;
         this.isRead = query.substring(0, query.indexOf(" ")).trim().equalsIgnoreCase("select");
+        this.manager = manager;
     }
 
     private QueryBuilder(QueryBuilder<R> builder) {
@@ -51,6 +53,7 @@ class QueryBuilder<R> {
         this.type = builder.type;
         this.queryInValues = builder.queryInValues == null ? null : new ArrayList<>(builder.queryInValues);
         this.doEmpty = builder.doEmpty;
+        this.manager = builder.manager;
     }
 
     <T> QueryBuilder<R> setValue(Collection<T> value, SqlBiConsumer<PreparedStatement, T> multiQuerySetter) {
@@ -121,7 +124,7 @@ class QueryBuilder<R> {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
-        try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+        try (ConnectionImpl connection = this.manager.getConnection()) {
             try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.query, this.name)) {
                 return selectResultList(preparedStatement);
             }
@@ -174,7 +177,7 @@ class QueryBuilder<R> {
     R query() {
         this.expectRead();
         try {
-            return this.query(ConnectionManager.getManager().getConnection());
+            return this.query(manager.getConnection());
         } catch (SQLException e) {
             e.printStackTrace();
             return null;
@@ -218,7 +221,7 @@ class QueryBuilder<R> {
             throw new IllegalStateException("no converter available");
         }
         return this.createLiveData(() -> {
-            try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+            try (ConnectionImpl connection = manager.getConnection()) {
                 return selectResult(connection);
             }
         });
@@ -235,7 +238,7 @@ class QueryBuilder<R> {
             throw new IllegalStateException("no converter available");
         }
         return this.createLiveData(() -> {
-            try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+            try (ConnectionImpl connection = manager.getConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
                     return selectResultList(preparedStatement);
                 }
@@ -245,7 +248,7 @@ class QueryBuilder<R> {
 
     boolean execute() {
         try {
-            return this.execute(ConnectionManager.getManager().getConnection());
+            return this.execute(manager.getConnection());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -323,7 +326,7 @@ class QueryBuilder<R> {
 
         AtomicReference<T> value = new AtomicReference<>();
 
-        try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+        try (ConnectionImpl connection = manager.getConnection()) {
             try {
                 Utils.doPartitioned(remainingCount, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];
@@ -424,7 +427,7 @@ class QueryBuilder<R> {
 
         List<R> resultValues = new ArrayList<>();
 
-        try (ConnectionImpl connection = ConnectionManager.getManager().getConnection()) {
+        try (ConnectionImpl connection = manager.getConnection()) {
             try {
                 Utils.doPartitioned(remainingCount, this.doEmpty, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];

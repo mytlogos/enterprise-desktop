@@ -14,15 +14,15 @@ import java.util.List;
 class MediumInWaitTable extends AbstractTable {
     private final QueryBuilder<MediumInWait> insertMediumInWaitQuery = new QueryBuilder<MediumInWait>(
             "Insert MediumInWait",
-            "INSERT OR IGNORE INTO medium_in_wait (title, medium, link) VALUES (?,?,?)"
+            "INSERT OR IGNORE INTO medium_in_wait (title, medium, link) VALUES (?,?,?)", getManager()
     ).setValueSetter((statement, mediumInWait) -> {
         statement.setString(1, mediumInWait.getTitle());
         statement.setInt(2, mediumInWait.getMedium());
         statement.setString(3, mediumInWait.getLink());
     });
 
-    MediumInWaitTable() {
-        super("medium_in_wait");
+    MediumInWaitTable(ConnectionManager manager) {
+        super("medium_in_wait", manager);
     }
 
     public LiveData<PagedList<MediumInWait>> get(String filter, int mediumFilter, String hostFilter, Sorting sortings) {
@@ -32,7 +32,7 @@ class MediumInWaitTable extends AbstractTable {
                         "WHERE (title IS NULL OR INSTR(lower(title), ?) > 0) " +
                         "AND (? = 0 OR (medium & ?) > 0) " +
                         "AND (link IS NULL OR INSTR(link, ?) > 0) " +
-                        "ORDER BY title ASC;"
+                        "ORDER BY title ASC;", getManager()
         )
                 .setDependencies(
                         MediumInWaitTable.class
@@ -53,7 +53,7 @@ class MediumInWaitTable extends AbstractTable {
     }
 
     public List<MediumInWait> getSimilar(MediumInWait mediumInWait) {
-        return new QueryBuilder<MediumInWait>("Select SimilarMediaInWait", "SELECT title, medium, link FROM medium_in_wait WHERE INSTR(title, ?) > 0 AND medium=?")
+        return new QueryBuilder<MediumInWait>("Select SimilarMediaInWait", "SELECT title, medium, link FROM medium_in_wait WHERE INSTR(title, ?) > 0 AND medium=?", getManager())
                 .setValues(value -> {
                     value.setString(1, mediumInWait.getTitle());
                     value.setInt(2, mediumInWait.getMedium());
@@ -71,7 +71,7 @@ class MediumInWaitTable extends AbstractTable {
                 toDelete,
                 new QueryBuilder<MediumInWait>(
                         "Delete MediumInWaits",
-                        "DELETE FROM medium_in_wait WHERE title=? AND medium=? AND link=?"
+                        "DELETE FROM medium_in_wait WHERE title=? AND medium=? AND link=?", getManager()
                 )
                         .setValueSetter((statement, mediumInWait) -> {
                             statement.setString(1, mediumInWait.getTitle());

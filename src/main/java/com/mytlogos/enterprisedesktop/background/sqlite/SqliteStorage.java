@@ -11,6 +11,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -33,26 +34,28 @@ public class SqliteStorage implements DatabaseStorage {
     final PartTable partTable;
     final ReleaseTable releaseTable;
     final ToDownloadTable toDownloadTable;
+    private final LoadData loadedData;
 
-    public SqliteStorage() {
-        ConnectionManager.getManager().enableForeignKeys();
-        this.userTable = this.initTable(new UserTable());
-        this.editEventTable = this.initTable(new EditEventTable());
-        this.episodeTable = this.initTable(new EpisodeTable());
-        this.externalListMediumJoinTable = this.initTable(new ExternalListMediumJoinTable());
-        this.externalMediaListTable = this.initTable(new ExternalMediaListTable());
-        this.externalUserTable = this.initTable(new ExternalUserTable());
-        this.mediaListTable = this.initTable(new MediaListTable());
-        this.listMediumJoinTable = this.initTable(new ListMediumJoinTable());
-        this.failedEpisodeTable = this.initTable(new FailedEpisodeTable());
-        this.mediumInWaitTable = this.initTable(new MediumInWaitTable());
-        this.newsTable = this.initTable(new NewsTable());
-        this.mediumTable = this.initTable(new MediumTable());
-        this.tocTable = this.initTable(new TocTable());
-        this.notificationTable = this.initTable(new NotificationTable());
-        this.partTable = this.initTable(new PartTable());
-        this.releaseTable = this.initTable(new ReleaseTable());
-        this.toDownloadTable = this.initTable(new ToDownloadTable());
+    public SqliteStorage(LoadData loadedData) {
+        this.loadedData = loadedData;
+        final ConnectionManager manager = new ConnectionManager();
+        this.userTable = this.initTable(new UserTable(manager));
+        this.editEventTable = this.initTable(new EditEventTable(manager));
+        this.episodeTable = this.initTable(new EpisodeTable(manager));
+        this.externalListMediumJoinTable = this.initTable(new ExternalListMediumJoinTable(manager));
+        this.externalMediaListTable = this.initTable(new ExternalMediaListTable(manager));
+        this.externalUserTable = this.initTable(new ExternalUserTable(manager));
+        this.mediaListTable = this.initTable(new MediaListTable(manager));
+        this.listMediumJoinTable = this.initTable(new ListMediumJoinTable(manager));
+        this.failedEpisodeTable = this.initTable(new FailedEpisodeTable(manager));
+        this.mediumInWaitTable = this.initTable(new MediumInWaitTable(manager));
+        this.newsTable = this.initTable(new NewsTable(manager));
+        this.mediumTable = this.initTable(new MediumTable(manager));
+        this.tocTable = this.initTable(new TocTable(manager));
+        this.notificationTable = this.initTable(new NotificationTable(manager));
+        this.partTable = this.initTable(new PartTable(manager));
+        this.releaseTable = this.initTable(new ReleaseTable(manager));
+        this.toDownloadTable = this.initTable(new ToDownloadTable(manager));
     }
 
     private <T extends AbstractTable> T initTable(T table) {
@@ -678,6 +681,7 @@ public class SqliteStorage implements DatabaseStorage {
         this.externalUserTable.deleteAll();
         this.mediumInWaitTable.deleteAll();
         this.newsTable.deleteAll();
+        this.loadedData.clearAll();
     }
 
     @Override
@@ -718,6 +722,7 @@ public class SqliteStorage implements DatabaseStorage {
     @Override
     public void removeMedium(int mediumId) {
         this.mediumTable.delete(mediumId);
+        this.loadedData.getMedia().remove(mediumId);
 //        this.tocTable.delete(mediumId);
 //        this.releaseTable.removeMediumReleases(mediumId);
 //        this.episodeTable.removeMediumEpisodes(mediumId);
@@ -1020,6 +1025,7 @@ public class SqliteStorage implements DatabaseStorage {
             final Set<Integer> removedMediaIds = new HashSet<>(this.loadedData.getMedia());
             removedMediaIds.removeAll(stat.media.keySet());
             SqliteStorage.this.mediumTable.delete(removedMediaIds);
+            loadedData.getMedia().removeAll(removedMediaIds);
 
             List<ListUser> listUser = SqliteStorage.this.externalMediaListTable.getListUser();
 
@@ -1049,8 +1055,13 @@ public class SqliteStorage implements DatabaseStorage {
             SqliteStorage.this.listMediumJoinTable.insert(newInternalJoins);
 
             SqliteStorage.this.externalMediaListTable.delete(deletedExLists);
+            loadedData.getExternalMediaList().removeAll(deletedExLists);
+
             SqliteStorage.this.mediaListTable.delete(deletedLists);
+            loadedData.getMediaList().removeAll(deletedLists);
+
             SqliteStorage.this.externalUserTable.delete(deletedExUser);
+            loadedData.getExternalUser().removeAll(deletedExUser);
             return this;
         }
 
@@ -1106,6 +1117,7 @@ public class SqliteStorage implements DatabaseStorage {
             });
 
             SqliteStorage.this.episodeTable.deletePerId(deleteEpisodes);
+            this.loadedData.getEpisodes().removeAll(deleteEpisodes);
         }
 
         @Override

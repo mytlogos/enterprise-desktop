@@ -17,7 +17,7 @@ import java.util.List;
 class ReleaseTable extends AbstractTable {
     private final QueryBuilder<Release> insertReleaseQuery = new QueryBuilder<Release>(
             "Insert Release",
-            "INSERT OR IGNORE INTO episode_release (episodeId, title, url, releaseDate, locked) VALUES (?,?,?,?,?)"
+            "INSERT OR IGNORE INTO episode_release (episodeId, title, url, releaseDate, locked) VALUES (?,?,?,?,?)", getManager()
     ).setValueSetter((statement, release) -> {
         statement.setInt(1, release.getEpisodeId());
         statement.setString(2, release.getTitle());
@@ -48,7 +48,7 @@ class ReleaseTable extends AbstractTable {
                     "AND (? < 0 OR episode.combiIndex <= ?)\n" +
 //                    "AND (? = 1 OR (list_medium.listId $? AND NOT ?))" +
                     "AND (? = 1 OR medium.mediumId $?)" +
-                    "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC"
+                    "ORDER BY episode_release.releaseDate DESC, episode.combiIndex DESC", getManager()
     ).setDependencies(
             EpisodeTable.class,
             PartTable.class,
@@ -73,17 +73,17 @@ class ReleaseTable extends AbstractTable {
                     "(" +
                     "SELECT episodeId FROM episode INNER JOIN part ON part.partId = episode.partId " +
                     "WHERE part.mediumId = ?" +
-                    ")"
+                    ")", getManager()
     ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));
 
-    ReleaseTable() {
-        super("episode_release");
+    ReleaseTable(ConnectionManager manager) {
+        super("episode_release", manager);
     }
 
     public void delete(List<SmallRelease> releases) {
         this.executeDMLQuery(
                 releases,
-                new QueryBuilder<SmallRelease>("Delete Release","DELETE FROM episode_release WHERE episodeId = ? AND url = ?")
+                new QueryBuilder<SmallRelease>("Delete Release","DELETE FROM episode_release WHERE episodeId = ? AND url = ?", getManager())
                         .setValueSetter((preparedStatement, smallRelease) -> {
                             preparedStatement.setInt(1, smallRelease.episodeId);
                             preparedStatement.setString(2, smallRelease.url);
@@ -92,7 +92,7 @@ class ReleaseTable extends AbstractTable {
     }
 
     public List<String> getLinks(int episodeId) {
-        return new QueryBuilder<String>("Select EpisodeReleaseLinks","SELECT url FROM episode_release WHERE episodeId=?")
+        return new QueryBuilder<String>("Select EpisodeReleaseLinks","SELECT url FROM episode_release WHERE episodeId=?", getManager())
                 .setValues(value -> value.setInt(1, episodeId))
                 .setConverter(value -> value.getString(1))
                 .queryListIgnoreError();

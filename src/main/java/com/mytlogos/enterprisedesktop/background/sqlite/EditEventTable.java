@@ -11,7 +11,7 @@ import java.util.Collection;
 class EditEventTable extends AbstractTable {
     private final QueryBuilder<EditEvent> insertEditEventQuery = new QueryBuilder<EditEvent>(
             "Insert EditEvent",
-            "INSERT OR IGNORE INTO edit_event (id, objectType, eventType, dateTime, firstValue, secondValue) VALUES (?,?,?,?,?,?)"
+            "INSERT OR IGNORE INTO edit_event (id, objectType, eventType, dateTime, firstValue, secondValue) VALUES (?,?,?,?,?,?)", getManager()
     )
             .setValueSetter((preparedStatement, editEvent) -> {
                 preparedStatement.setInt(1, editEvent.getId());
@@ -22,8 +22,8 @@ class EditEventTable extends AbstractTable {
                 preparedStatement.setString(6, editEvent.getSecondValue());
             });
 
-    EditEventTable() {
-        super("edit_event");
+    EditEventTable(ConnectionManager manager) {
+        super("edit_event", manager);
     }
 
     void insert(EditEvent value) {

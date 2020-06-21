@@ -11,15 +11,15 @@ import java.util.Collection;
 class NotificationTable extends AbstractTable {
     private final QueryBuilder<NotificationItem> insertNotificationItemQuery = new QueryBuilder<NotificationItem>(
             "Insert Notification",
-            "INSERT OR IGNORE INTO notification (title, description, dateTime) VALUES (?,?,?)"
+            "INSERT OR IGNORE INTO notification (title, description, dateTime) VALUES (?,?,?)", getManager()
     ).setValueSetter((statement, notificationItem) -> {
         statement.setString(1, notificationItem.getTitle());
         statement.setString(2, notificationItem.getDescription());
         statement.setString(3, Formatter.isoFormat(notificationItem.getDatetime()));
     });
 
-    NotificationTable() {
-        super("notification");
+    NotificationTable(ConnectionManager manager) {
+        super("notification", manager);
     }
 
     void insert(NotificationItem item) {

@@ -15,7 +15,7 @@ import java.util.function.Function;
 class NewsTable extends AbstractTable {
     private final QueryBuilder<News> insertNewsQuery = new QueryBuilder<News>(
             "Insert News",
-            "INSERT OR IGNORE INTO news (title, timeStamp, newsId, read, link) VALUES (?,?,?,?,?)"
+            "INSERT OR IGNORE INTO news (title, timeStamp, newsId, read, link) VALUES (?,?,?,?,?)", getManager()
     ).setValueSetter((statement, news) -> {
         statement.setString(1, news.getTitle());
         statement.setString(2, news.getTimeStampString());
@@ -24,8 +24,8 @@ class NewsTable extends AbstractTable {
         statement.setString(5, news.getUrl());
     });
 
-    NewsTable() {
-        super("news");
+    NewsTable(ConnectionManager manager) {
+        super("news", manager);
     }
 
     public void update(List<ClientNews> update) {

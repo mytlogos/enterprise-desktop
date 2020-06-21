@@ -6,6 +6,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
 
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -16,10 +17,16 @@ import java.util.function.Function;
 class MediumTable extends AbstractTable {
     private final QueryBuilder<Medium> insertMediumQuery = new QueryBuilder<Medium>(
             "Insert Medium",
-            "INSERT OR IGNORE INTO medium (mediumId, currentRead, countryOfOrigin, languageOfOrigin, author, title, medium, artist, lang, stateOrigin, stateTl, series, universe) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+            "INSERT OR IGNORE INTO medium (mediumId, currentRead, countryOfOrigin, languageOfOrigin, author, title, medium, artist, lang, stateOrigin, stateTl, series, universe) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)", getManager()
     ).setValueSetter((statement, medium) -> {
         statement.setInt(1, medium.getMediumId());
-        statement.setInt(2, medium.getCurrentRead());
+        final Integer currentRead = medium.getCurrentRead();
+
+        if (currentRead == null) {
+            statement.setNull(2, Types.INTEGER);
+        } else {
+            statement.setInt(2, currentRead);
+        }
         statement.setString(3, medium.getCountryOfOrigin());
         statement.setString(4, medium.getLanguageOfOrigin());
         statement.setString(5, medium.getAuthor());
@@ -67,7 +74,7 @@ class MediumTable extends AbstractTable {
                     "LEFT JOIN " +
                     "(SELECT mediumId,1 as toDownload FROM todownload WHERE mediumId > 0) " +
                     "as todownload ON todownload.mediumId=medium.mediumId " +
-                    "WHERE medium.mediumId=?"
+                    "WHERE medium.mediumId=?", getManager()
     ).setConverter(value -> {
         final int mediumId = value.getInt(1);
         final String title = value.getString(2);
@@ -96,7 +103,7 @@ class MediumTable extends AbstractTable {
 
     private final QueryBuilder<SimpleMedium> getSimpleMediumQuery = new QueryBuilder<SimpleMedium>(
             "Select SimpleMedium",
-            "SELECT mediumId, title, medium FROM medium WHERE mediumId=?"
+            "SELECT mediumId, title, medium FROM medium WHERE mediumId=?", getManager()
     ).setConverter(value -> new SimpleMedium(
             value.getInt(1),
             value.getString(2),
@@ -104,7 +111,7 @@ class MediumTable extends AbstractTable {
     ));
     private final QueryBuilder<SimpleMedium> getAllSimpleMediumQuery = new QueryBuilder<SimpleMedium>(
             "Select SimpleMedia",
-            "SELECT mediumId, title, medium FROM medium"
+            "SELECT mediumId, title, medium FROM medium", getManager()
     ).setConverter(value -> new SimpleMedium(
             value.getInt(1),
             value.getString(2),
@@ -152,7 +159,7 @@ class MediumTable extends AbstractTable {
                     "WHEN 8 THEN currentReadEpisode \n" +
                     "WHEN 9 THEN lastUpdated \n" +
                     "ELSE title \n" +
-                    "END ASC"
+                    "END ASC", getManager()
     )
             .setDependencies(MediumTable.class)
             .setConverter(value -> {
@@ -217,7 +224,7 @@ class MediumTable extends AbstractTable {
                     "WHEN 8 THEN currentReadEpisode \n" +
                     "WHEN 9 THEN lastUpdated \n" +
                     "ELSE title \n" +
-                    "END DESC"
+                    "END DESC", getManager()
     ).setConverter(value -> {
         final String title = value.getString(1);
         final int mediumId = value.getInt(2);
@@ -239,11 +246,11 @@ class MediumTable extends AbstractTable {
     });
     private final QueryBuilder<Integer> deleteQuery = new QueryBuilder<Integer>(
             "Delete Medium",
-            "DELETE FROM medium WHERE mediumId = ?;"
+            "DELETE FROM medium WHERE mediumId = ?;", getManager()
     ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));;
 
-    MediumTable() {
-        super("medium");
+    MediumTable(ConnectionManager manager) {
+        super("medium", manager);
     }
 
     public LiveData<MediumSetting> getSettings(int mediumId) {

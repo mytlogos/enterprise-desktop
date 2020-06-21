@@ -8,6 +8,8 @@ import com.mytlogos.enterprisedesktop.tools.Log;
 
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -15,12 +17,15 @@ import java.util.stream.Collectors;
  *
  */
 public abstract class AbstractTable {
-    private final MutableLiveData<Boolean> invalidated = new MutableLiveData<>();
+    private final AtomicBoolean invalidated = new AtomicBoolean(false);
+    private final Set<Consumer<Boolean>> invalidationListener = Collections.synchronizedSet(new HashSet<>());
     private final String table;
+    private final ConnectionManager manager;
 
-    AbstractTable(String table) {
+    AbstractTable(String table, ConnectionManager manager) {
         this.table = table;
         InvalidationManager.get().registerTable(this);
+        this.manager = manager;
     }
 
     public void deleteAll() {
@@ -49,12 +54,19 @@ public abstract class AbstractTable {
     }
 
     ConnectionImpl getConnection() throws SQLException {
-        final ConnectionManager manager = ConnectionManager.getManager();
-        return manager.getConnection();
+        return this.manager.getConnection();
+    }
+
+    private void notifyInvalidationListener(boolean newValue) {
+        if (this.invalidated.compareAndSet(!newValue, newValue)) {
+            for (Consumer<Boolean> consumer : this.invalidationListener) {
+                consumer.accept(newValue);
+            }
+        }
     }
 
     void setInvalidated() {
-        this.invalidated.postValue(Boolean.TRUE);
+        this.notifyInvalidationListener(true);
     }
 
     void initialize() {
@@ -63,6 +75,10 @@ public abstract class AbstractTable {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    protected final ConnectionManager getManager() {
+        return this.manager;
     }
 
     abstract String createTableSql();
@@ -85,11 +101,11 @@ public abstract class AbstractTable {
     }
 
     void clearInvalidated() {
-        this.invalidated.postValue(Boolean.FALSE);
+        this.notifyInvalidationListener(false);
     }
 
-    LiveData<Boolean> getInvalidated() {
-        return this.invalidated;
+    void addInvalidationListener(Consumer<Boolean> listener) {
+        this.invalidationListener.add(listener);
     }
 
     Set<Integer> getLoadedInt() {
@@ -149,7 +165,7 @@ public abstract class AbstractTable {
 
         this.executeDMLQuery(
                 values,
-                new QueryBuilder<T>("Update " + this.getClass().getSimpleName(), query)
+                new QueryBuilder<T>("Update " + this.getClass().getSimpleName(), query, this.getManager())
                         .setValueSetter((preparedStatement, t) -> {
                             int placeholder = 1;
                             for (int i = 0, attrNamesSize = attrNames.size(); i < attrNamesSize; i++, placeholder++) {

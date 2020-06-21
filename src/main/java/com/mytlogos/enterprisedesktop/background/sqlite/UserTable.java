@@ -13,14 +13,14 @@ class UserTable extends AbstractTable {
 
     private final QueryBuilder<User> insertUserQuery = new QueryBuilder<User>(
             "Insert User",
-            "INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)"
+            "INSERT OR REPLACE INTO user (uuid, session, name) VALUES (?,?,?)", getManager()
     ).setValueSetter((statement, user) -> {
         statement.setString(1, user.getUuid());
         statement.setString(2, user.getSession());
         statement.setString(3, user.getName());
     });
 
-    private final QueryBuilder<User> getUserQuery = new QueryBuilder<User>("Select User","SELECT * FROM user")
+    private final QueryBuilder<User> getUserQuery = new QueryBuilder<User>("Select User","SELECT * FROM user", getManager())
             .setConverter(resultSet -> {
                 String uuid = resultSet.getString("uuid");
                 String name = resultSet.getString("name");
@@ -28,8 +28,8 @@ class UserTable extends AbstractTable {
                 return new UserImpl(uuid, session, name);
             });
 
-    UserTable() {
-        super("user");
+    UserTable(ConnectionManager manager) {
+        super("user", manager);
     }
 
     public void update(User user) {

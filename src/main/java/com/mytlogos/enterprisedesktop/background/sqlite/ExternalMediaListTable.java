@@ -19,7 +19,7 @@ import java.util.function.Function;
 class ExternalMediaListTable extends AbstractTable {
     private final QueryBuilder<ExternalMediaList> insertExternalMediaListQuery = new QueryBuilder<ExternalMediaList>(
             "Insert ExternalList",
-            "INSERT OR IGNORE INTO external_media_list (uuid,externalListId, name, medium, url) VALUES (?,?,?,?,?)"
+            "INSERT OR IGNORE INTO external_media_list (uuid,externalListId, name, medium, url) VALUES (?,?,?,?,?)", getManager()
     ).setValueSetter((statement, value) -> {
         statement.setString(1, value.getUuid());
         statement.setInt(2, value.getListId());
@@ -33,7 +33,7 @@ class ExternalMediaListTable extends AbstractTable {
             "SELECT external_media_list.*, " +
                     "(SELECT COUNT(listId) FROM external_list_medium WHERE external_list_medium.listId=external_media_list.externalListId) " +
                     "as count " +
-                    "FROM external_media_list"
+                    "FROM external_media_list", getManager()
     ).setDependencies(
             ExternalMediaListTable.class, ExternalListMediumJoinTable.class
     ).setConverter(value -> {
@@ -55,7 +55,7 @@ class ExternalMediaListTable extends AbstractTable {
                     "WHERE external_media_list.externalListId IN " +
                     "(" +
                     "SELECT listId FROM external_list_medium WHERE mediumId = ?" +
-                    ");"
+                    ");", getManager()
     ).setDependencies(
             ExternalMediaListTable.class, ExternalListMediumJoinTable.class
     ).setConverter(value -> {
@@ -101,7 +101,7 @@ class ExternalMediaListTable extends AbstractTable {
                     "FROM medium INNER JOIN external_list_medium " +
                     "ON external_list_medium.mediumId=medium.mediumId " +
                     "WHERE listId=? " +
-                    "ORDER BY title"
+                    "ORDER BY title", getManager()
     ).setDependencies(
             EpisodeTable.class,
             PartTable.class,
@@ -134,7 +134,7 @@ class ExternalMediaListTable extends AbstractTable {
                     "FROM medium INNER JOIN external_list_medium " +
                     "ON external_list_medium.mediumId=medium.mediumId " +
                     "WHERE listId=? " +
-                    "ORDER BY title"
+                    "ORDER BY title", getManager()
     ).setDependencies(
             MediumTable.class,
             ExternalListMediumJoinTable.class
@@ -145,8 +145,8 @@ class ExternalMediaListTable extends AbstractTable {
         return new SimpleMedium(mediumId, title, medium);
     });
 
-    ExternalMediaListTable() {
-        super("external_media_list");
+    ExternalMediaListTable(ConnectionManager manager) {
+        super("external_media_list", manager);
     }
 
     public LiveData<List<ExternalMediaList>> getLists() {
@@ -154,7 +154,7 @@ class ExternalMediaListTable extends AbstractTable {
     }
 
     public List<ListUser> getListUser() {
-        return new QueryBuilder<ListUser>("Select ExternalListUser", "SELECT externalListId as listId, uuid FROM external_media_list")
+        return new QueryBuilder<ListUser>("Select ExternalListUser", "SELECT externalListId as listId, uuid FROM external_media_list", getManager())
                 .setConverter(value -> new ListUser(value.getInt(1), value.getString(2)))
                 .queryListIgnoreError();
     }
@@ -162,7 +162,7 @@ class ExternalMediaListTable extends AbstractTable {
     public void delete(Set<Integer> deletedExLists) {
         this.executeDMLQuery(
                 deletedExLists,
-                new QueryBuilder<Integer>("Delete ExternalListId", "DELETE FROM external_media_list WHERE externalListId = ?")
+                new QueryBuilder<Integer>("Delete ExternalListId", "DELETE FROM external_media_list WHERE externalListId = ?", getManager())
                         .setValueSetter((preparedStatement, listId) -> preparedStatement.setInt(1, listId))
         );
     }

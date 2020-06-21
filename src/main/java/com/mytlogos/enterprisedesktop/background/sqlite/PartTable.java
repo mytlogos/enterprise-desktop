@@ -15,7 +15,7 @@ import java.util.function.Function;
 class PartTable extends AbstractTable {
     private final QueryBuilder<Part> insertPartQuery = new QueryBuilder<Part>(
             "Insert Part",
-            "INSERT OR IGNORE INTO part (partId, mediumId, title, totalIndex, partialIndex, combiIndex) VALUES (?,?,?,?,?,?)"
+            "INSERT OR IGNORE INTO part (partId, mediumId, title, totalIndex, partialIndex, combiIndex) VALUES (?,?,?,?,?,?)", getManager()
     ).setValueSetter((statement, part) -> {
         statement.setInt(1, part.getPartId());
         statement.setInt(2, part.getMediumId());
@@ -27,11 +27,11 @@ class PartTable extends AbstractTable {
     private final QueryBuilder<Integer> removeMediumPartQuery = new QueryBuilder<Integer>(
             "Delete MediumPart",
             "DELETE FROM part " +
-                    "WHERE part.mediumId = ?"
+                    "WHERE part.mediumId = ?", getManager()
     ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));;
 
-    PartTable() {
-        super("part");
+    PartTable(ConnectionManager manager) {
+        super("part", manager);
     }
 
     public void update(List<ClientPart> update) {

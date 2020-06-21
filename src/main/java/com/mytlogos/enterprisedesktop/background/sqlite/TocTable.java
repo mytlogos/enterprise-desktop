@@ -13,25 +13,25 @@ import java.util.stream.Collectors;
 public class TocTable extends AbstractTable {
     private final QueryBuilder<Toc> insertTocQuery = new QueryBuilder<Toc>(
             "Insert ToC",
-            "INSERT OR IGNORE INTO medium_toc (mediumId, link) VALUES (?,?)"
+            "INSERT OR IGNORE INTO medium_toc (mediumId, link) VALUES (?,?)", getManager()
     ).setValueSetter((statement, toc) -> {
         statement.setInt(1, toc.getMediumId());
         statement.setString(2, toc.getLink());
     });
     private final QueryBuilder<Toc> deleteTocQuery = new QueryBuilder<Toc>(
             "Delete ToC",
-            "DELETE FROM medium_toc WHERE (mediumId, link) = (?,?)"
+            "DELETE FROM medium_toc WHERE (mediumId, link) = (?,?)", getManager()
     ).setValueSetter((statement, toc) -> {
         statement.setInt(1, toc.getMediumId());
         statement.setString(2, toc.getLink());
     });
     private final QueryBuilder<Integer> deleteMediumTocQuery = new QueryBuilder<Integer>(
             "Delete MediumToC",
-            "DELETE FROM medium_toc WHERE mediumId = ?"
+            "DELETE FROM medium_toc WHERE mediumId = ?", getManager()
     ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));
     private final QueryBuilder<Map<Integer, Integer>> getTocStatsQuery = new QueryBuilder<Map<Integer, Integer>>(
             "Select TocStat",
-            "SELECT mediumId, count(link) FROM medium_toc GROUP BY mediumId;"
+            "SELECT mediumId, count(link) FROM medium_toc GROUP BY mediumId;", getManager()
     ).setConverter((statement) -> {
         Map<Integer, Integer> map = new HashMap<>();
 
@@ -45,19 +45,19 @@ public class TocTable extends AbstractTable {
     });
     private final QueryBuilder<Toc> getTocsQuery = new QueryBuilder<Toc>(
             "Select Tocs",
-            "SELECT mediumId, link FROM medium_toc WHERE mediumId $?"
+            "SELECT mediumId, link FROM medium_toc WHERE mediumId $?", getManager()
     )
             .setDependencies(TocTable.class)
             .setConverter((statement) -> new SimpleToc(statement.getInt(1), statement.getString(2)));
     private final QueryBuilder<Toc> getAllTocsQuery = new QueryBuilder<Toc>(
             "Select Tocs",
-            "SELECT mediumId, link FROM medium_toc;"
+            "SELECT mediumId, link FROM medium_toc;", getManager()
     )
             .setDependencies(TocTable.class)
             .setConverter((statement) -> new SimpleToc(statement.getInt(1), statement.getString(2)));
 
-    TocTable() {
-        super("medium_toc");
+    TocTable(ConnectionManager manager) {
+        super("medium_toc", manager);
     }
 
     public List<Toc> getTocs(Collection<Integer> mediumIds) {

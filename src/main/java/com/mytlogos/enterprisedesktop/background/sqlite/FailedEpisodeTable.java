@@ -13,15 +13,15 @@ import java.util.List;
 class FailedEpisodeTable extends AbstractTable {
     private final QueryBuilder<FailedEpisode> insertFailedEpisodeQuery = new QueryBuilder<FailedEpisode>(
             "Insert FailedEpisode",
-            "INSERT OR IGNORE INTO failed_episode (episodeId, failCount) VALUES (?,?)"
+            "INSERT OR IGNORE INTO failed_episode (episodeId, failCount) VALUES (?,?)", getManager()
     ).setValueSetter((statement, failedEpisode) -> {
         statement.setInt(1, failedEpisode.getEpisodeId());
         statement.setInt(2, failedEpisode.getFailCount());
     });
-    private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("Select FailedEpisode","SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?");
+    private final QueryBuilder<FailedEpisode> failedEpisodeQuery = new QueryBuilder<>("Select FailedEpisode","SELECT episodeId, failCount FROM failed_episode WHERE episodeId $?", getManager());
 
-    FailedEpisodeTable() {
-        super("failed_episode");
+    FailedEpisodeTable(ConnectionManager manager) {
+        super("failed_episode", manager);
     }
 
     public List<FailedEpisode> getFailedEpisodes(Collection<Integer> episodeIds) {

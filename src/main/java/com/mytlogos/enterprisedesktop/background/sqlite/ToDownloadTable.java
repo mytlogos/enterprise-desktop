@@ -11,7 +11,7 @@ import java.util.List;
 class ToDownloadTable extends AbstractTable {
     private final QueryBuilder<ToDownload> insertToDownloadQuery = new QueryBuilder<ToDownload>(
             "Insert ToDownload",
-            "INSERT OR IGNORE INTO todownload (toDownloadId, prohibited, mediumId, listId, externalListId) VALUES (?,?,?,?,?)"
+            "INSERT OR IGNORE INTO todownload (toDownloadId, prohibited, mediumId, listId, externalListId) VALUES (?,?,?,?,?)", getManager()
     ).setValueSetter((statement, toDownload) -> {
         statement.setBoolean(1, toDownload.isProhibited());
         statement.setInt(2, toDownload.getMediumId());
@@ -21,7 +21,7 @@ class ToDownloadTable extends AbstractTable {
 
     private final QueryBuilder<ToDownload> getItemsQuery = new QueryBuilder<ToDownload>(
             "Select ToDownload",
-            "SELECT prohibited, mediumId, listId, externalListId FROM todownload"
+            "SELECT prohibited, mediumId, listId, externalListId FROM todownload", getManager()
     ).setConverter(value -> {
         final boolean prohibited = value.getBoolean(1);
         final int mediumId = value.getInt(2);
@@ -32,11 +32,11 @@ class ToDownloadTable extends AbstractTable {
     private final QueryBuilder<Integer> removeToDownloadQuery = new QueryBuilder<Integer>(
             "Delete MediumToDownload",
             "DELETE FROM todownload " +
-                    "WHERE mediumId = ? "
+                    "WHERE mediumId = ? ", getManager()
     ).setValueSetter((statement, mediumId) -> statement.setInt(1, mediumId));
 
-    ToDownloadTable() {
-        super("todownload");
+    ToDownloadTable(ConnectionManager manager) {
+        super("todownload", manager);
     }
 
     public List<ToDownload> getItems() {
