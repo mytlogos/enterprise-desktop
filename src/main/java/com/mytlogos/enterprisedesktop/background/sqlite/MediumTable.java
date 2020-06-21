@@ -81,8 +81,8 @@ class MediumTable extends AbstractTable {
         final String author = value.getString(3);
         final String artist = value.getString(4);
         final int medium = value.getInt(5);
-        final int stateTl = value.getInt(6);
-        final int stateOrigin = value.getInt(7);
+        final ReleaseState stateTl = ReleaseState.getInstance(value.getInt(6));
+        final ReleaseState stateOrigin = ReleaseState.getInstance(value.getInt(7));
         final String countryOrigin = value.getString(8);
         final String langOrigin = value.getString(9);
         final String language = value.getString(10);

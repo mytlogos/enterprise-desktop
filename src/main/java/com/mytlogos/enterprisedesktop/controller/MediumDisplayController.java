@@ -80,9 +80,9 @@ public class MediumDisplayController {
             this.titleField.setText(setting.getTitle());
             this.artistField.setText(setting.getArtist());
             this.authorField.setText(setting.getAuthor());
-            this.tlStateField.setText(setting.getStateTL() + "");
+            this.tlStateField.setText(setting.getStateTL().getDisplayValue());
             this.cooField.setText(setting.getCountryOfOrigin());
-            this.stateCooField.setText(setting.getStateOrigin() + "");
+            this.stateCooField.setText(setting.getStateOrigin().getDisplayValue());
             this.langOfOriginField.setText(setting.getLanguageOfOrigin());
             this.seriesField.setText(setting.getSeries());
             this.universeField.setText(setting.getUniverse());

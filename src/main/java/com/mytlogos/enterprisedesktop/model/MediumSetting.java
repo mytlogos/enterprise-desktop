@@ -9,8 +9,8 @@ public class MediumSetting {
     private final String author;
     private final String artist;
     private final int medium;
-    private final int stateTL;
-    private final int stateOrigin;
+    private final ReleaseState stateTL;
+    private final ReleaseState stateOrigin;
     private final String countryOfOrigin;
     private final String languageOfOrigin;
     private final String lang;
@@ -22,7 +22,7 @@ public class MediumSetting {
     private final LocalDateTime lastUpdated;
     private final boolean toDownload;
 
-    public MediumSetting(String title, int mediumId, String author, String artist, int medium, int stateTL, int stateOrigin, String countryOfOrigin, String languageOfOrigin, String lang, String series, String universe, int currentRead, int currentReadEpisode, int lastEpisode, LocalDateTime lastUpdated, boolean toDownload) {
+    public MediumSetting(String title, int mediumId, String author, String artist, int medium, ReleaseState stateTL, ReleaseState stateOrigin, String countryOfOrigin, String languageOfOrigin, String lang, String series, String universe, int currentRead, int currentReadEpisode, int lastEpisode, LocalDateTime lastUpdated, boolean toDownload) {
         this.title = title;
         this.mediumId = mediumId;
         this.author = author;
@@ -62,11 +62,11 @@ public class MediumSetting {
         return medium;
     }
 
-    public int getStateTL() {
+    public ReleaseState getStateTL() {
         return stateTL;
     }
 
-    public int getStateOrigin() {
+    public ReleaseState getStateOrigin() {
         return stateOrigin;
     }
 
@@ -151,8 +151,8 @@ public class MediumSetting {
         result = 31 * result + (getAuthor() != null ? getAuthor().hashCode() : 0);
         result = 31 * result + (getArtist() != null ? getArtist().hashCode() : 0);
         result = 31 * result + getMedium();
-        result = 31 * result + getStateTL();
-        result = 31 * result + getStateOrigin();
+        result = 31 * result + (getStateTL() != null ? getStateTL().hashCode() : 0);
+        result = 31 * result + (getStateOrigin() != null ? getStateOrigin().hashCode() : 0);
         result = 31 * result + (getCountryOfOrigin() != null ? getCountryOfOrigin().hashCode() : 0);
         result = 31 * result + (getLanguageOfOrigin() != null ? getLanguageOfOrigin().hashCode() : 0);
         result = 31 * result + (getLang() != null ? getLang().hashCode() : 0);
@@ -195,8 +195,8 @@ public class MediumSetting {
         private String author;
         private String artist;
         private int medium;
-        private int stateTL;
-        private int stateOrigin;
+        private ReleaseState stateTL;
+        private ReleaseState stateOrigin;
         private String countryOfOrigin;
         private String languageOfOrigin;
         private String lang;
@@ -248,12 +248,12 @@ public class MediumSetting {
             return this;
         }
 
-        public MediumSettingBuilder setStateTL(int stateTL) {
+        public MediumSettingBuilder setStateTL(ReleaseState stateTL) {
             this.stateTL = stateTL;
             return this;
         }
 
-        public MediumSettingBuilder setStateOrigin(int stateOrigin) {
+        public MediumSettingBuilder setStateOrigin(ReleaseState stateOrigin) {
             this.stateOrigin = stateOrigin;
             return this;
         }

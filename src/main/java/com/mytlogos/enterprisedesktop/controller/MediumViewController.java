@@ -48,6 +48,8 @@ public class MediumViewController {
         Duration dataThreshold = Duration.ofHours(1);
         this.series.getData().clear();
 
+        final MediumSetting setting = this.mediumSettings.getValue();
+
         for (int i = 1, point = 0; i < releases.size(); i++) {
             final DisplayRelease release = releases.get(i);
             final DisplayRelease previousRelease = releases.get(i - 1);
@@ -58,7 +60,7 @@ public class MediumViewController {
                 this.series.getData().add(new XYChart.Data<>(point++, duration.toHours() / 24D));
             }
 
-            if ((i + 1) == releases.size()) {
+            if ((i + 1) == releases.size() && setting != null && !setting.getStateTL().isEnd()) {
                 final Duration current = Duration.between(release.getReleaseDate(), LocalDateTime.now());
 
                 if (current.compareTo(dataThreshold) > 0) {
@@ -139,9 +141,9 @@ public class MediumViewController {
         this.titleField.setText(mediumSetting.getTitle());
         this.artistField.setText(mediumSetting.getArtist());
         this.authorField.setText(mediumSetting.getAuthor());
-        this.tlStateField.setText(mediumSetting.getStateTL() + "");
+        this.tlStateField.setText(mediumSetting.getStateTL().getDisplayValue());
         this.cooField.setText(mediumSetting.getCountryOfOrigin());
-        this.stateCooField.setText(mediumSetting.getStateOrigin() + "");
+        this.stateCooField.setText(mediumSetting.getStateOrigin().getDisplayValue());
         this.langOfOriginField.setText(mediumSetting.getLanguageOfOrigin());
         this.seriesField.setText(mediumSetting.getSeries());
         this.universeField.setText(mediumSetting.getUniverse());

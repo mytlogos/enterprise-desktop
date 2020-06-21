@@ -343,8 +343,8 @@ class EditService {
                     mediumSettings.getMedium(),
                     mediumSettings.getArtist(),
                     mediumSettings.getLang(),
-                    mediumSettings.getStateOrigin(),
-                    mediumSettings.getStateTL(),
+                    mediumSettings.getStateOrigin().getValue(),
+                    mediumSettings.getStateTL().getValue(),
                     mediumSettings.getSeries(),
                     mediumSettings.getUniverse()
             );
