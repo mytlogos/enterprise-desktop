@@ -619,6 +619,11 @@ public class AnalyzeController implements Attachable {
             }
 
             @Override
+            int getIssueNumber() {
+                return this.getSubResult().stream().mapToInt(AnalyzeResult::getIssueNumber).sum();
+            }
+
+            @Override
             String getTitle() {
                 return String.format("Domain Mismatches: %d", this.getIssueNumber());
             }
