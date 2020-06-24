@@ -379,7 +379,7 @@ class QueryBuilder<R> {
 
     boolean updateIn() throws SQLException {
         this.expectWrite();
-        return this.executeIn(SqlUtils.update(this.singleQuerySetter), (o, o1) -> {
+        final Boolean result = this.executeIn(SqlUtils.update(this.singleQuerySetter), (o, o1) -> {
             if (o == null) {
                 if (o1 == null) {
                     return false;
@@ -390,6 +390,7 @@ class QueryBuilder<R> {
                 return o || o1;
             }
         });
+        return result == null ? false : result;
     }
 
     LiveData<List<R>> selectInLiveDataList() {
