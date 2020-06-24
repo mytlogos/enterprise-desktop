@@ -76,8 +76,18 @@ public class DisplayEpisodeProfileBuilder {
         return this;
     }
 
+    public DisplayEpisodeProfileBuilder setReadFilter(ReadFilter readFilter) {
+        this.readFilter = readFilter == null ? -1 : readFilter.getValue();
+        return this;
+    }
+
     public DisplayEpisodeProfileBuilder setSavedFilter(byte savedFilter) {
         this.savedFilter = savedFilter;
+        return this;
+    }
+
+    public DisplayEpisodeProfileBuilder setSavedFilter(SavedFilter savedFilter) {
+        this.savedFilter = savedFilter == null ? -1 : savedFilter.getValue();
         return this;
     }
 
