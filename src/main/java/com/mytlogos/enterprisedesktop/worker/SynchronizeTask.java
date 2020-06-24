@@ -40,6 +40,11 @@ public class SynchronizeTask extends Task<Void> {
         Thread.currentThread().setName("Synchronize-Thread");
         final Repository repository = ApplicationConfig.getLiveDataRepository().firstElement().get();
 
+        if (!repository.isClientOnline()) {
+            cleanUp();
+            System.out.println("Aborting Synchronize, Client is offline");
+            return null;
+        }
         if (!repository.isClientAuthenticated()) {
             cleanUp();
             throw new IllegalStateException("Not Authenticated");

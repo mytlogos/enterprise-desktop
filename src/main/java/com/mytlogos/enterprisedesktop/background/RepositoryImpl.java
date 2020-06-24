@@ -37,7 +37,7 @@ class RepositoryImpl implements Repository {
     RepositoryImpl() {
         this.loadedData = new LoadData();
         this.client = new Client(new DesktopNetworkIdentificator());
-        this.storage = new SqliteStorage();
+        this.storage = new SqliteStorage(this.loadedData);
         this.persister = this.storage.getPersister(this, this.loadedData);
         this.storageUserLiveData = this.storage.getUser().map(value -> {
             if (value == null) {
