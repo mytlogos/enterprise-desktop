@@ -1,44 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.RadioButton?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Text?>
 
-
-<VBox fx:id="root" maxWidth="1.7976931348623157E308" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MediumDisplayController">
-    <ButtonBar>
-        <buttons>
-            <Button fx:id="saveMediumBtn" defaultButton="true" mnemonicParsing="false" onAction="#saveMedium" text="Save" />
-        </buttons>
-    </ButtonBar>
-    <TextField fx:id="titleField" />
-    <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Mediumtype:" />
+<VBox fx:id="root" maxWidth="1.7976931348623157E308" spacing="10.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MediumDisplayController">
+    <Text fx:id="titleField" />
     <HBox spacing="5.0">
-        <RadioButton fx:id="textBtn" mnemonicParsing="false" text="Text">
-            <toggleGroup>
-                <ToggleGroup fx:id="mediumMedium" />
-            </toggleGroup>
-        </RadioButton>
-        <RadioButton fx:id="imageBtn" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="Image" toggleGroup="$mediumMedium" />
-        <RadioButton fx:id="videoBtn" layoutX="97.0" layoutY="10.0" mnemonicParsing="false" text="Video" toggleGroup="$mediumMedium" />
-        <RadioButton fx:id="audioBtn" layoutX="144.0" layoutY="10.0" mnemonicParsing="false" text="Audio" toggleGroup="$mediumMedium" />
+        <fx:include fx:id="showMedium" source="mediumTypes.fxml" />
+      <Region HBox.hgrow="ALWAYS" />
+        <ToggleButton fx:id="autoDownloadBtn" mnemonicParsing="false" text="Auto-Download" />
     </HBox>
-    <ToggleButton fx:id="autoDownloadBtn" mnemonicParsing="false" text="Auto-Download" />
-   <Label alignment="CENTER" contentDisplay="BOTTOM" graphicTextGap="0.0" maxWidth="1.7976931348623157E308" text="Table of Contents" />
-   <ListView fx:id="tocListView" prefHeight="100.0" />
-    <HBox spacing="10.0">
-        <TextField fx:id="urlField" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS" />
-        <Button fx:id="addTocBtn" mnemonicParsing="false" onAction="#addToc" text="Add ToC" />
-    </HBox>
+    <Label alignment="CENTER" contentDisplay="BOTTOM" graphicTextGap="0.0" maxWidth="1.7976931348623157E308" text="Table of Contents" />
+    <ListView fx:id="tocListView" minHeight="30.0" prefHeight="50.0" />
     <FlowPane columnHalignment="CENTER" hgap="10.0" vgap="10.0">
         <Label contentDisplay="RIGHT" layoutX="76.0" layoutY="10.0" text="Seen last">
             <graphic>
@@ -62,47 +41,47 @@
         </Label>
         <Label contentDisplay="RIGHT" text="Series">
             <graphic>
-                <TextField fx:id="seriesField" />
+                <Text fx:id="seriesField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="10.0" layoutY="10.0" text="Universe">
             <graphic>
-                <TextField fx:id="universeField" />
+                <Text fx:id="universeField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="136.0" layoutY="10.0" text="Author">
             <graphic>
-                <TextField fx:id="authorField" />
+                <Text fx:id="authorField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="360.0" layoutY="10.0" text="Artist">
             <graphic>
-                <TextField fx:id="artistField" />
+                <Text fx:id="artistField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="10.0" layoutY="27.0" text="Translation State">
             <graphic>
-                <TextField fx:id="tlStateField" />
+                <Text fx:id="tlStateField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="47.0" layoutY="27.0" text="State in COO">
             <graphic>
-                <TextField fx:id="stateCooField" />
+                <Text fx:id="stateCooField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="84.0" layoutY="27.0" text="Country of Origin">
             <graphic>
-                <TextField fx:id="cooField" />
+                <Text fx:id="cooField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="128.0" layoutY="27.0" text="Language of Origin">
             <graphic>
-                <TextField fx:id="langOfOriginField" />
+                <Text fx:id="langOfOriginField" />
             </graphic>
         </Label>
         <Label contentDisplay="RIGHT" layoutX="290.0" layoutY="27.0" text="Language">
             <graphic>
-                <TextField fx:id="languageField" />
+                <Text fx:id="languageField" />
             </graphic>
         </Label>
     </FlowPane>

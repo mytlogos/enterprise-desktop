@@ -1,44 +1,42 @@
 package com.mytlogos.enterprisedesktop.controller;
 
+import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.Formatter;
+import com.mytlogos.enterprisedesktop.background.TocStat;
+import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.MediumSetting;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Parent;
-import javafx.scene.control.*;
+import javafx.scene.control.ListView;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.HBox;
 import javafx.scene.text.Text;
+
+import java.util.List;
 
 /**
  *
  */
 public class MediumDisplayController {
+    private final ObjectProperty<MediumSetting> mediumSetting = new SimpleObjectProperty<>();
     @FXML
-    private Button saveMediumBtn;
+    private HBox showMedium;
     @FXML
-    private ListView tocListView;
+    private MediumTypes showMediumController;
     @FXML
-    private Button addTocBtn;
-    @FXML
-    private TextField urlField;
+    private ListView<String> tocListView;
     @FXML
     private Parent root;
     @FXML
-    private TextField titleField;
-    @FXML
-    private RadioButton textBtn;
-    @FXML
-    private RadioButton imageBtn;
-    @FXML
-    private RadioButton videoBtn;
-    @FXML
-    private RadioButton audioBtn;
+    private Text titleField;
     @FXML
     private ToggleButton autoDownloadBtn;
     @FXML
-    private TextField seriesField;
+    private Text seriesField;
     @FXML
-    private TextField universeField;
+    private Text universeField;
     @FXML
     private Text lastSeenText;
     @FXML
@@ -48,34 +46,35 @@ public class MediumDisplayController {
     @FXML
     private Text averageReleaseText;
     @FXML
-    private TextField authorField;
+    private Text authorField;
     @FXML
-    private TextField artistField;
+    private Text artistField;
     @FXML
-    private TextField tlStateField;
+    private Text tlStateField;
     @FXML
-    private TextField stateCooField;
+    private Text stateCooField;
     @FXML
-    private TextField cooField;
+    private Text cooField;
     @FXML
-    private TextField langOfOriginField;
+    private Text langOfOriginField;
     @FXML
-    private TextField languageField;
-    @FXML
-    private ToggleGroup mediumMedium;
-
-    private final ObjectProperty<MediumSetting> mediumSetting = new SimpleObjectProperty<>();
-
-    Parent getRoot() {
-        return this.root;
-    }
+    private Text languageField;
+    private LiveData<List<String>> liveTocs;
 
     public void initialize() {
+        this.showMediumController.setEditable(false);
         this.mediumSetting.addListener(observable -> {
             final MediumSetting setting = this.mediumSetting.get();
             if (setting == null) {
                 return;
             }
+            this.liveTocs = ApplicationConfig.getRepository().getToc(setting.getMediumId());
+            this.liveTocs.observe(tocs -> {
+                if (tocs == null) {
+                    return;
+                }
+                this.tocListView.getItems().setAll(tocs);
+            });
 
             this.titleField.setText(setting.getTitle());
             this.artistField.setText(setting.getArtist());
@@ -92,22 +91,11 @@ public class MediumDisplayController {
             this.lastUpdatedText.setText(Formatter.format(setting.getLastUpdated()));
             this.averageReleaseText.setText("-1");
             this.autoDownloadBtn.setSelected(setting.isToDownload());
-            ControllerUtils.setMedium(setting.getMedium(), this.textBtn, this.imageBtn, this.videoBtn, this.audioBtn);
+            this.showMediumController.setMedium(setting.getMedium());
         });
     }
 
     public void setMedium(MediumSetting setting) {
         this.mediumSetting.set(setting);
-    }
-
-    @FXML
-    private void addToc() {
-        final String url = this.urlField.getText();
-        System.out.println("adding url: " + url);
-    }
-
-    @FXML
-    private void saveMedium() {
-        System.out.println("saving medium");
     }
 }
