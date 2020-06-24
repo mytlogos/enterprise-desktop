@@ -43,4 +43,14 @@ public class LoadData {
     public Set<Integer> getMediaList() {
         return mediaList;
     }
+
+    public void clearAll() {
+        this.media.clear();
+        this.part.clear();
+        this.episode.clear();
+        this.news.clear();
+        this.externalMediaList.clear();
+        this.externalUser.clear();
+        this.mediaList.clear();
+    }
 }

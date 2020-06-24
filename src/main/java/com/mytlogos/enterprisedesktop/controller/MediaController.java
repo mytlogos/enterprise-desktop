@@ -229,7 +229,6 @@ public class MediaController implements Attachable {
         this.mediumContentView.setCellFactory(param -> {
             final TocEpisodeCell cell = new TocEpisodeCell(lockedImage, readImage, onlineImage, localImage);
             cell.currentMediumProperty().bind(this.mediaView.getSelectionModel().selectedItemProperty());
-            cell.prefWidthProperty().bind(param.widthProperty().subtract(20));
             return cell;
         });
 

@@ -150,7 +150,6 @@ public class ListViewController implements Attachable {
         this.mediumContentView.setCellFactory(param -> {
             final TocEpisodeCell cell = new TocEpisodeCell(lockedImage, readImage, onlineImage, localImage);
             cell.currentMediumProperty().bind(this.listMediaView.getSelectionModel().selectedItemProperty());
-            cell.prefWidthProperty().bind(param.widthProperty().subtract(20));
             return cell;
         });
 

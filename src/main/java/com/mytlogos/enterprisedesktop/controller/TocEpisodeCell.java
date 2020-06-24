@@ -61,6 +61,12 @@ class TocEpisodeCell extends ListCell<TocEpisode> {
             }
             ControllerUtils.openEpisode(item, mediumItem.getMedium(), mediumItem.getMediumId());
         });
+        this.listViewProperty().addListener((observable, oldValue, newValue) -> {
+            this.prefWidthProperty().unbind();
+            if (newValue != null) {
+                this.prefWidthProperty().bind(newValue.widthProperty().subtract(20));
+            }
+        });
     }
 
     public ObjectProperty<Medium> currentMediumProperty() {
