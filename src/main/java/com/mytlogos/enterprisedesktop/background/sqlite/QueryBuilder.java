@@ -248,7 +248,7 @@ class QueryBuilder<R> {
 
     boolean execute() {
         try {
-            return this.execute(manager.getConnection());
+            return this.execute(this.manager.getConnection());
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -256,12 +256,22 @@ class QueryBuilder<R> {
     }
 
     boolean execute(ConnectionImpl con) {
+        try {
+            return this.executeThrow(con);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    boolean executeThrow(ConnectionImpl con) throws SQLException {
         this.expectWrite();
         try (ConnectionImpl connection = con) {
             try (PreparedStatement statement = connection.prepareStatement(this.query, this.name)) {
                 this.prepareStatement(statement);
 
                 if (this.values != null) {
+                    final boolean autoCommit = connection.getAutoCommit();
                     connection.setAutoCommit(false);
 
                     final int[] execute;
@@ -271,10 +281,12 @@ class QueryBuilder<R> {
                         connection.commit();
                     } catch (SQLException e) {
                         connection.rollback();
-                        e.printStackTrace();
-                        return false;
+                        throw e;
                     } finally {
+                        // always unlock first before doing anything that can potentially fail
                         this.unlock();
+                        // preserve previous auto commit value
+                        connection.setAutoCommit(autoCommit);
                     }
                     for (int insertInfo : execute) {
                         if (insertInfo > 0) {
@@ -290,8 +302,6 @@ class QueryBuilder<R> {
                     }
                 }
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return false;
     }
