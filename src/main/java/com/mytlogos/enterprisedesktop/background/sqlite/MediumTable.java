@@ -22,11 +22,11 @@ class MediumTable extends AbstractTable {
         statement.setInt(1, medium.getMediumId());
         final Integer currentRead = medium.getCurrentRead();
 
-        if (currentRead == null) {
-            statement.setNull(2, Types.INTEGER);
-        } else {
-            statement.setInt(2, currentRead);
-        }
+//        if (currentRead == null) {
+        statement.setNull(2, Types.INTEGER);
+//        } else {
+//            statement.setInt(2, currentRead);
+//        }
         statement.setString(3, medium.getCountryOfOrigin());
         statement.setString(4, medium.getLanguageOfOrigin());
         statement.setString(5, medium.getAuthor());
