@@ -31,44 +31,6 @@ import java.util.stream.Collectors;
  */
 public class MediumViewController {
     private final XYChart.Series<Number, Number> series = new XYChart.Series<>();
-    private final Observer<PagedList<DisplayRelease>> releaseObserver = displayReleases -> {
-        Map<Integer, DisplayRelease> idValueMap = new HashMap<>();
-
-        for (DisplayRelease release : displayReleases) {
-            final DisplayRelease otherRelease = idValueMap.get(release.getEpisodeId());
-
-            if (otherRelease == null || otherRelease.getReleaseDate().isAfter(release.getReleaseDate())) {
-                idValueMap.put(release.getEpisodeId(), release);
-            }
-        }
-
-        List<DisplayRelease> releases = new ArrayList<>(idValueMap.values());
-        releases.sort(Comparator.comparing(DisplayRelease::getReleaseDate));
-
-        Duration dataThreshold = Duration.ofHours(1);
-        this.series.getData().clear();
-
-        final MediumSetting setting = this.mediumSettings.getValue();
-
-        for (int i = 1, point = 0; i < releases.size(); i++) {
-            final DisplayRelease release = releases.get(i);
-            final DisplayRelease previousRelease = releases.get(i - 1);
-
-            final Duration duration = Duration.between(previousRelease.getReleaseDate(), release.getReleaseDate());
-
-            if (duration.compareTo(dataThreshold) > 0) {
-                this.series.getData().add(new XYChart.Data<>(point++, duration.toHours() / 24D));
-            }
-
-            if ((i + 1) == releases.size() && setting != null && !setting.getStateTL().isEnd()) {
-                final Duration current = Duration.between(release.getReleaseDate(), LocalDateTime.now());
-
-                if (current.compareTo(dataThreshold) > 0) {
-                    this.series.getData().add(new XYChart.Data<>(point++, current.toHours() / 24D));
-                }
-            }
-        }
-    };
     @FXML
     private LineChart<Number, Number> releaseChart;
     @FXML
@@ -154,9 +116,11 @@ public class MediumViewController {
         this.averageReleaseText.setText("-1");
         this.autoDownloadBtn.setSelected(mediumSetting.isToDownload());
         this.showMediumController.setMedium(mediumSetting.getMedium());
+        this.updateReleaseChart(this.releaseLiveData.getValue());
     };
     private int mediumId;
     private LiveData<MediumSetting> mediumSettings;
+    private final Observer<PagedList<DisplayRelease>> releaseObserver = this::updateReleaseChart;
     private LiveData<List<String>> toc;
     private LiveData<List<MediaList>> parentLists;
     private LiveData<PagedList<DisplayRelease>> releaseLiveData;
@@ -234,6 +198,48 @@ public class MediumViewController {
                 .create()
         );
         this.releaseLiveData.observe(this.releaseObserver);
+    }
+
+    private void updateReleaseChart(List<DisplayRelease> displayReleases) {
+        if (displayReleases == null) {
+            return;
+        }
+        Map<Integer, DisplayRelease> idValueMap = new HashMap<>();
+
+        for (DisplayRelease release : displayReleases) {
+            final DisplayRelease otherRelease = idValueMap.get(release.getEpisodeId());
+
+            if (otherRelease == null || otherRelease.getReleaseDate().isAfter(release.getReleaseDate())) {
+                idValueMap.put(release.getEpisodeId(), release);
+            }
+        }
+
+        List<DisplayRelease> releases = new ArrayList<>(idValueMap.values());
+        releases.sort(Comparator.comparing(DisplayRelease::getReleaseDate));
+
+        Duration dataThreshold = Duration.ofHours(1);
+        this.series.getData().clear();
+
+        final MediumSetting setting = this.mediumSettings.getValue();
+
+        for (int i = 1, point = 0; i < releases.size(); i++) {
+            final DisplayRelease release = releases.get(i);
+            final DisplayRelease previousRelease = releases.get(i - 1);
+
+            final Duration duration = Duration.between(previousRelease.getReleaseDate(), release.getReleaseDate());
+
+            if (duration.compareTo(dataThreshold) > 0) {
+                this.series.getData().add(new XYChart.Data<>(point++, duration.toHours() / 24D));
+            }
+
+            if ((i + 1) == releases.size() && (setting == null || !setting.getStateTL().isEnd())) {
+                final Duration current = Duration.between(release.getReleaseDate(), LocalDateTime.now());
+
+                if (current.compareTo(dataThreshold) > 0) {
+                    this.series.getData().add(new XYChart.Data<>(point++, current.toHours() / 24D));
+                }
+            }
+        }
     }
 
     @FXML
