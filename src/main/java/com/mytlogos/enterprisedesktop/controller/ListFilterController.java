@@ -27,7 +27,6 @@ public class ListFilterController {
     private LiveData<List<Integer>> filterListItemsLiveData;
     private LiveData<List<Integer>> ignoredListItemsLiveData;
 
-
     public ListFilterController(TextField field, BooleanProperty ignoredProperty, ObservableList<Node> children, LiveData<List<MediaList>> listLiveData) {
         this.listFilterController = new FilterController<>(field, ignoredProperty, listLiveData, MediaList::getName, children);
         this.listFilterController.addFilteredListener(observable -> {

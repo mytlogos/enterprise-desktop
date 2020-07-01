@@ -1,8 +1,6 @@
 package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.background.sqlite.life.Observer;
-import com.mytlogos.enterprisedesktop.model.MediaList;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
@@ -22,41 +20,39 @@ import java.util.function.Function;
  *
  */
 public class FilterController<T> {
-    private final ObservableList<FilterItem<T>> listFilterItems = FXCollections.observableArrayList();
-    private final ObservableSet<T> filterListIds = FXCollections.observableSet(new HashSet<>());
-    private final ObservableSet<T> ignoredListIds = FXCollections.observableSet(new HashSet<>());
+    private final ObservableList<FilterItem<T>> filterItems = FXCollections.observableArrayList();
+    private final ObservableSet<T> filtered = FXCollections.observableSet(new HashSet<>());
+    private final ObservableSet<T> ignored = FXCollections.observableSet(new HashSet<>());
     private final Function<T, String> converter;
     private final ObservableList<Node> children;
-    private final Observer<List<T>> listObserver = this::updateFilteredListView;
-
 
     public FilterController(TextField field, BooleanProperty ignoredProperty, LiveData<List<T>> liveData, Function<T, String> converter, ObservableList<Node> children) {
         this.converter = converter;
         this.children = children;
-        liveData.observe(this.listObserver);
+        liveData.observe(this::updateFiltered);
         ControllerUtils.addAutoCompletionBinding(
                 field,
                 liveData,
                 converter,
                 mediaList -> {
                     if (ignoredProperty.get()) {
-                        this.ignoredListIds.add(mediaList);
+                        this.ignored.add(mediaList);
                     } else {
-                        this.filterListIds.add(mediaList);
+                        this.filtered.add(mediaList);
                     }
                 }
         );
-        this.filterListIds.addListener((InvalidationListener) observable -> updateFilteredListView(liveData.getValue()));
-        this.ignoredListIds.addListener((InvalidationListener) observable -> updateFilteredListView(liveData.getValue()));
-        this.listFilterItems.addListener((ListChangeListener<? super FilterItem<T>>) c -> {
+        this.filtered.addListener((InvalidationListener) observable -> updateFiltered(liveData.getValue()));
+        this.ignored.addListener((InvalidationListener) observable -> updateFiltered(liveData.getValue()));
+        this.filterItems.addListener((ListChangeListener<? super FilterItem<T>>) c -> {
             if (c.next()) {
                 if (c.wasAdded()) {
                     for (FilterItem<T> item : c.getAddedSubList()) {
                         item.setOnClose(() -> {
                             if (item.isIgnored()) {
-                                this.ignoredListIds.remove(item.getValue());
+                                this.ignored.remove(item.getValue());
                             } else {
-                                this.filterListIds.remove(item.getValue());
+                                this.filtered.remove(item.getValue());
                             }
                         });
                         this.children.add(item.getRoot());
@@ -71,66 +67,66 @@ public class FilterController<T> {
         });
     }
 
-    Collection<T> getFiltered() {
-        return this.filterListIds;
-    }
-
-    Collection<T> getIgnored() {
-        return this.ignoredListIds;
-    }
-
-    void addFilteredListener(InvalidationListener listener) {
-        this.filterListIds.addListener(listener);
-    }
-
-    void addIgnoredListener(InvalidationListener listener) {
-        this.ignoredListIds.addListener(listener);
-    }
-
-    private void updateFilteredListView(List<T> mediaLists) {
-        if (mediaLists == null) {
+    private void updateFiltered(List<T> list) {
+        if (list == null) {
             return;
         }
 
-        List<T> filterLists = new ArrayList<>(this.filterListIds.size());
-        List<T> ignoreLists = new ArrayList<>(this.ignoredListIds.size());
+        List<T> filter = new ArrayList<>(this.filtered.size());
+        List<T> ignore = new ArrayList<>(this.ignored.size());
 
-        for (T mediaList : mediaLists) {
-            if (this.filterListIds.contains(mediaList)) {
-                filterLists.add(mediaList);
+        for (T value : list) {
+            if (this.filtered.contains(value)) {
+                filter.add(value);
             }
-            if (this.ignoredListIds.contains(mediaList)) {
-                ignoreLists.add(mediaList);
+            if (this.ignored.contains(value)) {
+                ignore.add(value);
             }
         }
 
         final List<FilterItem<T>> removeItems = new ArrayList<>();
 
-        for (FilterItem<T> item : this.listFilterItems) {
+        for (FilterItem<T> item : this.filterItems) {
             final T value = item.getValue();
 
             if (item.isIgnored()) {
-                if (!ignoreLists.remove(value)) {
+                if (!ignore.remove(value)) {
                     removeItems.add(item);
                 }
-            } else if (!filterLists.remove(value)) {
+            } else if (!filter.remove(value)) {
                 removeItems.add(item);
             }
         }
         final List<FilterItem<T>> newItems = new ArrayList<>();
 
-        for (T mediaList : filterLists) {
-            FilterItem<T> mediaListFilterItem = new FilterItem<>(this.converter.apply(mediaList), mediaList);
+        for (T value : filter) {
+            FilterItem<T> mediaListFilterItem = new FilterItem<>(this.converter.apply(value), value);
             mediaListFilterItem.setIgnored(false);
             newItems.add(mediaListFilterItem);
         }
 
-        for (T mediaList : ignoreLists) {
-            FilterItem<T> mediaListFilterItem = new FilterItem<>(this.converter.apply(mediaList), mediaList);
+        for (T value : ignore) {
+            FilterItem<T> mediaListFilterItem = new FilterItem<>(this.converter.apply(value), value);
             mediaListFilterItem.setIgnored(true);
             newItems.add(mediaListFilterItem);
         }
-        this.listFilterItems.removeAll(removeItems);
-        this.listFilterItems.addAll(newItems);
+        this.filterItems.removeAll(removeItems);
+        this.filterItems.addAll(newItems);
+    }
+
+    Collection<T> getFiltered() {
+        return this.filtered;
+    }
+
+    Collection<T> getIgnored() {
+        return this.ignored;
+    }
+
+    void addFilteredListener(InvalidationListener listener) {
+        this.filtered.addListener(listener);
+    }
+
+    void addIgnoredListener(InvalidationListener listener) {
+        this.ignored.addListener(listener);
     }
 }
