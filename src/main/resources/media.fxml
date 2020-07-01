@@ -1,22 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
-<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Text?>
 
 <SplitPane dividerPositions="0.7" orientation="VERTICAL" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.mytlogos.enterprisedesktop.controller.MediaController">
     <SplitPane dividerPositions="0.6">
@@ -28,7 +24,7 @@
                 <TextField fx:id="nameFilter" />
                 <Spinner fx:id="minEpisodeIndex" editable="true" />
                 <Spinner fx:id="maxEpisodeIndex" editable="true" />
-                <fx:include source="mediumTypes.fxml" fx:id="showMedium"/>
+                <fx:include fx:id="showMedium" source="mediumTypes.fxml" />
                 <ChoiceBox fx:id="mediumSorting" prefWidth="150.0" />
                 <ToggleButton fx:id="mediumAscendingBtn" mnemonicParsing="false" text="Ascending" />
                 <VBox spacing="5.0">
@@ -39,7 +35,7 @@
                         <TextField fx:id="listFilter" promptText="List Name"/>
                         <ToggleButton fx:id="ignoreLists" mnemonicParsing="false" text="Ignore"/>
                     </HBox>
-                    <ListView fx:id="listFilterView" maxHeight="-Infinity" prefHeight="100.0" prefWidth="200.0"/>
+                    <FlowPane fx:id="listFlowFilter" hgap="5.0" prefWrapLength="0.0" vgap="5.0"/>
                 </VBox>
             </FlowPane>
             <StackPane VBox.vgrow="ALWAYS">
@@ -61,8 +57,8 @@
                 <ChoiceBox fx:id="episodeSorting" prefWidth="150.0" />
                 <ToggleButton fx:id="episodeAscendingBtn" mnemonicParsing="false" text="Ascending" />
                 <TextField fx:id="scrollToEpisodeField" onAction="#scrollToEpisode" promptText="Scroll To" />
-                <fx:include source="threeStates.fxml" fx:id="readFilterState"/>
-                <fx:include source="threeStates.fxml" fx:id="savedFilterState"/>
+                <fx:include fx:id="readFilterState" source="threeStates.fxml" />
+                <fx:include fx:id="savedFilterState" source="threeStates.fxml" />
             </FlowPane>
             <StackPane VBox.vgrow="ALWAYS">
                 <ListView fx:id="mediumContentView" />

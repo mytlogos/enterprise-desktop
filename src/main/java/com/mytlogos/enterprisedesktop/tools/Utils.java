@@ -21,7 +21,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class Utils {
+    @SuppressWarnings("rawtypes")
+    private static final Observer OBSERVER = e -> {
+    };
+    @SuppressWarnings("rawtypes")
     public static BiFunction FIRST_ONLY = (o, o2) -> o;
+    @SuppressWarnings("rawtypes")
     public static BiFunction SECOND_ONLY = (o, o2) -> o2;
 
     public static ThreadFactory countingThreadFactory(String prefix) {
@@ -186,8 +191,8 @@ public class Utils {
     }
 
     public static <E> Observer<E> emptyObserver() {
-        return e -> {
-        };
+        //noinspection unchecked
+        return OBSERVER;
     }
 
     public static <E> void doPartitionedAsync(Collection<E> collection, FunctionEx<List<E>, Boolean> consumer) throws Exception {

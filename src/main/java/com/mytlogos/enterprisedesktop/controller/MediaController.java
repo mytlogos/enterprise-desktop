@@ -10,7 +10,6 @@ import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
-import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -18,12 +17,14 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableSet;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyCode;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -40,16 +41,21 @@ public class MediaController implements Attachable {
     private final ObjectProperty<ReadFilter> readFilterProperty = new SimpleObjectProperty<>();
     private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private final ObservableList<MediumItem> observableMediaItems = FXCollections.observableArrayList();
-    private final Observer<List<MediaList>> listObserver = Utils.emptyObserver();
-    private final ObjectProperty<List<Integer>> listItemsProperty = new SimpleObjectProperty<>();
-    private final Observer<List<Integer>> listItemsObserver = this.listItemsProperty::set;
+    private final ObservableSet<Integer> filterListIds = FXCollections.observableSet();
+    private final ObservableSet<Integer> ignoredListIds = FXCollections.observableSet();
+    private final ObservableList<FilterItem<MediaList>> listFilterItems = FXCollections.observableArrayList();
+    private final ObservableList<Integer> observableFilterListItems = FXCollections.observableArrayList();
+    private final ObservableList<Integer> observableIgnoreListItems = FXCollections.observableArrayList();
+    private final Observer<List<MediaList>> listObserver = this::updateFilteredListView;
+    private final Observer<List<Integer>> filterListItemsObserver = mediaIds -> this.observableFilterListItems.setAll(mediaIds == null ? Collections.emptyList() : mediaIds);
+    private final Observer<List<Integer>> ignoreListItemsObserver = mediaIds -> this.observableIgnoreListItems.setAll(mediaIds == null ? Collections.emptyList() : mediaIds);
     private ObjectBinding<MediumFilter> mediumFilter;
     @FXML
     private TextField listFilter;
     @FXML
     private ToggleButton ignoreLists;
     @FXML
-    private ListView<MediaList> listFilterView;
+    private FlowPane listFlowFilter;
     @FXML
     private StackPane mediaLoadPane;
     @FXML
@@ -116,10 +122,52 @@ public class MediaController implements Attachable {
     private LiveData<MediumSetting> mediumSettingLiveData;
     private final InvalidationListener mediumListener = observable -> selectMedium();
     private LiveData<List<MediumItem>> mediaItems;
-    private LiveData<List<Integer>> listItemsLiveData;
     private LiveData<List<MediaList>> listLiveData;
+    private LiveData<List<Integer>> filterListItemsLiveData;
+    private LiveData<List<Integer>> ignoredListItemsLiveData;
 
     public void initialize() {
+        this.listFilterItems.addListener((ListChangeListener<? super FilterItem<MediaList>>) c -> {
+            if (c.next()) {
+                if (c.wasAdded()) {
+                    for (FilterItem<MediaList> item : c.getAddedSubList()) {
+                        item.setOnClose(() -> {
+                            if (item.isIgnored()) {
+                                this.ignoredListIds.remove(item.getValue().getListId());
+                            } else {
+                                this.filterListIds.remove(item.getValue().getListId());
+                            }
+                        });
+                        this.listFlowFilter.getChildren().add(item.getRoot());
+                    }
+                }
+                if (c.wasRemoved()) {
+                    for (FilterItem<MediaList> item : c.getRemoved()) {
+                        this.listFlowFilter.getChildren().remove(item.getRoot());
+                    }
+                }
+            }
+        });
+        this.filterListIds.addListener((InvalidationListener) observable -> {
+            List<Integer> listIds = new ArrayList<>(this.filterListIds);
+
+            if (this.filterListItemsLiveData != null) {
+                this.filterListItemsLiveData.removeObserver(this.filterListItemsObserver);
+            }
+            this.filterListItemsLiveData = ApplicationConfig.getRepository().getListItems(listIds);
+            this.filterListItemsLiveData.observe(this.filterListItemsObserver);
+        });
+        this.ignoredListIds.addListener((InvalidationListener) observable -> {
+            List<Integer> listIds = new ArrayList<>(this.ignoredListIds);
+
+            if (this.ignoredListItemsLiveData != null) {
+                this.ignoredListItemsLiveData.removeObserver(this.ignoreListItemsObserver);
+            }
+            this.ignoredListItemsLiveData = ApplicationConfig.getRepository().getListItems(listIds);
+            this.ignoredListItemsLiveData.observe(this.ignoreListItemsObserver);
+        });
+        this.filterListIds.addListener((InvalidationListener) observable -> updateFilteredListView(this.listLiveData.getValue()));
+        this.ignoredListIds.addListener((InvalidationListener) observable -> updateFilteredListView(this.listLiveData.getValue()));
         this.showMediumController.setMedium(0);
         this.mediumFilter = Bindings.createObjectBinding(() -> new MediumFilter(
                         this.nameFilter.getText(),
@@ -157,57 +205,30 @@ public class MediaController implements Attachable {
                             }
                         }
                         final int mediumId = mediumItem.getMediumId();
-                        final List<Integer> value = this.listItemsProperty.getValue();
 
-                        if (value == null || this.listFilterView.getItems().isEmpty()) {
-                            return true;
+                        if (!this.observableIgnoreListItems.isEmpty() && this.observableIgnoreListItems.contains(mediumId)) {
+                            return false;
                         }
-                        if (this.ignoreLists.isSelected()) {
-                            return !value.contains(mediumId);
-                        } else {
-                            return value.contains(mediumId);
-                        }
+                        return this.observableFilterListItems.isEmpty() || this.observableFilterListItems.contains(mediumId);
                     };
                 },
-                this.listFilterView.getItems(),
-                this.ignoreLists.selectedProperty(),
-                this.mediumFilter,
-                this.listItemsProperty
+                this.observableFilterListItems,
+                this.observableIgnoreListItems,
+                this.mediumFilter
         ));
-        this.listFilterView.setCellFactory(param -> {
-            final ListCell<MediaList> cell = new ListCell<>();
-            cell.textProperty().bind(Bindings.createStringBinding(
-                    () -> cell.getItem() == null ? "" : cell.getItem().getName(),
-                    cell.itemProperty())
-            );
-            return cell;
-        });
-
-        this.listFilterView.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.DELETE) {
-                this.listFilterView.getItems().removeAll(this.listFilterView.getSelectionModel().getSelectedItems());
-            }
-        });
-
-        this.listFilterView.getItems().addListener((InvalidationListener) observable -> {
-            List<Integer> listIds = new ArrayList<>(this.listFilterView.getItems().size());
-
-            for (MediaList item : this.listFilterView.getItems()) {
-                listIds.add(item.getListId());
-            }
-            if (this.listItemsLiveData != null) {
-                this.listItemsLiveData.removeObserver(this.listItemsObserver);
-            }
-            this.listItemsLiveData = ApplicationConfig.getRepository().getListItems(listIds);
-            this.listItemsLiveData.observe(this.listItemsObserver);
-        });
         this.listLiveData = ApplicationConfig.getLiveDataRepository().flatMap(Repository::getInternLists);
         this.listLiveData.observe(this.listObserver);
         ControllerUtils.addAutoCompletionBinding(
                 this.listFilter,
                 this.listLiveData,
                 MediaList::getName,
-                mediaList -> this.listFilterView.getItems().add(mediaList)
+                mediaList -> {
+                    if (this.ignoreLists.isSelected()) {
+                        this.ignoredListIds.add(mediaList.getListId());
+                    } else {
+                        this.filterListIds.add(mediaList.getListId());
+                    }
+                }
         );
 
         this.mediaView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -251,6 +272,52 @@ public class MediaController implements Attachable {
         final LiveData<Repository> repositorySingle = ApplicationConfig.getLiveDataRepository();
         this.mediaLoadPane.setVisible(true);
         this.mediaItems = repositorySingle.flatMap(repository -> repository.getAllMedia(this.mediumSorting.getValue()));
+    }
+
+    private void updateFilteredListView(List<MediaList> mediaLists) {
+        if (mediaLists == null) {
+            return;
+        }
+        List<MediaList> filterLists = new ArrayList<>(this.filterListIds.size());
+        List<MediaList> ignoreLists = new ArrayList<>(this.ignoredListIds.size());
+
+        for (MediaList mediaList : mediaLists) {
+            if (this.filterListIds.contains(mediaList.getListId())) {
+                filterLists.add(mediaList);
+            }
+            if (this.ignoredListIds.contains(mediaList.getListId())) {
+                ignoreLists.add(mediaList);
+            }
+        }
+
+        final List<FilterItem<MediaList>> removeItems = new ArrayList<>();
+
+        for (FilterItem<MediaList> item : this.listFilterItems) {
+            final MediaList value = item.getValue();
+
+            if (item.isIgnored()) {
+                if (!ignoreLists.remove(value)) {
+                    removeItems.add(item);
+                }
+            } else if (!filterLists.remove(value)) {
+                removeItems.add(item);
+            }
+        }
+        final List<FilterItem<MediaList>> newItems = new ArrayList<>();
+
+        for (MediaList mediaList : filterLists) {
+            FilterItem<MediaList> mediaListFilterItem = new FilterItem<>(mediaList.getName(), mediaList);
+            mediaListFilterItem.setIgnored(false);
+            newItems.add(mediaListFilterItem);
+        }
+
+        for (MediaList mediaList : ignoreLists) {
+            FilterItem<MediaList> mediaListFilterItem = new FilterItem<>(mediaList.getName(), mediaList);
+            mediaListFilterItem.setIgnored(true);
+            newItems.add(mediaListFilterItem);
+        }
+        this.listFilterItems.removeAll(removeItems);
+        this.listFilterItems.addAll(newItems);
     }
 
     private void setMediaViewContextMenu() {
