@@ -7,10 +7,7 @@ import retrofit2.Response;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +35,29 @@ public class Utils {
                 return new Thread(r, String.format("%s%d", prefix, count.getAndIncrement()));
             }
         };
+    }
+
+    /**
+     * ???
+     *
+     * @param array
+     * @param values
+     * @param <T>
+     * @return
+     */
+    @SafeVarargs
+    public static <T> T[] concat(T[] array, T... values) {
+        List<T> list = new ArrayList<>(array.length + values.length);
+        list.addAll(Arrays.asList(array));
+        list.addAll(Arrays.asList(values));
+
+        T[] cast;
+        if (values.length == 0) {
+            cast = values;
+        } else {
+            cast = array;
+        }
+        return list.toArray(cast);
     }
 
     public static ThreadFactory threadFactory(String name) {
