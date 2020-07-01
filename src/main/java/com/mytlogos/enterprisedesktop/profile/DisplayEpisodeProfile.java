@@ -15,6 +15,7 @@ public class DisplayEpisodeProfile extends AbstractProfile {
     public final int minEpisodeIndex;
     public final int maxEpisodeIndex;
     public final boolean latestOnly;
+    public final boolean ignoreLocked;
     public final List<Integer> filterListIds;
     public final List<Integer> ignoreListIds;
     public final List<Integer> filterMediumIds;
@@ -22,11 +23,12 @@ public class DisplayEpisodeProfile extends AbstractProfile {
     public final byte readFilter;
     public final byte savedFilter;
 
-    public DisplayEpisodeProfile(int medium, int minEpisodeIndex, int maxEpisodeIndex, boolean latestOnly, List<Integer> filterListIds, List<Integer> ignoreListIds, List<Integer> filterMediumIds, List<Integer> ignoreMediumIds, byte readFilter, byte savedFilter) {
+    public DisplayEpisodeProfile(int medium, int minEpisodeIndex, int maxEpisodeIndex, boolean latestOnly, boolean ignoreLocked, List<Integer> filterListIds, List<Integer> ignoreListIds, List<Integer> filterMediumIds, List<Integer> ignoreMediumIds, byte readFilter, byte savedFilter) {
         this.medium = medium;
         this.minEpisodeIndex = minEpisodeIndex;
         this.maxEpisodeIndex = maxEpisodeIndex;
         this.latestOnly = latestOnly;
+        this.ignoreLocked = ignoreLocked;
         this.filterListIds = filterListIds;
         this.ignoreListIds = ignoreListIds;
         this.filterMediumIds = filterMediumIds;
@@ -35,11 +37,12 @@ public class DisplayEpisodeProfile extends AbstractProfile {
         this.savedFilter = savedFilter;
     }
 
-    public DisplayEpisodeProfile(int medium, int minEpisodeIndex, int maxEpisodeIndex, boolean latestOnly, List<Integer> filterListIds, List<Integer> ignoreListIds, List<Integer> filterMediumIds, List<Integer> ignoreMediumIds, ReadFilter readFilter, SavedFilter savedFilter) {
+    public DisplayEpisodeProfile(int medium, int minEpisodeIndex, int maxEpisodeIndex, boolean latestOnly, boolean ignoreLocked, List<Integer> filterListIds, List<Integer> ignoreListIds, List<Integer> filterMediumIds, List<Integer> ignoreMediumIds, ReadFilter readFilter, SavedFilter savedFilter) {
         this.medium = medium;
         this.minEpisodeIndex = minEpisodeIndex;
         this.maxEpisodeIndex = maxEpisodeIndex;
         this.latestOnly = latestOnly;
+        this.ignoreLocked = ignoreLocked;
         this.filterListIds = filterListIds;
         this.ignoreListIds = ignoreListIds;
         this.filterMediumIds = filterMediumIds;
@@ -53,6 +56,7 @@ public class DisplayEpisodeProfile extends AbstractProfile {
         this.minEpisodeIndex = -1;
         this.maxEpisodeIndex = -1;
         this.latestOnly = false;
+        this.ignoreLocked = false;
         this.filterListIds = Collections.emptyList();
         this.ignoreListIds = Collections.emptyList();
         this.filterMediumIds = Collections.emptyList();
@@ -67,6 +71,7 @@ public class DisplayEpisodeProfile extends AbstractProfile {
         result = 31 * result + minEpisodeIndex;
         result = 31 * result + maxEpisodeIndex;
         result = 31 * result + (latestOnly ? 1 : 0);
+        result = 31 * result + (ignoreLocked ? 1 : 0);
         result = 31 * result + (filterListIds != null ? filterListIds.hashCode() : 0);
         result = 31 * result + (ignoreListIds != null ? ignoreListIds.hashCode() : 0);
         result = 31 * result + (filterMediumIds != null ? filterMediumIds.hashCode() : 0);
@@ -87,6 +92,7 @@ public class DisplayEpisodeProfile extends AbstractProfile {
         if (minEpisodeIndex != that.minEpisodeIndex) return false;
         if (maxEpisodeIndex != that.maxEpisodeIndex) return false;
         if (latestOnly != that.latestOnly) return false;
+        if (ignoreLocked != that.ignoreLocked) return false;
         if (readFilter != that.readFilter) return false;
         if (savedFilter != that.savedFilter) return false;
         if (!Objects.equals(filterListIds, that.filterListIds))
@@ -105,6 +111,7 @@ public class DisplayEpisodeProfile extends AbstractProfile {
                 ", minEpisodeIndex=" + minEpisodeIndex +
                 ", maxEpisodeIndex=" + maxEpisodeIndex +
                 ", latestOnly=" + latestOnly +
+                ", ignoreLocked=" + ignoreLocked +
                 ", filterListIds=" + filterListIds +
                 ", ignoreListIds=" + ignoreListIds +
                 ", filterMediumIds=" + filterMediumIds +

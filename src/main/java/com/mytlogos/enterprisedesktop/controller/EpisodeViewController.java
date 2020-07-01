@@ -99,7 +99,9 @@ public class EpisodeViewController implements Attachable {
     @FXML
     private Spinner<Integer> maxEpisodeIndex;
     @FXML
-    private CheckBox latestOnly;
+    private ToggleButton latestOnly;
+    @FXML
+    private ToggleButton ignoreLocked;
     private LiveData<PagedList<DisplayRelease>> episodesLiveData;
     private LiveData<List<Integer>> filterListItemsLiveData;
     private LiveData<List<Integer>> ignoredListItemsLiveData;
@@ -289,6 +291,7 @@ public class EpisodeViewController implements Attachable {
                                 this.minEpisodeIndex.getValue(),
                                 this.maxEpisodeIndex.getValue(),
                                 this.latestOnly.isSelected(),
+                                this.ignoreLocked.isSelected(),
                                 new ArrayList<>(this.filterListIds),
                                 new ArrayList<>(this.ignoredListIds),
                                 new ArrayList<>(this.filterMediumIds),
@@ -297,6 +300,7 @@ public class EpisodeViewController implements Attachable {
                                 this.savedFilterObjectProperty.getValue()
                         )),
                 this.latestOnly.selectedProperty(),
+                this.ignoreLocked.selectedProperty(),
                 this.readFilterObjectProperty,
                 this.savedFilterObjectProperty,
                 this.showMediumController.mediumProperty(),

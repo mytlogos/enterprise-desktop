@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextField?>
@@ -21,7 +20,8 @@
         <Spinner fx:id="minEpisodeIndex" editable="true" />
         <Spinner fx:id="maxEpisodeIndex" editable="true" />
         <fx:include fx:id="showMedium" source="mediumTypes.fxml" />
-        <CheckBox fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only" />
+      <ToggleButton fx:id="latestOnly" mnemonicParsing="false" text="Latest Release Only" />
+      <ToggleButton fx:id="ignoreLocked" mnemonicParsing="false" text="Ignore Locked" />
         <VBox spacing="5.0">
             <padding>
                 <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

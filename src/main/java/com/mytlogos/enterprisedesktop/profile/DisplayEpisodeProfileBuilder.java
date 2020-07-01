@@ -11,6 +11,7 @@ public class DisplayEpisodeProfileBuilder {
     private int minEpisodeIndex;
     private int maxEpisodeIndex;
     private boolean latestOnly;
+    private boolean ignoreLocked;
     private List<Integer> filterListIds;
     private List<Integer> ignoreListIds;
     private List<Integer> filterMediumIds;
@@ -23,6 +24,7 @@ public class DisplayEpisodeProfileBuilder {
         this.minEpisodeIndex = -1;
         this.maxEpisodeIndex = -1;
         this.latestOnly = false;
+        this.ignoreLocked = false;
         this.filterListIds = Collections.emptyList();
         this.ignoreListIds = Collections.emptyList();
         this.filterMediumIds = Collections.emptyList();
@@ -81,6 +83,10 @@ public class DisplayEpisodeProfileBuilder {
         return this;
     }
 
+    public void setIgnoreLocked(boolean ignoreLocked) {
+        this.ignoreLocked = ignoreLocked;
+    }
+
     public DisplayEpisodeProfileBuilder setSavedFilter(byte savedFilter) {
         this.savedFilter = savedFilter;
         return this;
@@ -92,6 +98,6 @@ public class DisplayEpisodeProfileBuilder {
     }
 
     public DisplayEpisodeProfile create() {
-        return new DisplayEpisodeProfile(medium, minEpisodeIndex, maxEpisodeIndex, latestOnly, filterListIds, ignoreListIds, filterMediumIds, ignoreMediumIds, readFilter, savedFilter);
+        return new DisplayEpisodeProfile(medium, minEpisodeIndex, maxEpisodeIndex, latestOnly, ignoreLocked, filterListIds, ignoreListIds, filterMediumIds, ignoreMediumIds, readFilter, savedFilter);
     }
 }
