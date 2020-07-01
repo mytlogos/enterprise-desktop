@@ -6,6 +6,7 @@ import com.mytlogos.enterprisedesktop.controller.MainController;
  *
  */
 public enum ReleaseState implements MainController.DisplayValue {
+    ANY(-1, "Any", false),
     UNKNOWN(0, "Unknown", false),
     ONGOING(1, "Ongoing", false),
     HIATUS(2, "Hiatus", false),

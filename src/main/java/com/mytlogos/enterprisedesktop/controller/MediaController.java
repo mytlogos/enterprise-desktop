@@ -13,7 +13,6 @@ import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ObjectProperty;
@@ -30,7 +29,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.controlsfx.control.Notifications;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -42,6 +44,8 @@ public class MediaController implements Attachable {
     private final TextFormatter<Double> scrollToEpisodeFormatter = ControllerUtils.doubleTextFormatter();
     private final ObservableList<MediumItem> observableMediaItems = FXCollections.observableArrayList();
     private ObjectBinding<MediumFilter> mediumFilter;
+    @FXML
+    private ChoiceBox<ReleaseState> releaseState;
     @FXML
     private TextField listFilter;
     @FXML
@@ -118,6 +122,9 @@ public class MediaController implements Attachable {
     private ListFilterController listFilterController;
 
     public void initialize() {
+        this.releaseState.setConverter(new MainController.DisplayConverter<>(ReleaseState.values()));
+        this.releaseState.getItems().setAll(ReleaseState.values());
+        this.releaseState.getSelectionModel().select(ReleaseState.ANY);
         this.listLiveData = ApplicationConfig.getLiveDataRepository().flatMap(Repository::getInternLists);
         this.listFilterController = new ListFilterController(this.listFilter, this.ignoreLists.selectedProperty(), this.listFlowFilter.getChildren(), this.listLiveData);
         this.showMediumController.setMedium(0);
@@ -125,10 +132,12 @@ public class MediaController implements Attachable {
                         this.nameFilter.getText(),
                         this.showMediumController.getMedium(),
                         -1,
-                        -1
+                        -1,
+                        this.releaseState.getValue()
                 ),
                 this.nameFilter.textProperty(),
-                this.showMediumController.mediumProperty()
+                this.showMediumController.mediumProperty(),
+                this.releaseState.valueProperty()
         );
 
         FilteredList<MediumItem> itemFilteredList = new FilteredList<>(this.observableMediaItems);
@@ -153,6 +162,9 @@ public class MediaController implements Attachable {
                                 return false;
                             }
                             if (title != null && !mediumItem.getTitle().toLowerCase().contains(title)) {
+                                return false;
+                            }
+                            if (mediumFilter.state != ReleaseState.ANY && mediumFilter.state.getValue() != mediumItem.getStateTL()) {
                                 return false;
                             }
                         }
@@ -443,12 +455,14 @@ public class MediaController implements Attachable {
         private final int medium;
         private final int minEpisodeIndex;
         private final int maxEpisodeIndex;
+        private final ReleaseState state;
 
-        public MediumFilter(String title, int medium, int minEpisodeIndex, int maxEpisodeIndex) {
+        public MediumFilter(String title, int medium, int minEpisodeIndex, int maxEpisodeIndex, ReleaseState state) {
             this.title = title;
             this.medium = medium;
             this.minEpisodeIndex = minEpisodeIndex;
             this.maxEpisodeIndex = maxEpisodeIndex;
+            this.state = state;
         }
     }
 }
