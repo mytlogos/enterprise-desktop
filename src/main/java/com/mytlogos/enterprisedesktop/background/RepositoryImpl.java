@@ -985,7 +985,7 @@ class RepositoryImpl implements Repository {
     @Override
     public boolean addToc(int mediumId, String link) {
         try {
-            final Response<Boolean> response = this.client.removeToc(mediumId, link);
+            final Response<Boolean> response = this.client.addToc(mediumId, link);
             final Boolean body = Utils.checkAndGetBody(response);
 
             if (body) {
