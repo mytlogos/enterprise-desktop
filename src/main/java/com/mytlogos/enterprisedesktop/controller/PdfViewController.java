@@ -1,6 +1,5 @@
 package com.mytlogos.enterprisedesktop.controller;
 
-import com.sun.javafx.webkit.WebConsoleListener;
 import javafx.application.Application;
 import javafx.concurrent.Worker;
 import javafx.embed.swing.SwingFXUtils;
@@ -38,9 +37,6 @@ public class PdfViewController extends Application {
     }
 
     private WebView renderWithWebView() {
-        WebConsoleListener.setDefaultListener((webView, message, lineNumber, sourceId) -> {
-            System.out.println(message + "[at " + lineNumber + "]");
-        });
         final WebView web = new WebView();
         WebEngine engine = web.getEngine();
         String url = getClass().getResource("/pdfjs/web/viewer.html").toExternalForm();

@@ -7,7 +7,7 @@ import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.profile.DisplayEpisodeProfile;
 import com.mytlogos.enterprisedesktop.tools.Sorting;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import com.mytlogos.enterprisedesktop.tools.NotImplementedException;
 
 import java.time.LocalDateTime;
 import java.util.*;

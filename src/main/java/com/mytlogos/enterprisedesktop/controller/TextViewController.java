@@ -6,7 +6,6 @@ import com.mytlogos.enterprisedesktop.model.SimpleEpisode;
 import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import com.mytlogos.enterprisedesktop.tools.FileTools;
 import com.mytlogos.enterprisedesktop.tools.TextContentTool;
-import com.sun.javafx.webkit.WebConsoleListener;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -121,9 +120,6 @@ public class TextViewController {
             }
         });
 
-        WebConsoleListener.setDefaultListener((webView, message, lineNumber, sourceId) -> {
-            System.out.println(message + "[at " + lineNumber + "]");
-        });
         this.browser.setOnScroll(event -> updateProgress());
         this.browser.setOnScrollStarted(event -> System.out.println("i started scrolling"));
         this.browser.setOnScrollFinished(event -> System.out.println("i finished scrolling"));
