@@ -9,6 +9,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <javafx.version>15.0.1</javafx.version>
+        <maven.compiler.release>11</maven.compiler.release>
     </properties>
     <build>
         <finalName>enterprisedesktop</finalName>
@@ -36,6 +37,31 @@
                     <mainClass>com.mytlogos.enterprisedesktop.Starter</mainClass>
                 </configuration>
             </plugin>
+            <!-- Include external Dependencies into a fat jar -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                  <descriptorRefs>
+                    <descriptorRef>jar-with-dependencies</descriptorRef>
+                  </descriptorRefs>
+                  <archive>
+                    <manifest>
+                      <mainClass>com.mytlogos.enterprisedesktop.SubStarter</mainClass>
+                    </manifest>
+                  </archive>
+                </configuration>
+                <executions>
+                    <execution>
+                      <id>make-assembly</id> <!-- this is used for inheritance merges -->
+                      <phase>package</phase> <!-- bind to the packaging phase -->
+                      <goals>
+                        <goal>single</goal>
+                      </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <!-- Make this jar executable -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -49,7 +75,7 @@
                     <archive>
                         <manifest>
                             <!-- Jar file entry point -->
-                            <mainClass>com.mytlogos.enterprisedesktop.Starter</mainClass>
+                            <mainClass>com.mytlogos.enterprisedesktop.SubStarter</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -66,7 +92,7 @@
         <dependency>
             <groupId>org.controlsfx</groupId>
             <artifactId>controlsfx</artifactId>
-            <version>8.40.16</version>
+            <version>11.0.3</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox -->
         <dependency>
@@ -80,7 +106,6 @@
             <artifactId>hlsparserj</artifactId>
             <version>1.0.0</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.openjfx/javafx-controls -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
@@ -89,7 +114,7 @@
         <dependency>
             <groupId>com.dlsc.preferencesfx</groupId>
             <artifactId>preferencesfx-core</artifactId>
-            <version>8.6.0</version>
+            <version>11.6.0</version>
         </dependency>
         <dependency>
             <groupId>com.squareup.retrofit2</groupId>
@@ -114,7 +139,7 @@
         <dependency>
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
-            <version>3.4.1</version>
+            <version>3.4.5</version>
         </dependency>
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
