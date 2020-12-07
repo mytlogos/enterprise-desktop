@@ -10,6 +10,9 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <javafx.version>15.0.1</javafx.version>
         <maven.compiler.release>11</maven.compiler.release>
+        <sonar.projectKey>mytlogos_enterprise-desktop</sonar.projectKey>
+        <sonar.organization>mytlogos</sonar.organization>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     </properties>
     <build>
         <finalName>enterprisedesktop</finalName>
