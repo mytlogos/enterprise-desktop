@@ -6,13 +6,16 @@ import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.background.Repository;
 import com.mytlogos.enterprisedesktop.background.RepositoryProvider;
 
+import javafx.animation.FadeTransition;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 
 public class MainWindowController {
     @FXML
@@ -21,11 +24,8 @@ public class MainWindowController {
     private StackPane root;
 
     public void initialize() {
-        this.showLoading();
         Initializer initializer = new Initializer();
         initializer.setOnSucceeded(ev -> {
-            this.hideLoading();
-
             Boolean loggedIn = initializer.getValue();
 
             if (loggedIn != null && loggedIn) {
@@ -42,6 +42,24 @@ public class MainWindowController {
         initializer.start();
     }
 
+    private void transition(Node from, Node to) {
+        FadeTransition fadeOut = new FadeTransition();
+        fadeOut.setDuration(Duration.seconds(2));
+        fadeOut.setNode(from);
+        fadeOut.setFromValue(1.0);
+        fadeOut.setToValue(0.0);
+        fadeOut.setOnFinished(ev -> this.root.getChildren().remove(from));
+        
+        FadeTransition fadeIn = new FadeTransition();
+        fadeIn.setDuration(Duration.seconds(2));
+        fadeIn.setNode(to);
+        fadeIn.setFromValue(0.0);
+        fadeIn.setToValue(1.0);
+        
+        fadeOut.play();
+        fadeIn.play();
+    }
+
     private void listenUserState() {
         ApplicationConfig.getRepository().getUser().observe(user -> {
             if (user == null) {
@@ -52,16 +70,6 @@ public class MainWindowController {
         });
     }
 
-    private void showLoading() {
-        if (this.loading.getParent() == null) {
-            this.root.getChildren().setAll(loading);
-        }
-    }
-
-    private void hideLoading() {
-        this.root.getChildren().remove(this.loading);
-    }
-
     private void showLogin() {
         Parent loginRoot;
         try {
@@ -70,7 +78,9 @@ public class MainWindowController {
             e.printStackTrace();
             return;
         }
-        this.root.getChildren().setAll(loginRoot);
+        Node current = this.root.getChildren().get(this.root.getChildren().size() - 1);
+        this.root.getChildren().add(loginRoot);
+        this.transition(current, loginRoot);
     }
 
     private void showMain() {
@@ -81,7 +91,9 @@ public class MainWindowController {
             e.printStackTrace();
             return;
         }
-        this.root.getChildren().setAll(mainRoot);
+        Node current = this.root.getChildren().get(this.root.getChildren().size() - 1);
+        this.root.getChildren().add(mainRoot);
+        this.transition(current, mainRoot);
     }
 
     private class Initializer extends Service<Boolean> {
