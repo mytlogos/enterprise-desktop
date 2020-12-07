@@ -1,5 +1,15 @@
+# configuration directories
 .project
 .classpath
 .settings/
 .vscode/
+
+# output directories
 target/
+
+# data directory
+medium/
+
+# data files
+*.db
+*.log.*
