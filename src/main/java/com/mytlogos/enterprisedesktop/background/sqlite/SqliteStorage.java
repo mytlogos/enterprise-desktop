@@ -81,7 +81,7 @@ public class SqliteStorage implements DatabaseStorage {
 
     @Override
     public void deleteAllUser() {
-        throw new NotImplementedException();
+        this.userTable.deleteAll();
     }
 
     @Override

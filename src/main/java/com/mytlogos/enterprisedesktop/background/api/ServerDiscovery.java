@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 
 class ServerDiscovery {
 
-    private static final boolean isDev = false;
+    private static final boolean isDev = true;
     private final int maxAddress = 50;
     private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress, Utils.countingThreadFactory("Server-Discovery-"));
 
