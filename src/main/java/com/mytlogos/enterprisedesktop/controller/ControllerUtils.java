@@ -308,66 +308,68 @@ public class ControllerUtils {
     }
 
     static <T> void addAutoCompletionBinding(TextField mediumFilter, LiveData<List<T>> liveData, Function<T, String> stringFunction, Consumer<T> completed) {
-        new AutoCompletionTextFieldBinding<>(
-                mediumFilter,
-                param -> {
-                    if (param.isCancelled()) {
-                        return Collections.emptyList();
-                    }
+        // FIXME: currently this throws an exception on java 11
+        // controlsfx uses reflection where it should not (due to a workaround fixed in java 14)
+        // new AutoCompletionTextFieldBinding<>(
+        //         mediumFilter,
+        //         param -> {
+        //             if (param.isCancelled()) {
+        //                 return Collections.emptyList();
+        //             }
 
-                    final String[] simpleWords = param.getUserText().toLowerCase().split("\\W");
-                    final List<T> values = liveData.getValue();
+        //             final String[] simpleWords = param.getUserText().toLowerCase().split("\\W");
+        //             final List<T> values = liveData.getValue();
 
-                    if (values == null) {
-                        return Collections.emptyList();
-                    }
+        //             if (values == null) {
+        //                 return Collections.emptyList();
+        //             }
 
-                    TreeMap<Integer, List<T>> countMatched = new TreeMap<>();
+        //             TreeMap<Integer, List<T>> countMatched = new TreeMap<>();
 
-                    for (T value : values) {
-                        final String title = stringFunction.apply(value).toLowerCase();
-                        int match = 0;
-                        int count = 0;
-                        for (String word : simpleWords) {
-                            if (title.contains(word)) {
-                                match += word.length();
-                                count++;
-                            }
-                        }
-                        if (count > 0) {
-                            countMatched.computeIfAbsent(match * count, integer -> new LinkedList<>()).add(value);
-                        }
-                    }
-                    List<T> suggestions = new LinkedList<>();
+        //             for (T value : values) {
+        //                 final String title = stringFunction.apply(value).toLowerCase();
+        //                 int match = 0;
+        //                 int count = 0;
+        //                 for (String word : simpleWords) {
+        //                     if (title.contains(word)) {
+        //                         match += word.length();
+        //                         count++;
+        //                     }
+        //                 }
+        //                 if (count > 0) {
+        //                     countMatched.computeIfAbsent(match * count, integer -> new LinkedList<>()).add(value);
+        //                 }
+        //             }
+        //             List<T> suggestions = new LinkedList<>();
 
-                    for (Integer match : countMatched.descendingKeySet()) {
-                        suggestions.addAll(countMatched.get(match));
-                    }
-                    return suggestions;
-                },
-                new StringConverter<T>() {
-                    @Override
-                    public String toString(T object) {
-                        return stringFunction.apply(object);
-                    }
+        //             for (Integer match : countMatched.descendingKeySet()) {
+        //                 suggestions.addAll(countMatched.get(match));
+        //             }
+        //             return suggestions;
+        //         },
+        //         new StringConverter<T>() {
+        //             @Override
+        //             public String toString(T object) {
+        //                 return stringFunction.apply(object);
+        //             }
 
-                    @Override
-                    public T fromString(String string) {
-                        final List<T> values = liveData.getValue();
-                        if (values == null || values.isEmpty()) {
-                            return null;
-                        }
-                        for (T value : values) {
-                            if (stringFunction.apply(value).equals(string)) {
-                                return value;
-                            }
-                        }
-                        return null;
-                    }
-                }).setOnAutoCompleted(event -> {
-            final T t = event.getCompletion();
-            completed.accept(t);
-        });
+        //             @Override
+        //             public T fromString(String string) {
+        //                 final List<T> values = liveData.getValue();
+        //                 if (values == null || values.isEmpty()) {
+        //                     return null;
+        //                 }
+        //                 for (T value : values) {
+        //                     if (stringFunction.apply(value).equals(string)) {
+        //                         return value;
+        //                     }
+        //                 }
+        //                 return null;
+        //             }
+        //         }).setOnAutoCompleted(event -> {
+        //     final T t = event.getCompletion();
+        //     completed.accept(t);
+        // });
     }
 
     /**

@@ -274,7 +274,7 @@ public class Client {
 
     public Response<ClientChangedEntities> getNew(LocalDateTime lastSync) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
-        body.put("date", lastSync);
+        body.put("date", lastSync == null ? "null" : lastSync);
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getNew(url, body));
     }
 
