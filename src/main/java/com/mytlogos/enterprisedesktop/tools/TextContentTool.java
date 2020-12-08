@@ -107,7 +107,8 @@ public class TextContentTool extends ContentTool {
         boolean writeable = writeable();
 
         if (!writeable) {
-            throw new IOException("Out of Storage Space: Less than " + this.minMBSpaceAvailable + "  MB available");
+            throw new IOException("Out of Storage Space: Less than " + ContentTool.MIN_MB_SPACE_AVAILABLE
+                    + "  MB available");
         }
         if (episodeFiles.containsKey(mediumId)) {
             file = episodeFiles.get(mediumId);

@@ -25,7 +25,7 @@ public class ClientPart implements Part {
 
     @Override
     public int hashCode() {
-        return getId();
+        return getPartId();
     }
 
     @Override
@@ -35,7 +35,7 @@ public class ClientPart implements Part {
 
         ClientPart that = (ClientPart) o;
 
-        return getId() == that.getId();
+        return getPartId() == that.getPartId();
     }
 
     @Override

@@ -42,7 +42,7 @@ public class FilterController<T> {
                     }
                 }
         );
-        this.filtered.addListener((InvalidationListener) observable -> updateFiltered(liveData.getValue()));
+        this.filtered.addListener((InvalidationListener)observable -> updateFiltered(liveData.getValue()));
         this.ignored.addListener((InvalidationListener) observable -> updateFiltered(liveData.getValue()));
         this.filterItems.addListener((ListChangeListener<? super FilterItem<T>>) c -> {
             if (c.next()) {

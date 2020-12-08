@@ -10,6 +10,7 @@ import com.mytlogos.enterprisedesktop.background.api.NotConnectedException;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.model.Toc;
 import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
+import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.concurrent.Task;
 import retrofit2.Response;
@@ -42,7 +43,7 @@ public class SynchronizeTask extends Task<Void> {
 
         if (!repository.isClientOnline()) {
             cleanUp();
-            System.out.println("Aborting Synchronize, Client is offline");
+            Log.info("Aborting Synchronize, Client is offline");
             return null;
         }
         if (!repository.isClientAuthenticated()) {
@@ -55,24 +56,26 @@ public class SynchronizeTask extends Task<Void> {
             this.updateTitle("Start Synchronizing");
             syncWithTime(repository);
             contentText = "Synchronization complete";
-        } catch (Exception e) {
+        } catch (NotConnectedException e) {
+            contentText = "Not connected with Server";
             this.totalAddedOrUpdated = 0;
-
-            if (e instanceof IOException) {
-                if (e instanceof NotConnectedException) {
-                    contentText = "Not connected with Server";
-                } else if (e instanceof ServerException) {
-                    contentText = "Response with Error Message";
-                } else {
-                    contentText = "Error between App and Server";
-                }
-            } else {
-                contentText = "Local Error";
-            }
+            throw e;
+        } catch (ServerException e) {
+            contentText = "Response with Error Message";
+            this.totalAddedOrUpdated = 0;
+            throw e;
+        } catch (IOException e) {
+            contentText = "Error between App and Server";
+            this.totalAddedOrUpdated = 0;
+            throw e;
+        } catch (Exception e) {
+            contentText = "Local Error";
+            this.totalAddedOrUpdated = 0;
             throw e;
         } finally {
             StringBuilder builder = new StringBuilder("Added or Updated:\n");
             append(builder, "Media: ", this.mediaAddedOrUpdated);
+            append(builder, "Tocs: ", this.tocsAddedOrUpdated);
             append(builder, "Parts: ", this.partAddedOrUpdated);
             append(builder, "Episodes: ", this.episodesAddedOrUpdated);
             append(builder, "Releases: ", this.releasesAddedOrUpdated);
@@ -124,6 +127,7 @@ public class SynchronizeTask extends Task<Void> {
 
         StringBuilder builder = new StringBuilder();
         append(builder, "Media: ", mediaSize);
+        append(builder, "Tocs: ", tocsSize);
         append(builder, "Parts: ", partsSize);
         append(builder, "Episodes: ", episodesSize);
         append(builder, "Releases: ", releasesSize);

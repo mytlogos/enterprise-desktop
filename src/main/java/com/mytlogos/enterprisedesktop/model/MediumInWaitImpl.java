@@ -3,6 +3,10 @@ package com.mytlogos.enterprisedesktop.model;
 import java.io.Serializable;
 
 public class MediumInWaitImpl implements Serializable, MediumInWait {
+    /**
+     * Alibi Uid.
+     */
+    private static final long serialVersionUID = 8428220461047209897L;
     private final String title;
     private final int medium;
     private final String link;

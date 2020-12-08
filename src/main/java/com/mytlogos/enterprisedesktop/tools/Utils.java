@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -219,7 +220,7 @@ public class Utils {
         doPartitioned(100, collection, consumer);
     }
 
-    public static <E> void doPartitionedAsync(int steps, Collection<E> collection, ConsumerEx<List<E>> consumer) throws Exception {
+    public static <E> void doPartitionedAsync(int steps, Collection<E> collection, ConsumerEx<List<E>> consumer) throws InterruptedException, ExecutionException {
         List<E> list = new ArrayList<>(collection);
         int minItem = 0;
         int maxItem = minItem + steps;
@@ -287,6 +288,27 @@ public class Utils {
                 return "Audio";
             default:
                 return "Unknown Medium";
+        }
+    }
+
+    public static Map<String, Integer> mediumTypeMap() {
+        final Map<String, Integer> map = new HashMap<>();
+        map.put("Text", MediumType.TEXT);
+        map.put("Image", MediumType.IMAGE);
+        map.put("Video", MediumType.VIDEO);
+        map.put("Audio", MediumType.AUDIO);
+        return map;
+    }
+
+    public interface RunnableEx {
+        void run() throws Exception;
+    }
+
+    public static void ignore(RunnableEx runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

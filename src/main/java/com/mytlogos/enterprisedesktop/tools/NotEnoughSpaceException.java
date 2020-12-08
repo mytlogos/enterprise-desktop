@@ -3,6 +3,11 @@ package com.mytlogos.enterprisedesktop.tools;
 import java.io.IOException;
 
 public class NotEnoughSpaceException extends IOException {
+    /**
+     * Alibi Uid.
+     */
+    private static final long serialVersionUID = 3397480902909897686L;
+
     public NotEnoughSpaceException() {
     }
 

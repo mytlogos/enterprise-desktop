@@ -6,15 +6,11 @@ package com.mytlogos.enterprisedesktop.background;
 public class RepositoryProvider {
     private static Repository repository;
 
-    public Repository provide() {
+    public synchronized Repository provide() {
         if (repository == null) {
-            synchronized (RepositoryProvider.class) {
-                if (repository == null) {
-                    final RepositoryImpl repositoryImpl = new RepositoryImpl();
-                    TaskManager.runTask(repositoryImpl::initialize);
-                    repository = repositoryImpl;
-                }
-            }
+            final RepositoryImpl repositoryImpl = new RepositoryImpl();
+            TaskManager.runTask(repositoryImpl::initialize);
+            repository = repositoryImpl;
         }
         return repository;
     }

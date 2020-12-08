@@ -72,8 +72,6 @@ public class TasksHelper {
             }
         });
         this.popupRoot.setBackground(new Background(new BackgroundFill(Color.WHITESMOKE, null, null)));
-        popup.setOnShowing(event -> System.out.println("i am showing popup"));
-        popup.setOnHiding(event -> System.out.println("i am hiding popup"));
         this.anchorPosition = Bindings.createObjectBinding(() -> {
             final Bounds screenBounds = this.text.localToScreen(this.text.getBoundsInLocal());
 

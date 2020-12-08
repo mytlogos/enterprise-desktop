@@ -2,11 +2,8 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 
 import com.mytlogos.enterprisedesktop.background.TaskManager;
 import com.mytlogos.enterprisedesktop.tools.Log;
-import com.mytlogos.enterprisedesktop.tools.Utils;
 
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -16,7 +13,6 @@ public class InvalidationManager {
     private static final InvalidationManager INSTANCE = new InvalidationManager();
     private final Map<AbstractTable, Set<Runnable>> tableRunnable = Collections.synchronizedMap(new HashMap<>());
     private final Map<AbstractTable, AtomicBoolean> tableInvalidationRunning = Collections.synchronizedMap(new HashMap<>());
-    private final ExecutorService service = Executors.newFixedThreadPool(5, Utils.countingThreadFactory("InvalidationManager.Pool-worker-"));
 
     private InvalidationManager() {
         if (INSTANCE != null) {
@@ -35,7 +31,7 @@ public class InvalidationManager {
         table.addInvalidationListener(invalidated -> {
             final AtomicBoolean invalidationRunning = this.tableInvalidationRunning.get(table);
 
-            if (!invalidated || !invalidationRunning.compareAndSet(false, true)) {
+            if (!Boolean.TRUE.equals(invalidated) || !invalidationRunning.compareAndSet(false, true)) {
                 return;
             }
             System.out.println("Invalidated: " + table.getClass().getName());

@@ -977,7 +977,7 @@ public class SqliteStorage implements DatabaseStorage {
             SqliteStorage.this.partTable.update(update);
 
             for (ClientPart part : list) {
-                this.loadedData.getPart().add(part.getId());
+                this.loadedData.getPart().add(part.getPartId());
             }
             this.persistEpisodes(filteredParts.episodes);
             return this;
@@ -991,7 +991,7 @@ public class SqliteStorage implements DatabaseStorage {
 
         @Override
         public void finish() {
-
+            // this implementation does nothing here
         }
 
         @Override

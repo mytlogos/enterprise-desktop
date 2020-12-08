@@ -2,7 +2,6 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.Formatter;
-import com.mytlogos.enterprisedesktop.background.TocStat;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
 import com.mytlogos.enterprisedesktop.model.MediumSetting;
 import javafx.beans.property.ObjectProperty;

@@ -9,6 +9,11 @@ import java.util.List;
  *
  */
 public class SqlUtils {
+
+    private SqlUtils() {
+        throw new IllegalAccessError("Do not instantiate SqlUtils!");
+    }
+
     private static final SqlBiFunction getResultsFunction = (SqlBiFunction<PreparedStatement, SqlFunction<ResultSet, Object>, List<Object>>) (preparedStatement, resultSetSqlFunction) -> {
         try (ResultSet resultSet = preparedStatement.executeQuery()) {
             List<Object> list = new ArrayList<>();

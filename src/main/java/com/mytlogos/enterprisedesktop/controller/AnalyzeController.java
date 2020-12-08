@@ -22,7 +22,6 @@ import javafx.util.StringConverter;
 import org.controlsfx.control.Notifications;
 
 import java.math.BigDecimal;
-import java.text.DecimalFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -47,7 +46,7 @@ public class AnalyzeController implements Attachable {
             this.toTree(newValue, root);
             this.problemView.setRoot(root);
         });
-        //noinspection ThrowableNotThrown
+        // noinspection ThrowableNotThrown
         this.analyzeService.setOnFailed(event -> event.getSource().getException().printStackTrace());
         this.problemView.setCellFactory(param -> new TreeCell<AnalyzeResult>() {
             private Node labeledText;
@@ -59,13 +58,11 @@ public class AnalyzeController implements Attachable {
                     final Node node = this.lookup(".text");
 
                     if (node != null) {
-                        node.styleProperty().bind(Bindings
-                                .when(this.itemProperty()
-                                        .isNotNull()
-                                        .and(Bindings.selectBoolean(this.itemProperty(), "resolved"))
-                                )
-                                .then("-fx-strikethrough: true")
-                                .otherwise(""));
+                        node.styleProperty()
+                                .bind(Bindings
+                                        .when(this.itemProperty().isNotNull()
+                                                .and(Bindings.selectBoolean(this.itemProperty(), "resolved")))
+                                        .then("-fx-strikethrough: true").otherwise(""));
                         this.labeledText = node;
                     }
                 }
@@ -96,14 +93,15 @@ public class AnalyzeController implements Attachable {
 
     @Override
     public void onAttach() {
-
+        // nothing to do here
     }
 
     @Override
     public void onDetach() {
-
+        // nothing to do here
     }
 
+    @Override
     public void setParentController(MainController controller) {
         this.controller = controller;
     }
@@ -204,15 +202,15 @@ public class AnalyzeController implements Attachable {
     private static class SimilarMediaTask extends AnalyzeWork {
         @Override
         void work(AnalyzerTask resultTask) throws Exception {
-            final List<SimpleMedium> media = ApplicationConfig.getRepository().getSimpleMedium().firstNonNullElement().get();
+            final List<SimpleMedium> media = ApplicationConfig.getRepository().getSimpleMedium().firstNonNullElement()
+                    .get();
             Set<SimilarMediaResult> results = new LinkedHashSet<>();
 
             for (SimpleMedium medium : media) {
                 for (SimpleMedium simpleMedium : media) {
-                    if (simpleMedium != medium && medium.getMedium() == simpleMedium.getMedium()) {
-                        if (similarity(medium.getTitle(), simpleMedium.getTitle()) > 0.5) {
-                            results.add(new SimilarMediaResult(medium, simpleMedium));
-                        }
+                    if (simpleMedium != medium && medium.getMedium() == simpleMedium.getMedium()
+                            && similarity(medium.getTitle(), simpleMedium.getTitle()) > 0.5) {
+                        results.add(new SimilarMediaResult(medium, simpleMedium));
                     }
                 }
             }
@@ -227,7 +225,8 @@ public class AnalyzeController implements Attachable {
          * Calculates the similarity (a number within 0 and 1) between two strings.
          */
         public static double similarity(String s1, String s2) {
-            String longer = s1, shorter = s2;
+            String longer = s1;
+            String shorter = s2;
             if (s1.length() < s2.length()) { // longer should always have greater length
                 longer = s2;
                 shorter = s1;
@@ -236,11 +235,7 @@ public class AnalyzeController implements Attachable {
             if (longerLength == 0) {
                 return 1.0; /* both strings are zero length */
             }
-            /* // If you have Apache Commons Text, you can use it to calculate the edit distance:
-            LevenshteinDistance levenshteinDistance = new LevenshteinDistance();
-            return (longerLength - levenshteinDistance.apply(longer, shorter)) / (double) longerLength; */
             return (longerLength - editDistance(longer, shorter)) / (double) longerLength;
-
         }
 
         /**
@@ -262,8 +257,7 @@ public class AnalyzeController implements Attachable {
                         if (j > 0) {
                             int newValue = costs[j - 1];
                             if (s1.charAt(i - 1) != s2.charAt(j - 1))
-                                newValue = Math.min(Math.min(newValue, lastValue),
-                                        costs[j]) + 1;
+                                newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
                             costs[j - 1] = lastValue;
                             lastValue = newValue;
                         }
@@ -310,21 +304,21 @@ public class AnalyzeController implements Attachable {
 
             @Override
             public boolean equals(Object o) {
-                if (this == o) return true;
-                if (!(o instanceof SimilarMediaResult)) return false;
+                if (this == o)
+                    return true;
+                if (!(o instanceof SimilarMediaResult))
+                    return false;
 
                 SimilarMediaResult that = (SimilarMediaResult) o;
 
-                if (!Objects.equals(first, that.first)) return false;
+                if (!Objects.equals(first, that.first))
+                    return false;
                 return Objects.equals(second, that.second);
             }
 
             @Override
             public String toString() {
-                return "SimilarMediaResult{" +
-                        "first=" + first +
-                        ", second=" + second +
-                        '}';
+                return "SimilarMediaResult{" + "first=" + first + ", second=" + second + '}';
             }
 
             @Override
@@ -344,11 +338,12 @@ public class AnalyzeController implements Attachable {
                 Button resolve = new Button("Merge Media");
                 resolve.setOnAction(event -> {
                     Alert alert = new Alert(
-                            Alert.AlertType.CONFIRMATION,
-                            String.format("Are you sure you want to merge '%s' into '%s'", second.getTitle(), first.getTitle()),
-                            ButtonType.NO,
-                            ButtonType.YES
+                        Alert.AlertType.CONFIRMATION,
+                        String.format("Are you sure you want to merge '%s' into '%s'", second.getTitle(), first.getTitle()),
+                        ButtonType.NO,
+                        ButtonType.YES
                     );
+
                     alert.showAndWait().ifPresent(buttonType -> {
                         if (buttonType == ButtonType.YES) {
                             ApplicationConfig.getRepository()
@@ -359,22 +354,20 @@ public class AnalyzeController implements Attachable {
                                             aBoolean = Boolean.FALSE;
                                         }
                                         boolean finalABoolean = aBoolean;
-                                        Platform.runLater(() -> Notifications
-                                                .create()
+                                        Platform.runLater(() -> Notifications.create()
                                                 .title(String.format(
-                                                        "Merging Media '%s' into '%s' %s",
-                                                        this.second.getTitle(),
-                                                        this.first.getTitle(),
-                                                        finalABoolean ? "succeeded" : "failed"
+                                                    "Merging Media '%s' into '%s' %s",
+                                                    this.second.getTitle(),
+                                                    this.first.getTitle(),
+                                                    finalABoolean ? "succeeded" : "failed"
                                                 ))
-                                                .show()
-                                        );
+                                                .show());
                                     });
                         }
                     });
                 });
                 root.getChildren().add(resolve);
-                final MediumTypes controller = ControllerUtils.load("/mediumTypes.fxml", node -> root.getChildren().add(node));
+                final MediumTypes controller = ControllerUtils.load("/mediumTypes.fxml", root);
                 controller.setEditable(false);
                 controller.setMedium(this.first.getMedium());
 
@@ -402,21 +395,15 @@ public class AnalyzeController implements Attachable {
             final List<SimpleMedium> media = repository.getSimpleMedium().firstNonNullElement().get();
             final List<MediaList> lists = repository.getLists().firstNonNullElement().get();
 
-            final List<Integer> listIds = lists
-                    .stream()
-                    .filter(mediaList -> !(mediaList instanceof ExternalMediaList))
-                    .map(MediaList::getListId)
-                    .collect(Collectors.toList());
+            final List<Integer> listIds = lists.stream().filter(mediaList -> !(mediaList instanceof ExternalMediaList))
+                    .map(MediaList::getListId).collect(Collectors.toList());
 
-            final Set<Integer> externalListItems = lists
-                    .stream()
-                    .filter(mediaList -> mediaList instanceof ExternalMediaList)
-                    .map(MediaList::getListId)
-                    .map(repository::getExternalListItems)
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toSet());
+            final Set<Integer> externalListItems = lists.stream()
+                    .filter(mediaList -> mediaList instanceof ExternalMediaList).map(MediaList::getListId)
+                    .map(repository::getExternalListItems).flatMap(Collection::stream).collect(Collectors.toSet());
 
-            final Set<Integer> mediaWithLists = new HashSet<>(repository.getListItems(listIds).firstNonNullElement().get());
+            final Set<Integer> mediaWithLists = new HashSet<>(
+                    repository.getListItems(listIds).firstNonNullElement().get());
             mediaWithLists.addAll(externalListItems);
 
             List<MediumWithoutListResult> results = new ArrayList<>();
@@ -503,19 +490,17 @@ public class AnalyzeController implements Attachable {
                     }
                 });
                 this.addButton.disableProperty().bind(this.listSelect.valueProperty().isNull());
-                this.addButton.setOnAction(event ->
-                        repository.addMediumToList(
-                                this.listSelect.getValue().getListId(),
-                                Collections.singleton(this.medium.getMediumId())
-                        ).whenComplete((aBoolean, throwable) -> {
+                this.addButton.setOnAction(event -> repository
+                        .addMediumToList(this.listSelect.getValue().getListId(),
+                                Collections.singleton(this.medium.getMediumId()))
+                        .whenComplete((aBoolean, throwable) -> {
                             if (throwable != null) {
                                 throwable.printStackTrace();
                             }
                             if (aBoolean != null && aBoolean) {
                                 this.resolved();
                             }
-                        })
-                );
+                        }));
             }
 
             @Override
@@ -557,7 +542,8 @@ public class AnalyzeController implements Attachable {
             for (Toc toc : tocs) {
                 final String domain = Utils.getDomain(toc.getLink());
 
-                final Map<Integer, Set<Integer>> map = domainMediumMediaMap.computeIfAbsent(domain, s -> new HashMap<>());
+                final Map<Integer, Set<Integer>> map = domainMediumMediaMap.computeIfAbsent(domain,
+                        s -> new HashMap<>());
                 final SimpleMedium medium = idMediumMap.get(toc.getMediumId());
 
                 if (medium == null) {
@@ -603,7 +589,8 @@ public class AnalyzeController implements Attachable {
                     if (proportion < 0.1) {
                         for (Integer mediumId : value) {
                             final SimpleMedium medium = idMediumMap.get(mediumId);
-                            misMatchResults.add(new TocMisMatchResult(medium.getMedium(), expectedMediumType, mediumId, medium.getTitle()));
+                            misMatchResults.add(new TocMisMatchResult(medium.getMedium(), expectedMediumType, mediumId,
+                                    medium.getTitle()));
                         }
                     }
                 }
@@ -668,12 +655,8 @@ public class AnalyzeController implements Attachable {
 
             @Override
             String getTitle() {
-                return String.format(
-                        "'%s': Expected MediumType: %s, but has MediumType: %s",
-                        this.mediumTitle,
-                        this.expectedMediumType.getName(),
-                        this.currentMediumType.getName()
-                );
+                return String.format("'%s': Expected MediumType: %s, but has MediumType: %s", this.mediumTitle,
+                        this.expectedMediumType.getName(), this.currentMediumType.getName());
             }
         }
     }
@@ -750,12 +733,8 @@ public class AnalyzeController implements Attachable {
                                 if (medium == null) {
                                     medium = repository.getSimpleMedium(mediumId);
                                 }
-                                gapResults.add(new ReadGapResult(
-                                        previousReadIndex,
-                                        episode.combiIndex,
-                                        unreadEpisodes,
-                                        medium.getTitle()
-                                ));
+                                gapResults.add(new ReadGapResult(previousReadIndex, episode.combiIndex, unreadEpisodes,
+                                        medium.getTitle()));
                                 unreadEpisodes.clear();
                             }
                             previousReadIndex = episode.combiIndex;
@@ -771,7 +750,8 @@ public class AnalyzeController implements Attachable {
                 private final List<MediumEpisode> betweenUnread;
                 private final String mediumTitle;
 
-                private ReadGapResult(double previousRead, double afterRead, List<MediumEpisode> betweenUnread, String mediumTitle) {
+                private ReadGapResult(double previousRead, double afterRead, List<MediumEpisode> betweenUnread,
+                        String mediumTitle) {
                     this.previousRead = previousRead;
                     this.afterRead = afterRead;
                     this.betweenUnread = new ArrayList<>(betweenUnread);
@@ -785,16 +765,12 @@ public class AnalyzeController implements Attachable {
 
                 @Override
                 String getTitle() {
-                    return String.format(
-                            "'%s' has a reading gap between %s and %s of %d Episodes",
-                            this.mediumTitle,
+                    return String.format("'%s' has a reading gap between %s and %s of %d Episodes", this.mediumTitle,
                             new BigDecimal(this.previousRead).stripTrailingZeros().toPlainString(),
                             new BigDecimal(this.afterRead).stripTrailingZeros().toPlainString(),
-                            this.betweenUnread.size()
-                    );
+                            this.betweenUnread.size());
                 }
             }
-
 
             private static class TotalReadGaps extends AnalyzeGroupResult {
                 protected TotalReadGaps(List<ReadGapResult> results) {
@@ -835,11 +811,8 @@ public class AnalyzeController implements Attachable {
                                 if (medium == null) {
                                     medium = repository.getSimpleMedium(mediumId);
                                 }
-                                gapResults.add(new EpisodeGapResult(
-                                        previousIndex,
-                                        episode.combiIndex,
-                                        medium.getTitle()
-                                ));
+                                gapResults.add(
+                                        new EpisodeGapResult(previousIndex, episode.combiIndex, medium.getTitle()));
                             }
                         }
                         previousIndex = episode.combiIndex;
@@ -866,12 +839,9 @@ public class AnalyzeController implements Attachable {
 
                 @Override
                 String getTitle() {
-                    return String.format(
-                            "'%s' has an episode gap between %s and %s",
-                            this.mediumTitle,
+                    return String.format("'%s' has an episode gap between %s and %s", this.mediumTitle,
                             new BigDecimal(this.previousIndex).stripTrailingZeros().toPlainString(),
-                            new BigDecimal(this.afterIndex).stripTrailingZeros().toPlainString()
-                    );
+                            new BigDecimal(this.afterIndex).stripTrailingZeros().toPlainString());
                 }
             }
 

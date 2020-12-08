@@ -51,11 +51,10 @@ public class ClientStat {
     }
 
     public ParsedStat parse() {
-        Map<Integer, Map<Integer, Partstat>> media = new HashMap<>();
-        Map<Integer, ClientMediaStat> mediaStats = new HashMap<>();
-        Map<Integer, List<Integer>> lists = new HashMap<>();
-        Map<Integer, List<Integer>> extLists = new HashMap<>();
-        Map<String, List<Integer>> extUser = new HashMap<>();
+        Map<Integer, Map<Integer, Partstat>> parsedMedia = new HashMap<>();
+        Map<Integer, ClientMediaStat> parsedMediaStats = new HashMap<>();
+        Map<Integer, List<Integer>> parsedLists = new HashMap<>();
+        Map<Integer, List<Integer>> parsedExtLists = new HashMap<>();
 
         for (Map.Entry<String, Map<String, Partstat>> entry : this.media.entrySet()) {
             Map<Integer, Partstat> medium = new HashMap<>();
@@ -64,21 +63,21 @@ public class ClientStat {
                 medium.put(Integer.parseInt(partstatEntry.getKey()), partstatEntry.getValue());
             }
 
-            media.put(Integer.parseInt(entry.getKey()), medium);
+            parsedMedia.put(Integer.parseInt(entry.getKey()), medium);
         }
 
         for (Map.Entry<String, List<Integer>> entry : this.lists.entrySet()) {
-            lists.put(Integer.parseInt(entry.getKey()), entry.getValue());
+            parsedLists.put(Integer.parseInt(entry.getKey()), entry.getValue());
         }
 
         for (Map.Entry<String, List<Integer>> entry : this.extLists.entrySet()) {
-            extLists.put(Integer.parseInt(entry.getKey()), entry.getValue());
+            parsedExtLists.put(Integer.parseInt(entry.getKey()), entry.getValue());
         }
 
         for (Map.Entry<String, ClientMediaStat> entry : this.mediaStats.entrySet()) {
-            mediaStats.put(Integer.parseInt(entry.getKey()), entry.getValue());
+            parsedMediaStats.put(Integer.parseInt(entry.getKey()), entry.getValue());
         }
 
-        return new ParsedStat(media, mediaStats, lists, extLists, this.extUser);
+        return new ParsedStat(parsedMedia, parsedMediaStats, parsedLists, parsedExtLists, this.extUser);
     }
 }

@@ -9,6 +9,11 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
 public class Formatter {
+
+    private Formatter() {
+        throw new IllegalAccessError("Do not instantiate Formatter!");
+    }
+
     public static String isoFormat(LocalDateTime date) {
         return date == null ? null : date.toInstant(ZoneOffset.UTC).toString();
     }

@@ -2,6 +2,7 @@ package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
 import com.mytlogos.enterprisedesktop.model.*;
+import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.rxjavafx.observables.JavaFxObservable;
@@ -94,14 +95,7 @@ public class SearchMediumController implements Attachable {
         this.mediumChoiceBox.getItems().addAll(MediumType.TEXT, MediumType.AUDIO, MediumType.VIDEO, MediumType.IMAGE);
         this.mediumChoiceBox.getSelectionModel().selectFirst();
         this.mediumChoiceBox.setConverter(new StringConverter<Integer>() {
-            private final Map<String, Integer> map = new HashMap<>();
-
-            {
-                map.put("Text", MediumType.TEXT);
-                map.put("Image", MediumType.IMAGE);
-                map.put("Video", MediumType.VIDEO);
-                map.put("Audio", MediumType.AUDIO);
-            }
+            private final Map<String, Integer> map = Utils.mediumTypeMap();
 
             @Override
             public String toString(Integer object) {
@@ -135,24 +129,24 @@ public class SearchMediumController implements Attachable {
                         return Collections.<SearchResponse>emptyList();
                     } else {
                         final Thread thread = Thread.currentThread();
-                        System.out.printf(
-                                "Request Searching on Fx Thread: %b, Thread Id %d, Thread Name: %s%n",
-                                Platform.isFxApplicationThread(),
-                                thread.getId(),
-                                thread.getName()
-                        );
+                        Log.info(String.format(
+                            "Request Searching on Fx Thread: %b, Thread Id %d, Thread Name: %s%n",
+                            Platform.isFxApplicationThread(),
+                            thread.getId(),
+                            thread.getName()
+                        ));
                         return ApplicationConfig.getRepository().requestSearch(searchRequest);
                     }
                 })
                 .observeOn(JavaFxScheduler.platform())
                 .subscribe(list -> {
                     final Thread thread = Thread.currentThread();
-                    System.out.printf(
-                            "Finished Searching on Fx Thread: %b, Thread Id %d, Thread Name: %s%n",
-                            Platform.isFxApplicationThread(),
-                            thread.getId(),
-                            thread.getName()
-                    );
+                    Log.info(String.format(
+                        "Finished Searching on Fx Thread: %b, Thread Id %d, Thread Name: %s%n",
+                        Platform.isFxApplicationThread(),
+                        thread.getId(),
+                        thread.getName()
+                    ));
                     this.resultsView.getItems().setAll(list);
                 }, Throwable::printStackTrace);
     }

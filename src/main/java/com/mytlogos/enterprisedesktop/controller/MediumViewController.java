@@ -287,7 +287,7 @@ public class MediumViewController {
 
     @FXML
     private void saveMedium() {
-
+        // TODO: implement
     }
 
     @FXML

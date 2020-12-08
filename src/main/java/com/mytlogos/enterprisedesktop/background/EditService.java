@@ -52,7 +52,6 @@ class EditService {
 
         for (Map.Entry<Integer, Map<Integer, List<EditEvent>>> entry : objectTypeEventMap.entrySet()) {
             try {
-                boolean consumed = true;
                 EditObject editObject = null;
 
                 for (EditObject value : EditObject.values()) {
@@ -227,7 +226,7 @@ class EditService {
     private boolean updateProgressOnline(float progress, Collection<Integer> ids) throws IOException {
         Response<Boolean> response = this.client.addProgress(ids, progress);
 
-        if (!response.isSuccessful() || response.body() == null || !response.body()) {
+        if (!response.isSuccessful() || response.body() == null || !Boolean.TRUE.equals(response.body())) {
             // TODO 06.3.2020: better error handling
             return false;
         }

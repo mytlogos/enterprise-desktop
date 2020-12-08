@@ -81,36 +81,6 @@ public class Client {
         }
     }
 
-    public static void main(String[] args) {
-        try {
-//            final URLConnection connection = URI.create("http://localhost:3000/api/user/stats?session=c604a272-4925-4dfa-8d81-802b3d4ce7d7&uuid=3a343e90-00af-11e9-972c-9be323ae4020").toURL().openConnection();
-//            connection.connect();
-//            Scanner s = new Scanner(connection.getInputStream()).useDelimiter("\\A");
-//            String result = s.hasNext() ? s.next() : "";
-//            Gson gson = new Gson();
-//            System.out.println(gson.fromJson(result, Map.class));
-            Gson gson = new GsonBuilder()
-                    .registerTypeHierarchyAdapter(LocalDateTime.class, new GsonAdapter.LocalDateTimeAdapter())
-                    .create();
-            final UserApi userApi = new Retrofit.Builder()
-                    .baseUrl("http://localhost:3000/")
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .build().create(UserApi.class);
-            Map<String, Object> body = new HashMap<>();
-
-            body.put("session", "c604a272-4925-4dfa-8d81-802b3d4ce7d7");
-            body.put("uuid", "3a343e90-00af-11e9-972c-9be323ae4020");
-            body.put("date", LocalDateTime.now().minusWeeks(1).toString());
-            final Call<ClientChangedEntities> stats = userApi.getNew("api/user", body);
-            System.out.println(stats.request().url().toString());
-            final Response<ClientChangedEntities> response = stats.execute();
-            System.out.println(gson.toJson(response.body()));
-//            System.out.println(result);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     public void setAuthentication(String uuid, String session) {
         if (uuid == null || uuid.isEmpty() || session == null || session.isEmpty()) {
             return;
@@ -662,10 +632,12 @@ public class Client {
                 this.setConnected();
                 return true;
             }
+            this.setDisconnected();
+            return false;
         } catch (NotConnectedException ignored) {
+            this.setDisconnected();
+            return false;
         }
-        this.setDisconnected();
-        return false;
     }
 
     @FunctionalInterface

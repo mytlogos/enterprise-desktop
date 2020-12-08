@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- *
+ * TODO: implement class
  */
 public class PdfContentTool extends ContentTool {
     PdfContentTool(File contentDir) {
@@ -34,7 +34,7 @@ public class PdfContentTool extends ContentTool {
 
     @Override
     void removeMediaEpisodes(Set<Integer> episodeIds, String internalFile) {
-
+        // TODO: implement
     }
 
     @Override
@@ -44,7 +44,7 @@ public class PdfContentTool extends ContentTool {
 
     @Override
     public void saveContent(Collection<ClientDownloadedEpisode> episode, int mediumId) throws IOException {
-
+        // TODO: implement
     }
 
     @Override
@@ -73,6 +73,6 @@ public class PdfContentTool extends ContentTool {
     }
 
     public void readPdf(File file) {
-
+        // TODO: implement
     }
 }

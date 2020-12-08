@@ -848,7 +848,7 @@ class RepositoryImpl implements Repository {
         List<Integer> loadedPartIds = new ArrayList<>();
 
         for (ClientPart part : partBody) {
-            loadedPartIds.add(part.getId());
+            loadedPartIds.add(part.getPartId());
         }
         LoadWorkGenerator generator = new LoadWorkGenerator(this.loadedData);
         LoadWorkGenerator.FilteredParts filteredParts = generator.filterParts(partBody);
@@ -886,7 +886,7 @@ class RepositoryImpl implements Repository {
         TaskManager.runTask(() -> {
             try {
                 final Boolean success = checkAndGetBody(this.client.updateProgress(episodeId, progress));
-                if (success) {
+                if (Boolean.TRUE.equals(success)) {
                     this.storage.updateProgress(Collections.singleton(episodeId), progress);
                 }
             } catch (IOException e) {
@@ -972,7 +972,7 @@ class RepositoryImpl implements Repository {
             final Response<Boolean> response = this.client.removeToc(mediumId, link);
             final Boolean body = Utils.checkAndGetBody(response);
 
-            if (body) {
+            if (Boolean.TRUE.equals(body)) {
                 this.storage.removeToc(mediumId, link);
                 return true;
             }
@@ -988,7 +988,7 @@ class RepositoryImpl implements Repository {
             final Response<Boolean> response = this.client.addToc(mediumId, link);
             final Boolean body = Utils.checkAndGetBody(response);
 
-            if (body) {
+            if (Boolean.TRUE.equals(body)) {
                 this.persister.persistTocs(Collections.singleton(new SimpleToc(mediumId, link)));
                 return true;
             }
@@ -1003,7 +1003,7 @@ class RepositoryImpl implements Repository {
         return TaskManager.runCompletableTask(() -> {
             try {
                 final Boolean success = Utils.checkAndGetBody(this.client.mergeMedia(sourceId, destinationId));
-                if (success) {
+                if (Boolean.TRUE.equals(success)) {
                     this.storage.removeMedium(sourceId);
                 }
                 return success;

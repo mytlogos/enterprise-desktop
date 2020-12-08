@@ -1,7 +1,5 @@
 package com.mytlogos.enterprisedesktop.background;
 
-
-
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.application.Platform;
 

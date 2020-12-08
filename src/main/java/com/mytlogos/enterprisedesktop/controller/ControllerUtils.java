@@ -9,7 +9,6 @@ import com.mytlogos.enterprisedesktop.tools.BiConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.BidirectionalMap;
 import com.mytlogos.enterprisedesktop.tools.TriConsumerEx;
 import com.mytlogos.enterprisedesktop.tools.TriFunction;
-import impl.org.controlsfx.autocompletion.AutoCompletionTextFieldBinding;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
@@ -30,6 +29,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -123,7 +123,7 @@ public class ControllerUtils {
     }
 
     public static <T> T load(String fxmlFile) {
-        return load(fxmlFile, null);
+        return load(fxmlFile, (Consumer<Node>) null);
     }
 
     public static void openMedium(int mediumId) {
@@ -136,6 +136,10 @@ public class ControllerUtils {
             stage.show();
         });
         load.setMediumId(mediumId);
+    }
+
+    public static <Controller> Controller load(String fxmlFile, Pane parent) {
+        return load(fxmlFile, node -> parent.getChildren().add(node));
     }
 
     public static <Controller, Root extends Node> Controller load(String fxmlFile, Consumer<Root> consumer) {

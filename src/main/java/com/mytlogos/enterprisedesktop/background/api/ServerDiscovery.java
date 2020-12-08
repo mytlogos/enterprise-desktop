@@ -33,44 +33,38 @@ class ServerDiscovery {
             // as localhost udp server cannot seem to receive upd packets send from emulator
             futures.add(this.executor.submit(() -> this.discoverLocalNetworkServerPerTcp(local)));
         }
+        
+        final Thread discoverThread = new BroadcastDiscoverThread(broadcastAddress, discoveredServer);
+        Utils.ignore(() -> {
+            discoverThread.start();
+            discoverThread.join(2000);
+            discoverThread.interrupt();
+        });
+        
+        for (Future<Server> serverFuture : futures) {
+            Utils.ignore(() -> {
+                if (serverFuture.isDone()) {
+                    Server now = serverFuture.get(0, TimeUnit.SECONDS);
+                    discoveredServer.add(now);
+                } else {
+                    serverFuture.cancel(true);
+                }
+            });
+        }
         Server server = null;
-        try {
-            final Thread discoverThread = new BroadcastDiscoverThread(broadcastAddress, discoveredServer);
+
+        for (Server discovered : discoveredServer) {
+            if (discovered != null && discovered.isLocal() && discovered.isDevServer() == isDev) {
+                server = discovered;
+                break;
+            }
+        }
+        if (server == null) {
             try {
-                discoverThread.start();
-                discoverThread.join(2000);
-                discoverThread.interrupt();
+                server = this.executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
-            for (Future<Server> serverFuture : futures) {
-                try {
-                    if (serverFuture.isDone()) {
-                        Server now = serverFuture.get(0, TimeUnit.SECONDS);
-
-                        if (now != null) {
-                            discoveredServer.add(now);
-                        }
-                    } else {
-                        serverFuture.cancel(true);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            for (Server discovered : discoveredServer) {
-                if (discovered.isLocal() && discovered.isDevServer() == isDev) {
-                    server = discovered;
-                    break;
-                }
-            }
-            if (server == null) {
-                server = this.executor.submit(this::discoverInternetServerPerUdp).get(1, TimeUnit.SECONDS);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
         this.executor.shutdownNow();
         return server;
@@ -150,73 +144,8 @@ class ServerDiscovery {
             try (DatagramSocket c = new DatagramSocket()) {
                 this.socket = c;
                 c.setBroadcast(true);
-
-                byte[] sendData = "DISCOVER_SERVER_REQUEST_ENTERPRISE".getBytes();
-
-                int udpServerPort = 3001;
-                //Try the some 'normal' ip addresses first
-                try {
-                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getLocalHost());
-                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("255.255.255.255"));
-                    this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("192.168.255.255"));
-
-                    for (int i = 1; i < 50; i++) {
-                        this.sendUDPPacket(c, sendData, udpServerPort, InetAddress.getByName("192.168.1." + i));
-                    }
-
-                    if (broadcastAddress != null) {
-                        this.sendUDPPacket(c, sendData, udpServerPort, broadcastAddress);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-                // Broadcast the message over all the network interfaces
-                List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-
-                for (NetworkInterface networkInterface : interfaces) {
-                    if (!networkInterface.isUp()) {
-                        continue; // Don't want to broadcast to the loopback interface
-                    }
-
-                    for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
-                        InetAddress broadcast = interfaceAddress.getBroadcast();
-                        if (broadcast == null) {
-                            continue;
-                        }
-
-                        // Send the broadcast package!
-                        try {
-                            sendUDPPacket(c, sendData, udpServerPort, broadcast);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-
-                }
-
-                //Wait for a response
-                byte[] recvBuf = new byte[15000];
-
-                while (!this.isInterrupted()) {
-                    DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
-                    c.receive(receivePacket);
-
-                    //Check if the message is correct
-                    String message = new String(receivePacket.getData()).trim();
-
-                    // the weird thing is if the message is over 34 bytes long
-                    // e.g. 'DISCOVER_SERVER_RESPONSE_ENTERPRISE' the last character will be cut off
-                    // either the node server does not send correctly
-                    // or java client does not receive correctly
-                    if ("ENTERPRISE_DEV".equals(message)) {
-                        Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, true);
-                        discoveredServer.add(server);
-                    } else if ("ENTERPRISE_PROD".equals(message)) {
-                        Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, false);
-                        discoveredServer.add(server);
-                    }
-                }
+                sendMessages(broadcastAddress);
+                waitResponses(discoveredServer);
             } catch (IOException ex) {
                 if (!this.isInterrupted()) {
                     ex.printStackTrace();
@@ -224,11 +153,75 @@ class ServerDiscovery {
             }
         }
 
-        private void sendUDPPacket(DatagramSocket c, byte[] data, int port, InetAddress address) throws IOException {
-//        System.out.println("Sending Msg to " + address.getHostAddress() + ":" + port);
+        private void sendMessages(InetAddress broadcastAddress)
+                throws UnknownHostException, SocketException {
+            byte[] sendData = "DISCOVER_SERVER_REQUEST_ENTERPRISE".getBytes();
+
+            int udpServerPort = 3001;
+            //Try the some 'normal' ip addresses first
+            this.sendUDPPacket(sendData, udpServerPort, InetAddress.getLocalHost());
+            this.sendUDPPacket(sendData, udpServerPort, InetAddress.getByName("255.255.255.255"));
+            this.sendUDPPacket(sendData, udpServerPort, InetAddress.getByName("192.168.255.255"));
+
+            for (int i = 1; i < 50; i++) {
+                this.sendUDPPacket(sendData, udpServerPort, InetAddress.getByName("192.168.1." + i));
+            }
+
+            if (broadcastAddress != null) {
+                this.sendUDPPacket(sendData, udpServerPort, broadcastAddress);
+            }
+
+            // Broadcast the message over all the network interfaces
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+
+            for (NetworkInterface networkInterface : interfaces) {
+                if (!networkInterface.isUp()) {
+                    continue; // Don't want to broadcast to the loopback interface
+                }
+
+                for (InterfaceAddress interfaceAddress : networkInterface.getInterfaceAddresses()) {
+                    InetAddress broadcast = interfaceAddress.getBroadcast();
+                    if (broadcast == null) {
+                        continue;
+                    }
+
+                    // Send the broadcast package!
+                    sendUDPPacket(sendData, udpServerPort, broadcast);
+                }
+
+            }
+        }
+
+        private void waitResponses(Set<Server> discoveredServer) throws IOException {
+            //Wait for a response
+            byte[] recvBuf = new byte[15000];
+
+            while (!this.isInterrupted()) {
+                DatagramPacket receivePacket = new DatagramPacket(recvBuf, recvBuf.length);
+                this.socket.receive(receivePacket);
+
+                //Check if the message is correct
+                String message = new String(receivePacket.getData()).trim();
+
+                // the weird thing is if the message is over 34 bytes long
+                // e.g. 'DISCOVER_SERVER_RESPONSE_ENTERPRISE' the last character will be cut off
+                // either the node server does not send correctly
+                // or java client does not receive correctly
+                if ("ENTERPRISE_DEV".equals(message)) {
+                    Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, true);
+                    discoveredServer.add(server);
+                } else if ("ENTERPRISE_PROD".equals(message)) {
+                    Server server = new Server(receivePacket.getAddress().getHostAddress(), 3000, true, false);
+                    discoveredServer.add(server);
+                }
+            }
+        }
+
+        private void sendUDPPacket(byte[] data, int port, InetAddress address) {
             try {
-                c.send(new DatagramPacket(data, data.length, address, port));
-            } catch (SocketException ignored) {
+                this.socket.send(new DatagramPacket(data, data.length, address, port));
+            } catch (IOException ignored) {
+                // ignore IO exceptions
             }
         }
     }
