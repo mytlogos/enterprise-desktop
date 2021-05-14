@@ -835,8 +835,8 @@ public class AnalyzeController implements Attachable {
                 @Override
                 String getTitle() {
                     return String.format("'%s' has an episode gap between %s and %s", this.mediumTitle,
-                            new BigDecimal(this.previousIndex).stripTrailingZeros().toPlainString(),
-                            new BigDecimal(this.afterIndex).stripTrailingZeros().toPlainString());
+                            BigDecimal.valueOf(this.previousIndex).stripTrailingZeros().toPlainString(),
+                            BigDecimal.valueOf(this.afterIndex).stripTrailingZeros().toPlainString());
                 }
             }
 
