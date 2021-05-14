@@ -68,10 +68,8 @@ public class LiveDataImpl<T> extends LiveData<T> {
     });
     final Runnable mInvalidationRunnable = new SafeRunnable(() -> {
         boolean isActive = hasActiveObservers();
-        if (mInvalid.compareAndSet(false, true)) {
-            if (isActive) {
-                executor.execute(mRefreshRunnable);
-            }
+        if (mInvalid.compareAndSet(false, true) && isActive) {
+            executor.execute(mRefreshRunnable);
         }
     });
 
@@ -90,6 +88,7 @@ public class LiveDataImpl<T> extends LiveData<T> {
         }
     }
 
+    @Override
     public void refresh() {
         executor.execute(mInvalidationRunnable);
     }

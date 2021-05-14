@@ -83,36 +83,35 @@ class TocEpisodeCell extends ListCell<TocEpisode> {
         if (empty || item == null) {
             this.setText(null);
             this.setGraphic(null);
+        } else if (this.loadFailed) {
+            this.setGraphic(null);
+            this.setText("Could not load Item Graphic");
         } else {
-            if (this.loadFailed) {
-                this.setGraphic(null);
-                this.setText("Could not load Item Graphic");
-            } else {
-                this.setGraphic(this.root);
-                final List<Release> releases = item.getReleases();
-                final String title = releases
-                        .stream()
-                        .max(Comparator.comparingInt(release -> release.getTitle().length()))
-                        .map(Release::getTitle)
-                        .orElse("N/A");
+            this.setGraphic(this.root);
+            final List<Release> releases = item.getReleases();
+            final String title = releases
+                    .stream()
+                    .max(Comparator.comparingInt(release -> release.getTitle().length()))
+                    .map(Release::getTitle)
+                    .orElse("N/A");
 
-                final String latestRelease = releases
-                        .stream()
-                        .min(Comparator.comparing(Release::getReleaseDate))
-                        .map(Release::getReleaseDate)
-                        .map(Formatter::format)
-                        .orElse("N/A");
+            final String latestRelease = releases
+                    .stream()
+                    .min(Comparator.comparing(Release::getReleaseDate))
+                    .map(Release::getReleaseDate)
+                    .map(Formatter::format)
+                    .orElse("N/A");
 
-                this.topLeftContent.setText(Formatter.format(item));
-                this.topRightContent.setText(latestRelease);
-                this.content.setText(title);
-                final boolean locked = releases.stream().allMatch(Release::isLocked) && !releases.isEmpty();
-                final boolean hasOnline = releases.stream().map(Release::getUrl).anyMatch(s -> s != null && !s.isEmpty());
-                this.lockedView.setVisible(locked);
-                this.readView.setOpacity((item.getProgress() + 0.25) / (1.25));
-                this.onlineView.setOpacity(hasOnline ? 1 : 0.25);
-                this.localView.setOpacity(item.isSaved() ? 1 : 0.25);
-            }
+            final boolean locked = releases.stream().allMatch(Release::isLocked) && !releases.isEmpty();
+            final boolean hasOnline = releases.stream().map(Release::getUrl).anyMatch(s -> s != null && !s.isEmpty());
+
+            this.topLeftContent.setText(Formatter.format(item));
+            this.topRightContent.setText(latestRelease);
+            this.content.setText(title);
+            this.lockedView.setVisible(locked);
+            this.readView.setOpacity((item.getProgress() + 0.25) / (1.25));
+            this.onlineView.setOpacity(hasOnline ? 1 : 0.25);
+            this.localView.setOpacity(item.isSaved() ? 1 : 0.25);
         }
     }
 

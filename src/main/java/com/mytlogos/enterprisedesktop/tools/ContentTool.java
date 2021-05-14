@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 public abstract class ContentTool {
     final File contentDir;
-    final int minMBSpaceAvailable = 150;
+    static final int MIN_MB_SPACE_AVAILABLE = 150;
 
 
     ContentTool(File contentDir) {
@@ -170,7 +170,7 @@ public abstract class ContentTool {
     }
 
     private long minByteSpaceAvailable() {
-        return minMBSpaceAvailable * 1024 * 1024;
+        return MIN_MB_SPACE_AVAILABLE * 1024L * 1024L;
     }
 
     boolean notWriteable(long toWriteBytes) {

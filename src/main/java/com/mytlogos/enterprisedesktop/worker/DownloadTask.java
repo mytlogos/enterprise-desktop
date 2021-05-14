@@ -18,7 +18,7 @@ import java.util.*;
  *
  */
 class DownloadTask extends Task<Void> {
-    private static final int maxPackageSize = 1;
+    private static final int MAX_PACKAGE_SIZE = 1;
     private final int mediumId;
     private final List<Integer> episodeIds;
     private final DownloadPreferences downloadPreference = ApplicationConfig.getMainPreferences().getDownloadPreferences();
@@ -228,22 +228,23 @@ class DownloadTask extends Task<Void> {
                 updateProgress(downloadCount, successFull, notSuccessFull);
             } catch (NotEnoughSpaceException e) {
                 notSuccessFull = onFailed(
-                        downloadCount,
-                        successFull,
-                        notSuccessFull,
-                        repository,
-                        episodePackage,
-                        true
+                    downloadCount,
+                    successFull,
+                    notSuccessFull,
+                    repository,
+                    episodePackage,
+                    true
                 );
             } catch (IOException e) {
                 e.printStackTrace();
                 notSuccessFull = onFailed(
-                        downloadCount,
-                        successFull,
-                        notSuccessFull,
-                        repository,
-                        episodePackage,
-                        false);
+                    downloadCount,
+                    successFull,
+                    notSuccessFull,
+                    repository,
+                    episodePackage,
+                    false
+                );
             }
         }
     }
@@ -313,7 +314,7 @@ class DownloadTask extends Task<Void> {
                     continue;
                 }
 
-                if (downloadPackage.episodeIds.size() == maxPackageSize) {
+                if (downloadPackage.episodeIds.size() == MAX_PACKAGE_SIZE) {
                     episodePackages.add(downloadPackage);
                     downloadPackage = new DownloadPackage(
                             mediumDownload.id,

@@ -78,20 +78,6 @@ public class TaskController {
         this.helper.addService(this.checkSavedService);
     }
 
-    private static class Message {
-        final String title;
-        final String message;
-        final double total;
-        final double progress;
-
-        private Message(String title, String message, double total, double progress) {
-            this.title = title;
-            this.message = message;
-            this.total = total;
-            this.progress = progress;
-        }
-    }
-
     private class RemoveServiceTask extends TimerTask {
         private final Service<?> service;
 

@@ -45,7 +45,7 @@ public class LoadWorkGenerator {
 
         for (ClientPart part : parts) {
             if (this.isMediumLoaded(part.getMediumId())) {
-                if (this.isPartLoaded(part.getId())) {
+                if (this.isPartLoaded(part.getPartId())) {
                     filteredParts.updateParts.add(part);
                 } else {
                     filteredParts.newParts.add(part);

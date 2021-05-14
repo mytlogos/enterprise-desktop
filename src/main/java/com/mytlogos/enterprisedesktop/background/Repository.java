@@ -243,7 +243,7 @@ public interface Repository {
 
     void updateProgress(int episodeId, float progress);
 
-    List<SearchResponse> requestSearch(SearchRequest searchRequest);
+    List<ClientSearchResult> requestSearch(SearchRequest searchRequest);
 
     LiveData<List<Integer>> getListItems(Collection<Integer> listIds);
 

@@ -22,7 +22,6 @@ import org.controlsfx.control.Notifications;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  *

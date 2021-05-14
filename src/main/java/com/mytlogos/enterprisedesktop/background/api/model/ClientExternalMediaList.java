@@ -4,6 +4,10 @@ import com.mytlogos.enterprisedesktop.model.ExternalMediaList;
 
 import java.util.Arrays;
 
+/**
+ * API Model for PureExternalList (items == null), ExternalList.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientExternalMediaList implements ExternalMediaList {
     private final String uuid;
     private final int id;

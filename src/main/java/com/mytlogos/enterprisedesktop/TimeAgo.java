@@ -1,5 +1,6 @@
 package com.mytlogos.enterprisedesktop;
 
+import java.sql.Time;
 import java.time.LocalDateTime;
 
 import java.time.ZoneOffset;
@@ -21,6 +22,10 @@ public class TimeAgo {
         times.put("hour", TimeUnit.HOURS.toMillis(1));
         times.put("minute", TimeUnit.MINUTES.toMillis(1));
         times.put("second", TimeUnit.SECONDS.toMillis(1));
+    }
+
+    private TimeAgo() {
+        throw new IllegalAccessError("Do not instantiate TimeAgo!");
     }
 
     public static String toPastRelative(long duration) {

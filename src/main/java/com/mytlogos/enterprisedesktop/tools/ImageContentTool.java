@@ -145,7 +145,7 @@ public class ImageContentTool extends ContentTool {
         File file;
 
         if (!this.writeable()) {
-            throw new NotEnoughSpaceException("Out of Storage Space: Less than " + minMBSpaceAvailable + " MB available");
+            throw new NotEnoughSpaceException("Out of Storage Space: Less than " + MIN_MB_SPACE_AVAILABLE + " MB available");
         }
 
         if (this.imageMedia.containsKey(mediumId)) {
@@ -307,16 +307,6 @@ public class ImageContentTool extends ContentTool {
                 outputStream.write(ch);
             }
         }
-    }
-
-    private void saveImageBitmap(InputStream in, File image) throws IOException {
-        throw new UnsupportedOperationException();
-//        Bitmap bitmap = BitmapFactory.decodeStream(in);
-//
-//        try (OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(image))) {
-//            bitmap.compress(Bitmap.CompressFormat.PNG, 0, outputStream);
-//            outputStream.flush();
-//        }
     }
 
     @Override

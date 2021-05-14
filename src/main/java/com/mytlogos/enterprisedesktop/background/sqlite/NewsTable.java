@@ -1,6 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-import com.mytlogos.enterprisedesktop.background.api.model.ClientNews;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientPureNews;
 import com.mytlogos.enterprisedesktop.model.News;
 
 import java.util.Collection;
@@ -28,15 +28,15 @@ class NewsTable extends AbstractTable {
         super("news", manager);
     }
 
-    public void update(List<ClientNews> update) {
-        final HashMap<String, Function<ClientNews, ?>> attrMap = new HashMap<>();
-        attrMap.put("title", (StringProducer<ClientNews>) ClientNews::getTitle);
-        attrMap.put("timeStamp", (StringProducer<ClientNews>) ClientNews::getTimeStampString);
-        attrMap.put("read", (BooleanProducer<ClientNews>) ClientNews::isRead);
-        attrMap.put("link", (StringProducer<ClientNews>) ClientNews::getUrl);
+    public void update(List<ClientPureNews> update) {
+        final HashMap<String, Function<ClientPureNews, ?>> attrMap = new HashMap<>();
+        attrMap.put("title", (StringProducer<ClientPureNews>) ClientPureNews::getTitle);
+        attrMap.put("timeStamp", (StringProducer<ClientPureNews>) ClientPureNews::getTimeStampString);
+        attrMap.put("read", (BooleanProducer<ClientPureNews>) ClientPureNews::isRead);
+        attrMap.put("link", (StringProducer<ClientPureNews>) ClientPureNews::getUrl);
 
-        final Map<String, Function<ClientNews, ?>> keyExtractors = new HashMap<>();
-        keyExtractors.put("newsId", (IntProducer<ClientNews>) ClientNews::getId);
+        final Map<String, Function<ClientPureNews, ?>> keyExtractors = new HashMap<>();
+        keyExtractors.put("newsId", (IntProducer<ClientPureNews>) ClientPureNews::getId);
         this.update(update, "news", attrMap, keyExtractors);
     }
 

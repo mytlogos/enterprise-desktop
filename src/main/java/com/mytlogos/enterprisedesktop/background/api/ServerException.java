@@ -3,6 +3,10 @@ package com.mytlogos.enterprisedesktop.background.api;
 import java.io.IOException;
 
 public class ServerException extends IOException {
+    /**
+     * Alibi Uid.
+     */
+    private static final long serialVersionUID = 2788180305707794052L;
     public final int responseCode;
     public final String errorMessage;
 

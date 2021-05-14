@@ -9,6 +9,11 @@ import java.util.Collections;
  */
 public class PagedList<E> extends ArrayList<E> {
 
+    /**
+     *Alibi Uid.
+     */
+    private static final long serialVersionUID = 2377959485581940912L;
+
     public PagedList() {
     }
 

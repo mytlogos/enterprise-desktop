@@ -42,7 +42,7 @@ class PartTable extends AbstractTable {
         attrMap.put("combiIndex", (DoubleProducer<ClientPart>) ClientPart::getCombiIndex);
 
         final Map<String, Function<ClientPart, ?>> keyExtractors = new HashMap<>();
-        keyExtractors.put("partId", (IntProducer<ClientPart>) ClientPart::getId);
+        keyExtractors.put("partId", (IntProducer<ClientPart>) ClientPart::getPartId);
         this.update(update, "part", attrMap, keyExtractors);
     }
 

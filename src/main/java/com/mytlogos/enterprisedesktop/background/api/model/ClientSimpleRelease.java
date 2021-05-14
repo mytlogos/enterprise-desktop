@@ -1,19 +1,23 @@
 package com.mytlogos.enterprisedesktop.background.api.model;
 
+/**
+ * API Model for SimpleRelease.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientSimpleRelease {
     public final String url;
-    public final int id;
+    public final int episodeId;
 
-    public ClientSimpleRelease(String url, int id) {
+    public ClientSimpleRelease(String url, int episodeId) {
         this.url = url;
-        this.id = id;
+        this.episodeId = episodeId;
     }
 
     @Override
     public String toString() {
         return "ClientSimpleRelease{" +
                 "url='" + url + '\'' +
-                ", id=" + id +
+                ", episodeId=" + episodeId +
                 '}';
     }
 
@@ -24,14 +28,14 @@ public class ClientSimpleRelease {
 
         ClientSimpleRelease that = (ClientSimpleRelease) o;
 
-        if (id != that.id) return false;
+        if (episodeId != that.episodeId) return false;
         return url.equals(that.url);
     }
 
     @Override
     public int hashCode() {
         int result = url.hashCode();
-        result = 31 * result + id;
+        result = 31 * result + episodeId;
         return result;
     }
 }

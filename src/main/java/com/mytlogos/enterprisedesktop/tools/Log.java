@@ -9,7 +9,7 @@ import java.util.logging.*;
  *
  */
 public class Log {
-    private final static Log log = new Log();
+    private static final Log log = new Log();
     private final Logger logger;
 
     public Log() {

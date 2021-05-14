@@ -90,13 +90,6 @@ public class MainController {
         preferencesFx.show();
     }
 
-    private void detachTab(Attachable attachable) {
-        if (attachable == null) {
-            return;
-        }
-        attachable.onDetach();
-    }
-
     @FXML
     private void startSynchronize() {
         this.taskController.startSynchronizeTask();

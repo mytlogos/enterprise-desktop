@@ -6,6 +6,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * API Model for MinPart (episode == null) und Part.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientPart implements Part {
     private final int mediumId;
     private final int id;
@@ -25,7 +29,7 @@ public class ClientPart implements Part {
 
     @Override
     public int hashCode() {
-        return getId();
+        return getPartId();
     }
 
     @Override
@@ -35,7 +39,7 @@ public class ClientPart implements Part {
 
         ClientPart that = (ClientPart) o;
 
-        return getId() == that.getId();
+        return getPartId() == that.getPartId();
     }
 
     @Override

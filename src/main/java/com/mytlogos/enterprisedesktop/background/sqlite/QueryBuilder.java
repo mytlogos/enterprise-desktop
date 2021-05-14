@@ -119,11 +119,15 @@ class QueryBuilder<R> {
         }
     }
 
-    List<R> queryList() throws SQLException {
-        this.expectRead();
+    private void checkConverter() {
         if (this.converter == null) {
             throw new IllegalStateException("no converter available");
         }
+    }
+
+    List<R> queryList() throws SQLException {
+        this.expectRead();
+        this.checkConverter();
         try (ConnectionImpl connection = this.manager.getConnection()) {
             try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.query, this.name)) {
                 return selectResultList(preparedStatement);
@@ -186,9 +190,7 @@ class QueryBuilder<R> {
 
     R query(ConnectionImpl con) throws SQLException {
         this.expectRead();
-        if (this.converter == null) {
-            throw new IllegalStateException("no converter available");
-        }
+        this.checkConverter();
         try (ConnectionImpl connection = con) {
             return selectResult(connection);
         }
@@ -217,9 +219,7 @@ class QueryBuilder<R> {
 
     LiveData<R> queryLiveData() {
         this.expectRead();
-        if (this.converter == null) {
-            throw new IllegalStateException("no converter available");
-        }
+        this.checkConverter();
         return this.createLiveData(() -> {
             try (ConnectionImpl connection = manager.getConnection()) {
                 return selectResult(connection);
@@ -234,9 +234,7 @@ class QueryBuilder<R> {
 
     LiveData<List<R>> queryLiveDataList() {
         this.expectRead();
-        if (this.converter == null) {
-            throw new IllegalStateException("no converter available");
-        }
+        this.checkConverter();
         return this.createLiveData(() -> {
             try (ConnectionImpl connection = manager.getConnection()) {
                 try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {

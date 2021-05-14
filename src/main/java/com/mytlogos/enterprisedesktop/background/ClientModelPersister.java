@@ -15,15 +15,21 @@ public interface ClientModelPersister {
         return this.persistEpisodes(Arrays.asList(episode));
     }
 
+    default ClientModelPersister persist(ClientMediaList... list) {
+        return this.persistMediaLists(Arrays.asList(list));
+    }
+
+    ClientModelPersister persistMediaLists(Collection<ClientMediaList> lists);
+
     ClientModelPersister persistEpisodes(Collection<ClientEpisode> episode);
 
-    default ClientModelPersister persist(ClientMediaList... mediaLists) {
-        return this.persistMediaLists(Arrays.asList(mediaLists));
+    default ClientModelPersister persist(ClientUserList... mediaLists) {
+        return this.persistUserLists(Arrays.asList(mediaLists));
     }
 
     ClientModelPersister persist(LoadWorkGenerator.FilteredEpisodes filteredEpisodes);
 
-    ClientModelPersister persistMediaLists(Collection<ClientMediaList> mediaLists);
+    ClientModelPersister persistUserLists(List<ClientUserList> lists);
 
     default ClientModelPersister persist(ClientExternalMediaList... externalMediaLists) {
         return this.persistExternalMediaLists(Arrays.asList(externalMediaLists));
@@ -41,21 +47,27 @@ public interface ClientModelPersister {
 
     ClientModelPersister persistExternalUsers(Collection<ClientExternalUser> externalUsers);
 
+    default ClientModelPersister persist(ClientSimpleMedium... media) {
+        return this.persistSimpleMedia(Arrays.asList(media));
+    }
+
     default ClientModelPersister persist(ClientMedium... media) {
         return this.persistMedia(Arrays.asList(media));
     }
 
     ClientModelPersister persist(LoadWorkGenerator.FilteredExternalUser filteredExternalUser);
 
-    ClientModelPersister persistMedia(Collection<ClientMedium> media);
+    ClientModelPersister persistSimpleMedia(List<ClientSimpleMedium> media);
 
-    default ClientModelPersister persist(ClientNews... news) {
+    ClientModelPersister persistMedia(List<ClientMedium> media);
+
+    default ClientModelPersister persist(ClientPureNews... news) {
         return this.persistNews(Arrays.asList(news));
     }
 
     ClientModelPersister persist(LoadWorkGenerator.FilteredMedia filteredMedia);
 
-    ClientModelPersister persistNews(Collection<ClientNews> news);
+    ClientModelPersister persistNews(List<ClientPureNews> news);
 
     default ClientModelPersister persist(ClientPart... parts) {
         return this.persistParts(Arrays.asList(parts));
@@ -97,9 +109,11 @@ public interface ClientModelPersister {
 
     Collection<Integer> deleteLeftoverReleases(Map<Integer, List<ClientSimpleRelease>> partReleases);
 
-    ClientModelPersister persistReleases(Collection<ClientRelease> releases);
+    ClientModelPersister persistReleases(Collection<ClientPureDisplayRelease> releases);
 
     void deleteLeftoverTocs(Map<Integer, List<String>> mediaTocs);
+
+    ClientModelPersister persistFullTocs(List<ClientFullMediumToc> tocs);
 
     ClientModelPersister persistTocs(Collection<? extends Toc> tocs);
 }

@@ -10,6 +10,7 @@ import com.mytlogos.enterprisedesktop.background.api.NotConnectedException;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.model.Toc;
 import com.mytlogos.enterprisedesktop.preferences.MainPreferences;
+import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 import javafx.concurrent.Task;
 import retrofit2.Response;
@@ -42,7 +43,7 @@ public class SynchronizeTask extends Task<Void> {
 
         if (!repository.isClientOnline()) {
             cleanUp();
-            System.out.println("Aborting Synchronize, Client is offline");
+            Log.info("Aborting Synchronize, Client is offline");
             return null;
         }
         if (!repository.isClientAuthenticated()) {
@@ -55,24 +56,26 @@ public class SynchronizeTask extends Task<Void> {
             this.updateTitle("Start Synchronizing");
             syncWithTime(repository);
             contentText = "Synchronization complete";
-        } catch (Exception e) {
+        } catch (NotConnectedException e) {
+            contentText = "Not connected with Server";
             this.totalAddedOrUpdated = 0;
-
-            if (e instanceof IOException) {
-                if (e instanceof NotConnectedException) {
-                    contentText = "Not connected with Server";
-                } else if (e instanceof ServerException) {
-                    contentText = "Response with Error Message";
-                } else {
-                    contentText = "Error between App and Server";
-                }
-            } else {
-                contentText = "Local Error";
-            }
+            throw e;
+        } catch (ServerException e) {
+            contentText = "Response with Error Message";
+            this.totalAddedOrUpdated = 0;
+            throw e;
+        } catch (IOException e) {
+            contentText = "Error between App and Server";
+            this.totalAddedOrUpdated = 0;
+            throw e;
+        } catch (Exception e) {
+            contentText = "Local Error";
+            this.totalAddedOrUpdated = 0;
             throw e;
         } finally {
             StringBuilder builder = new StringBuilder("Added or Updated:\n");
             append(builder, "Media: ", this.mediaAddedOrUpdated);
+            append(builder, "Tocs: ", this.tocsAddedOrUpdated);
             append(builder, "Parts: ", this.partAddedOrUpdated);
             append(builder, "Episodes: ", this.episodesAddedOrUpdated);
             append(builder, "Releases: ", this.releasesAddedOrUpdated);
@@ -124,6 +127,7 @@ public class SynchronizeTask extends Task<Void> {
 
         StringBuilder builder = new StringBuilder();
         append(builder, "Media: ", mediaSize);
+        append(builder, "Tocs: ", tocsSize);
         append(builder, "Parts: ", partsSize);
         append(builder, "Episodes: ", episodesSize);
         append(builder, "Releases: ", releasesSize);
@@ -137,13 +141,13 @@ public class SynchronizeTask extends Task<Void> {
 
         this.notify("Persisting Media", null, current, total);
         // persist all new or updated entities, media to releases needs to be in this order
-        persister.persistMedia(changedEntities.media);
+        persister.persistSimpleMedia(changedEntities.media);
         current += mediaSize;
         changedEntities.media.clear();
 
         this.notify("Persisting Tocs", null, current, total);
         // persist all new or updated entities, media to releases needs to be in this order
-        persister.persistTocs(changedEntities.tocs);
+        persister.persistFullTocs(changedEntities.tocs);
         current += tocsSize;
         changedEntities.tocs.clear();
 
@@ -163,7 +167,7 @@ public class SynchronizeTask extends Task<Void> {
         changedEntities.releases.clear();
 
         this.notify("Persisting Lists", null, current, total);
-        persister.persistMediaLists(changedEntities.lists);
+        persister.persistUserLists(changedEntities.lists);
         current += listsSize;
         changedEntities.lists.clear();
 
@@ -271,8 +275,8 @@ public class SynchronizeTask extends Task<Void> {
 
             for (Map.Entry<Integer, List<ClientSimpleRelease>> entry : partReleases.entrySet()) {
                 for (ClientSimpleRelease release : entry.getValue()) {
-                    if (!repository.isEpisodeLoaded(release.id)) {
-                        missingEpisodes.add(release.id);
+                    if (!repository.isEpisodeLoaded(release.episodeId)) {
+                        missingEpisodes.add(release.episodeId);
                     }
                 }
             }
@@ -294,12 +298,12 @@ public class SynchronizeTask extends Task<Void> {
         }
 
         if (!reloadStat.loadMediumTocs.isEmpty()) {
-            final Response<List<ClientToc>> mediumTocsResponse = client.getMediumTocs(reloadStat.loadMediumTocs);
-            final List<ClientToc> mediumTocs = Utils.checkAndGetBody(mediumTocsResponse);
+            final Response<List<ClientFullMediumToc>> mediumTocsResponse = client.getMediumTocs(reloadStat.loadMediumTocs);
+            final List<ClientFullMediumToc> mediumTocs = Utils.checkAndGetBody(mediumTocsResponse);
             Map<Integer, List<String>> mediaTocs = new HashMap<>();
 
-            for (ClientToc mediumToc : mediumTocs) {
-                mediaTocs.computeIfAbsent(mediumToc.getMediumId(), id -> new ArrayList<>()).add(mediumToc.getLink());
+            for (ClientFullMediumToc mediumToc : mediumTocs) {
+                mediaTocs.computeIfAbsent(mediumToc.mediumId, id -> new ArrayList<>()).add(mediumToc.link);
             }
             Utils.doPartitionedRethrow(mediaTocs.keySet(), mediaIds-> {
                 Map<Integer, List<String>> partitionedMediaTocs = new HashMap<>();
@@ -443,9 +447,9 @@ public class SynchronizeTask extends Task<Void> {
         persister.persistEpisodes(loading);
     }
 
-    private void persistReleases(Collection<ClientRelease> releases, Client client, ClientModelPersister persister, Repository repository) throws IOException {
+    private void persistReleases(List<ClientPureDisplayRelease> releases, Client client, ClientModelPersister persister, Repository repository) throws IOException {
         Collection<Integer> missingIds = new HashSet<>();
-        Collection<ClientRelease> loading = new HashSet<>();
+        Collection<ClientPureDisplayRelease> loading = new HashSet<>();
 
         releases.removeIf(value -> {
             if (!repository.isEpisodeLoaded(value.getEpisodeId())) {

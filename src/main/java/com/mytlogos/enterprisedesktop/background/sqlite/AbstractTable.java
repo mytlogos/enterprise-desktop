@@ -1,9 +1,6 @@
 package com.mytlogos.enterprisedesktop.background.sqlite;
 
-
 import com.mytlogos.enterprisedesktop.background.sqlite.internal.ConnectionImpl;
-import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
-import com.mytlogos.enterprisedesktop.background.sqlite.life.MutableLiveData;
 import com.mytlogos.enterprisedesktop.tools.Log;
 
 import java.sql.*;
@@ -146,25 +143,23 @@ public abstract class AbstractTable {
         }
     }
 
-    <T> void update(Collection<T> values, String table, Map<String, Function<T, ?>> attrExtractors, Map<String, Function<T, ?>> keyExtractors) {
-        // TODO 02.3.2020: use something else maybe, as this may be used for SQLInjection?
+    <T> void update(Collection<T> values, String table, Map<String, Function<T, ?>> attrExtractors,
+            Map<String, Function<T, ?>> keyExtractors) {
+        // TODO 02.3.2020: use something else maybe, as this may be used for
+        // SQLInjection?
         if (attrExtractors.isEmpty()) {
             System.out.println("trying to update without any attrExtractor");
             return;
         }
         final List<String> attrNames = new ArrayList<>(attrExtractors.keySet());
         final List<String> keyNames = new ArrayList<>(keyExtractors.keySet());
-        String query = attrNames
-                .stream()
-                .map(attr -> "`" + attr + "` = ?")
+        String query = attrNames.stream().map(attr -> "`" + attr + "` = ?")
                 .collect(Collectors.joining(",", "UPDATE `" + table + "` SET ", ""));
 
-        query = keyNames.stream()
-                .map(attr -> "`" + attr + "` = ?")
+        query = keyNames.stream().map(attr -> "`" + attr + "` = ?")
                 .collect(Collectors.joining(",", query + " WHERE ", ";"));
 
-        this.executeDMLQuery(
-                values,
+        this.executeDMLQuery(values,
                 new QueryBuilder<T>("Update " + this.getClass().getSimpleName(), query, this.getManager())
                         .setValueSetter((preparedStatement, t) -> {
                             int placeholder = 1;
@@ -180,34 +175,34 @@ public abstract class AbstractTable {
 
                                 setValue(preparedStatement, t, placeholder, function);
                             }
-                        })
-        );
+                        }));
     }
 
-    private <T> void setValue(PreparedStatement preparedStatement, T t, int placeholder, Function<T, ?> function) throws SQLException {
+    private <T> void setValue(PreparedStatement preparedStatement, T t, int placeholder, Function<T, ?> function)
+            throws SQLException {
         if (function instanceof ByteProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setByte(placeholder, ((ByteProducer<T>) function).apply(t));
         } else if (function instanceof ShortProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setShort(placeholder, ((ShortProducer<T>) function).apply(t));
         } else if (function instanceof IntProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setInt(placeholder, ((IntProducer<T>) function).apply(t));
         } else if (function instanceof LongProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setLong(placeholder, ((LongProducer<T>) function).apply(t));
         } else if (function instanceof FloatProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setFloat(placeholder, ((FloatProducer<T>) function).apply(t));
         } else if (function instanceof DoubleProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setDouble(placeholder, ((DoubleProducer<T>) function).apply(t));
         } else if (function instanceof BooleanProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setBoolean(placeholder, ((BooleanProducer<T>) function).apply(t));
         } else if (function instanceof StringProducer) {
-            //noinspection unchecked
+            // noinspection unchecked
             preparedStatement.setString(placeholder, ((StringProducer<T>) function).apply(t));
         }
     }

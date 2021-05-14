@@ -421,7 +421,7 @@ public class MediaController implements Attachable {
 
     @FXML
     private void scrollToEpisode() {
-
+        // TODO: implement
     }
 
     private static class MediumCell extends ListCell<MediumItem> {

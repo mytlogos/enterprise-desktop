@@ -258,13 +258,7 @@ class RepositoryImpl implements Repository {
 
     @Override
     public List<ClientNews> loadNewsSync(Collection<Integer> newsIds) {
-        try {
-            System.out.println("loading News: " + newsIds + " on " + Thread.currentThread());
-            return this.client.getNews(newsIds).body();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -284,11 +278,7 @@ class RepositoryImpl implements Repository {
 
     @Override
     public void refreshNews(LocalDateTime latest) throws IOException {
-        List<ClientNews> news = this.client.getNews(latest, null).body();
-
-        if (news != null) {
-            this.persister.persistNews(news);
-        }
+        // TODO: implement refreshNews
     }
 
     @Override
@@ -848,7 +838,7 @@ class RepositoryImpl implements Repository {
         List<Integer> loadedPartIds = new ArrayList<>();
 
         for (ClientPart part : partBody) {
-            loadedPartIds.add(part.getId());
+            loadedPartIds.add(part.getPartId());
         }
         LoadWorkGenerator generator = new LoadWorkGenerator(this.loadedData);
         LoadWorkGenerator.FilteredParts filteredParts = generator.filterParts(partBody);
@@ -886,7 +876,7 @@ class RepositoryImpl implements Repository {
         TaskManager.runTask(() -> {
             try {
                 final Boolean success = checkAndGetBody(this.client.updateProgress(episodeId, progress));
-                if (success) {
+                if (Boolean.TRUE.equals(success)) {
                     this.storage.updateProgress(Collections.singleton(episodeId), progress);
                 }
             } catch (IOException e) {
@@ -896,9 +886,9 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public List<SearchResponse> requestSearch(SearchRequest searchRequest) {
+    public List<ClientSearchResult> requestSearch(SearchRequest searchRequest) {
         try {
-            final Response<List<SearchResponse>> response = this.client.searchRequest(searchRequest);
+            final Response<List<ClientSearchResult>> response = this.client.searchRequest(searchRequest);
             if (response.isSuccessful()) {
                 return response.body();
             } else {
@@ -972,7 +962,7 @@ class RepositoryImpl implements Repository {
             final Response<Boolean> response = this.client.removeToc(mediumId, link);
             final Boolean body = Utils.checkAndGetBody(response);
 
-            if (body) {
+            if (Boolean.TRUE.equals(body)) {
                 this.storage.removeToc(mediumId, link);
                 return true;
             }
@@ -988,8 +978,8 @@ class RepositoryImpl implements Repository {
             final Response<Boolean> response = this.client.addToc(mediumId, link);
             final Boolean body = Utils.checkAndGetBody(response);
 
-            if (body) {
-                this.persister.persistTocs(Collections.singleton(new SimpleToc(mediumId, link)));
+            if (Boolean.TRUE.equals(body)) {
+                this.persister.persistTocs(Collections.singletonList(new SimpleToc(mediumId, link)));
                 return true;
             }
         } catch (IOException e) {
@@ -1003,7 +993,7 @@ class RepositoryImpl implements Repository {
         return TaskManager.runCompletableTask(() -> {
             try {
                 final Boolean success = Utils.checkAndGetBody(this.client.mergeMedia(sourceId, destinationId));
-                if (success) {
+                if (Boolean.TRUE.equals(success)) {
                     this.storage.removeMedium(sourceId);
                 }
                 return success;

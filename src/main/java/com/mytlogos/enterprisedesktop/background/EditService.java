@@ -1,11 +1,11 @@
 package com.mytlogos.enterprisedesktop.background;
 
-
 import com.mytlogos.enterprisedesktop.background.api.Client;
 import com.mytlogos.enterprisedesktop.background.api.NotConnectedException;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientListQuery;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMediaList;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientMedium;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientUpdateMedium;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientUpdateUser;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Utils;
@@ -20,12 +20,12 @@ import java.util.concurrent.Executors;
 import static com.mytlogos.enterprisedesktop.background.EditService.Event.*;
 import static com.mytlogos.enterprisedesktop.background.EditService.EditObject.*;
 
-
 class EditService {
     private final Client client;
     private final DatabaseStorage storage;
     private final ClientModelPersister persister;
-    private final ExecutorService pushEditExecutor = Executors.newSingleThreadExecutor(Utils.threadFactory("PushEdits-Thread"));
+    private final ExecutorService pushEditExecutor = Executors
+            .newSingleThreadExecutor(Utils.threadFactory("PushEdits-Thread"));
 
     EditService(Client client, DatabaseStorage storage, ClientModelPersister persister) {
         this.client = client;
@@ -43,16 +43,13 @@ class EditService {
         Map<Integer, Map<Integer, List<EditEvent>>> objectTypeEventMap = new HashMap<>();
 
         for (EditEvent event : events) {
-            objectTypeEventMap
-                    .computeIfAbsent(event.getObjectType(), integer -> new HashMap<>())
-                    .computeIfAbsent(event.getEventType(), integer -> new ArrayList<>())
-                    .add(event);
+            objectTypeEventMap.computeIfAbsent(event.getObjectType(), integer -> new HashMap<>())
+                    .computeIfAbsent(event.getEventType(), integer -> new ArrayList<>()).add(event);
         }
         Collection<EditEvent> consumedEvents = new ArrayList<>();
 
         for (Map.Entry<Integer, Map<Integer, List<EditEvent>>> entry : objectTypeEventMap.entrySet()) {
             try {
-                boolean consumed = true;
                 EditObject editObject = null;
 
                 for (EditObject value : EditObject.values()) {
@@ -183,9 +180,7 @@ class EditService {
             String newValue = latestEntry.getValue().getSecondValue();
 
             float newProgress = this.parseProgress(newValue);
-            currentProgressEpisodeMap
-                    .computeIfAbsent(newProgress, aFloat -> new HashSet<>())
-                    .add(latestEntry.getKey());
+            currentProgressEpisodeMap.computeIfAbsent(newProgress, aFloat -> new HashSet<>()).add(latestEntry.getKey());
         }
 
         for (Map.Entry<Float, Set<Integer>> progressEntry : currentProgressEpisodeMap.entrySet()) {
@@ -204,7 +199,8 @@ class EditService {
                         float idProgress = this.parseProgress(event.getFirstValue());
                         progressMap.computeIfAbsent(idProgress, aFloat -> new HashSet<>()).add(id);
                     }
-                    progressMap.forEach((updateProgress, progressIds) -> this.storage.updateProgress(progressIds, updateProgress));
+                    progressMap.forEach(
+                            (updateProgress, progressIds) -> this.storage.updateProgress(progressIds, updateProgress));
                 }
             } catch (NotConnectedException e) {
                 throw new NotConnectedException(e);
@@ -227,7 +223,7 @@ class EditService {
     private boolean updateProgressOnline(float progress, Collection<Integer> ids) throws IOException {
         Response<Boolean> response = this.client.addProgress(ids, progress);
 
-        if (!response.isSuccessful() || response.body() == null || !response.body()) {
+        if (!response.isSuccessful() || response.body() == null || !Boolean.TRUE.equals(response.body())) {
             // TODO 06.3.2020: better error handling
             return false;
         }
@@ -242,11 +238,8 @@ class EditService {
             if (value == null) {
                 throw new IllegalArgumentException("cannot change user when none is logged in");
             }
-            ClientUpdateUser user = new ClientUpdateUser(
-                    value.getUuid(), updateUser.getName(),
-                    updateUser.getPassword(),
-                    updateUser.getNewPassword()
-            );
+            ClientUpdateUser user = new ClientUpdateUser(updateUser.getName(), updateUser.getPassword(),
+                    updateUser.getNewPassword());
             if (!this.client.isOnline()) {
                 System.err.println("offline user edits are not allowed");
                 return;
@@ -269,13 +262,8 @@ class EditService {
                 return "Cannot update External Lists";
             }
             int listId = listSetting.getListId();
-            ClientMediaList mediaList = new ClientMediaList(
-                    listSetting.getUuid(),
-                    listId,
-                    listSetting.getName(),
-                    newMediumType,
-                    new int[0]
-            );
+            ClientMediaList mediaList = new ClientMediaList(listSetting.getUuid(), listId, listSetting.getName(),
+                    newMediumType, new int[0]);
             return this.updateList(listSetting.getName(), newMediumType, listId, mediaList);
         });
     }
@@ -291,10 +279,12 @@ class EditService {
                 List<EditEvent> editEvents = new ArrayList<>();
 
                 if (!Objects.equals(setting.getName(), newName)) {
-                    editEvents.add(new EditEventImpl(listId, MEDIUM.getValue(), CHANGE_NAME.getValue(), setting.getName(), newName));
+                    editEvents.add(new EditEventImpl(listId, MEDIUM.getValue(), CHANGE_NAME.getValue(),
+                            setting.getName(), newName));
                 }
                 if (setting.getMedium() != newMediumType) {
-                    editEvents.add(new EditEventImpl(listId, MEDIUM.getValue(), CHANGE_TYPE.getValue(), setting.getMedium(), newMediumType));
+                    editEvents.add(new EditEventImpl(listId, MEDIUM.getValue(), CHANGE_TYPE.getValue(),
+                            setting.getMedium(), newMediumType));
                 }
                 this.storage.insertEditEvent(editEvents);
                 this.persister.persist(mediaList).finish();
@@ -316,13 +306,8 @@ class EditService {
                 return "Cannot update External Lists";
             }
             int listId = listSetting.getListId();
-            ClientMediaList mediaList = new ClientMediaList(
-                    listSetting.getUuid(),
-                    listId,
-                    newName,
-                    listSetting.getMedium(),
-                    new int[0]
-            );
+            ClientMediaList mediaList = new ClientMediaList(listSetting.getUuid(), listId, newName,
+                    listSetting.getMedium(), new int[0]);
             return updateList(newName, listSetting.getMedium(), listId, mediaList);
         });
     }
@@ -367,7 +352,20 @@ class EditService {
                 this.persister.persist(clientMedium).finish();
             }
             try {
-                this.client.updateMedia(clientMedium);
+                this.client.updateMedia(new ClientUpdateMedium(
+                    mediumId,
+                    mediumSettings.getCountryOfOrigin(),
+                    mediumSettings.getLanguageOfOrigin(),
+                    mediumSettings.getAuthor(),
+                    mediumSettings.getTitle(),
+                    mediumSettings.getMedium(),
+                    mediumSettings.getArtist(),
+                    mediumSettings.getLang(),
+                    mediumSettings.getStateOrigin().getValue(),
+                    mediumSettings.getStateTL().getValue(),
+                    mediumSettings.getSeries(),
+                    mediumSettings.getUniverse()
+                ));
                 ClientMedium medium = this.client.getMedium(mediumId).body();
                 this.persister.persist(medium).finish();
             } catch (IOException e) {
@@ -409,7 +407,8 @@ class EditService {
                     Collection<EditEvent> events = new ArrayList<>(mediumIds.size());
 
                     for (Integer id : mediumIds) {
-                        EditEvent event = new EditEventImpl(id, MEDIUM.getValue(), REMOVE_FROM.getValue(), listId, null);
+                        EditEvent event = new EditEventImpl(id, MEDIUM.getValue(), REMOVE_FROM.getValue(), listId,
+                                null);
                         events.add(event);
                     }
                     this.storage.insertEditEvent(events);
@@ -474,7 +473,8 @@ class EditService {
         return TaskManager.runCompletableTask(() -> {
             try {
                 if (!this.client.isOnline()) {
-                    EditEvent event = new EditEventImpl(mediumId, MEDIUM.getValue(), MOVE.getValue(), oldListId, newListId);
+                    EditEvent event = new EditEventImpl(mediumId, MEDIUM.getValue(), MOVE.getValue(), oldListId,
+                            newListId);
                     this.storage.insertEditEvent(event);
                     this.storage.removeItemFromList(oldListId, mediumId);
                     this.storage.addItemsToList(newListId, Collections.singleton(mediumId));
@@ -511,7 +511,8 @@ class EditService {
                     Collection<EditEvent> events = new ArrayList<>(ids.size());
 
                     for (Integer id : ids) {
-                        EditEvent event = new EditEventImpl(id, EditObject.MEDIUM.getValue(), Event.MOVE.getValue(), oldListId, listId);
+                        EditEvent event = new EditEventImpl(id, EditObject.MEDIUM.getValue(), Event.MOVE.getValue(),
+                                oldListId, listId);
                         events.add(event);
                     }
                     this.storage.insertEditEvent(events);
@@ -539,16 +540,7 @@ class EditService {
     }
 
     enum EditObject {
-        USER(1),
-        EXTERNAL_USER(2),
-        EXTERNAL_LIST(3),
-        LIST(4),
-        MEDIUM(5),
-        PART(6),
-        EPISODE(7),
-        RELEASE(8),
-        NEWS(9),
-        ;
+        USER(1), EXTERNAL_USER(2), EXTERNAL_LIST(3), LIST(4), MEDIUM(5), PART(6), EPISODE(7), RELEASE(8), NEWS(9),;
 
         private final int value;
 
@@ -562,18 +554,8 @@ class EditService {
     }
 
     enum Event {
-        ADD(1),
-        REMOVE(2),
-        MOVE(3),
-        ADD_TO(4),
-        REMOVE_FROM(5),
-        MERGE(6),
-        CHANGE_NAME(7),
-        CHANGE_TYPE(8),
-        ADD_TOC(9),
-        REMOVE_TOC(10),
-        CHANGE_PROGRESS(11),
-        CHANGE_READ(12);
+        ADD(1), REMOVE(2), MOVE(3), ADD_TO(4), REMOVE_FROM(5), MERGE(6), CHANGE_NAME(7), CHANGE_TYPE(8), ADD_TOC(9),
+        REMOVE_TOC(10), CHANGE_PROGRESS(11), CHANGE_READ(12);
 
         private final int value;
 

@@ -8,6 +8,10 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class FileTools {
+    private FileTools() {
+        throw new IllegalAccessError("Do not instantiate FileTools!");
+    }
+
     /**
      * Copied from
      * <a href="https://stackoverflow.com/a/3758880/9492864">

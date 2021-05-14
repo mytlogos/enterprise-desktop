@@ -6,21 +6,27 @@ import com.mytlogos.enterprisedesktop.model.Episode;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 
+/**
+ * API Model for PureEpisode (releases == null), Episode.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientEpisode implements Episode {
     private final int id;
     private final float progress;
     private final int partId;
     private final int totalIndex;
     private final int partialIndex;
+    private final double combiIndex;
     private final LocalDateTime readDate;
     private final ClientRelease[] releases;
 
-    public ClientEpisode(int id, float progress, int partId, int totalIndex, int partialIndex, LocalDateTime readDate, ClientRelease[] releases) {
+    public ClientEpisode(int id, float progress, int partId, int totalIndex, int partialIndex, double combiIndex, LocalDateTime readDate, ClientRelease[] releases) {
         this.id = id;
         this.progress = progress;
         this.partId = partId;
         this.totalIndex = totalIndex;
         this.partialIndex = partialIndex;
+        this.combiIndex = combiIndex;
         this.readDate = readDate;
         this.releases = releases;
     }
@@ -35,7 +41,7 @@ public class ClientEpisode implements Episode {
 
     @Override
     public double getCombiIndex() {
-        return Double.parseDouble(this.getTotalIndex() + "." + this.getPartialIndex());
+        return combiIndex;
     }
 
     @Override

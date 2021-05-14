@@ -13,12 +13,12 @@ import java.nio.file.FileSystems;
  *
  */
 public class DownloadPreferences extends CategoryPreference {
-
-    private final SimpleObjectProperty<File> defaultFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium").toFile());
-    private final ObjectProperty<File> textFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "text").toFile());
-    private final ObjectProperty<File> videoFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "video").toFile());
-    private final ObjectProperty<File> audioFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "audio").toFile());
-    private final ObjectProperty<File> imageFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath("medium", "image").toFile());
+    private static final String BASE = "medium";
+    private final SimpleObjectProperty<File> defaultFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath(BASE).toFile());
+    private final ObjectProperty<File> textFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath(BASE, "text").toFile());
+    private final ObjectProperty<File> videoFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath(BASE, "video").toFile());
+    private final ObjectProperty<File> audioFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath(BASE, "audio").toFile());
+    private final ObjectProperty<File> imageFile = new SimpleObjectProperty<>(FileSystems.getDefault().getPath(BASE, "image").toFile());
     private final BooleanProperty autoDownload = new SimpleBooleanProperty(true);
     private final IntegerProperty defaultSizeLimit = new SimpleIntegerProperty(4000);
     private final IntegerProperty videoSizeLimit = new SimpleIntegerProperty(1000);
