@@ -23,6 +23,7 @@ class ServerDiscovery {
     private final int maxAddress = 50;
     private final ExecutorService executor = Executors.newFixedThreadPool(maxAddress, Utils.countingThreadFactory("Server-Discovery-"));
 
+    @SuppressWarnings("java:S2142")
     Server discover(InetAddress broadcastAddress) {
         Set<Server> discoveredServer = Collections.synchronizedSet(new HashSet<>());
 

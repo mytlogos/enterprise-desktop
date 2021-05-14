@@ -337,12 +337,10 @@ public class AnalyzeController implements Attachable {
                 root.setPadding(new Insets(5));
                 Button resolve = new Button("Merge Media");
                 resolve.setOnAction(event -> {
-                    Alert alert = new Alert(
-                        Alert.AlertType.CONFIRMATION,
-                        String.format("Are you sure you want to merge '%s' into '%s'", second.getTitle(), first.getTitle()),
-                        ButtonType.NO,
-                        ButtonType.YES
-                    );
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
+                            String.format("Are you sure you want to merge '%s' into '%s'", second.getTitle(),
+                                    first.getTitle()),
+                            ButtonType.NO, ButtonType.YES);
 
                     alert.showAndWait().ifPresent(buttonType -> {
                         if (buttonType == ButtonType.YES) {
@@ -355,12 +353,9 @@ public class AnalyzeController implements Attachable {
                                         }
                                         boolean finalABoolean = aBoolean;
                                         Platform.runLater(() -> Notifications.create()
-                                                .title(String.format(
-                                                    "Merging Media '%s' into '%s' %s",
-                                                    this.second.getTitle(),
-                                                    this.first.getTitle(),
-                                                    finalABoolean ? "succeeded" : "failed"
-                                                ))
+                                                .title(String.format("Merging Media '%s' into '%s' %s",
+                                                        this.second.getTitle(), this.first.getTitle(),
+                                                        finalABoolean ? "succeeded" : "failed"))
                                                 .show());
                                     });
                         }
@@ -766,8 +761,8 @@ public class AnalyzeController implements Attachable {
                 @Override
                 String getTitle() {
                     return String.format("'%s' has a reading gap between %s and %s of %d Episodes", this.mediumTitle,
-                            new BigDecimal(this.previousRead).stripTrailingZeros().toPlainString(),
-                            new BigDecimal(this.afterRead).stripTrailingZeros().toPlainString(),
+                            BigDecimal.valueOf(this.previousRead).stripTrailingZeros().toPlainString(),
+                            BigDecimal.valueOf(this.afterRead).stripTrailingZeros().toPlainString(),
                             this.betweenUnread.size());
                 }
             }
