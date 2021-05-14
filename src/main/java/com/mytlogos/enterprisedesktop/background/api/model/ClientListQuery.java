@@ -2,6 +2,10 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 
 import java.util.Arrays;
 
+/**
+ * API Model for ListMedia.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientListQuery {
     private final ClientMediaList list;
     private final ClientMedium[] media;

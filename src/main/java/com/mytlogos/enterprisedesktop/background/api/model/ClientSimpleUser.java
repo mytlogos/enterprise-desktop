@@ -2,6 +2,10 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 
 import com.mytlogos.enterprisedesktop.model.User;
 
+/**
+ * API Model for SimpleUser.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientSimpleUser implements User {
     private final String uuid;
     private final String session;

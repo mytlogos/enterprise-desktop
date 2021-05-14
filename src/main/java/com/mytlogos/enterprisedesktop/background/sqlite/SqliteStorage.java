@@ -853,7 +853,7 @@ public class SqliteStorage implements DatabaseStorage {
         }
 
         @Override
-        public ClientModelPersister persistMedia(Collection<ClientMedium> media) {
+        public ClientModelPersister persistMedia(List<ClientMedium> media) {
             LoadWorkGenerator.FilteredMedia filteredMedia = this.generator.filterMedia(media);
             return persist(filteredMedia);
         }
@@ -873,11 +873,11 @@ public class SqliteStorage implements DatabaseStorage {
         }
 
         @Override
-        public ClientModelPersister persistNews(Collection<ClientNews> news) {
-            List<ClientNews> list = new ArrayList<>();
-            List<ClientNews> update = new ArrayList<>();
+        public ClientModelPersister persistNews(List<ClientPureNews> news) {
+            List<ClientPureNews> list = new ArrayList<>();
+            List<ClientPureNews> update = new ArrayList<>();
 
-            for (ClientNews clientNews : news) {
+            for (ClientPureNews clientNews : news) {
                 if (this.generator.isNewsLoaded(clientNews.getId())) {
                     update.add(clientNews);
                 } else {
@@ -887,7 +887,7 @@ public class SqliteStorage implements DatabaseStorage {
             SqliteStorage.this.newsTable.insert(list);
             SqliteStorage.this.newsTable.update(update);
 
-            for (ClientNews clientNews : list) {
+            for (ClientPureNews clientNews : list) {
                 this.loadedData.getNews().add(clientNews.getId());
             }
             return this;
@@ -938,7 +938,10 @@ public class SqliteStorage implements DatabaseStorage {
             // persistFiltered externalUser
             this.persist(clientUser.getExternalUser());
             // persistFiltered loaded unread NewsImpl
-            this.persist(clientUser.getUnreadNews());
+            this.persistNews(Arrays.stream(clientUser.getUnreadNews())
+                .map(news -> new ClientPureNews(news.getTitle(), news.getLink(), news.getDate(), news.getId(), news.isRead()))
+                .collect(Collectors.toList())
+            );
             // persistFiltered/update media with data
             this.persist(clientUser.getReadToday());
 
@@ -950,9 +953,6 @@ public class SqliteStorage implements DatabaseStorage {
             User value = SqliteStorage.this.userTable.getUserNow();
             if (value == null) {
                 throw new IllegalArgumentException("cannot update user if none is stored in the database");
-            }
-            if (!user.getUuid().equals(value.getUuid())) {
-                throw new IllegalArgumentException("cannot update user which do not share the same uuid");
             }
             // at the moment the only thing that can change for the user on client side is the name
             if (user.getName().equals(value.getName())) {
@@ -1138,7 +1138,7 @@ public class SqliteStorage implements DatabaseStorage {
 
                 if (releases != null) {
                     for (ClientSimpleRelease simpleRelease : releases) {
-                        if (simpleRelease.id == release.episodeId && Objects.equals(simpleRelease.url, release.url)) {
+                        if (simpleRelease.episodeId == release.episodeId && Objects.equals(simpleRelease.url, release.url)) {
                             found = true;
                             unmatchedReleases.remove(simpleRelease);
                             break;
@@ -1153,7 +1153,7 @@ public class SqliteStorage implements DatabaseStorage {
             Collection<Integer> episodesToLoad = new HashSet<>();
 
             for (ClientSimpleRelease release : unmatchedReleases) {
-                episodesToLoad.add(release.id);
+                episodesToLoad.add(release.episodeId);
             }
 
             SqliteStorage.this.releaseTable.delete(deleteRelease);
@@ -1161,8 +1161,11 @@ public class SqliteStorage implements DatabaseStorage {
         }
 
         @Override
-        public ClientModelPersister persistReleases(Collection<ClientRelease> releases) {
-            SqliteStorage.this.releaseTable.insert(releases);
+        public ClientModelPersister persistReleases(Collection<ClientPureDisplayRelease> releases) {
+            List<Release> toInsert = releases.stream().map(release -> new SimpleRelease(
+                release.getEpisodeId(), release.getTitle(), release.getUrl(), release.isLocked(), release.getReleaseDate()
+            )).collect(Collectors.toList());
+            SqliteStorage.this.releaseTable.insert(toInsert);
             return this;
         }
 
@@ -1205,6 +1208,46 @@ public class SqliteStorage implements DatabaseStorage {
             }
 
         }
-    }
 
+        @Override
+        public ClientModelPersister persistUserLists(List<ClientUserList> lists) {
+            String uuid = getUserNow().getUuid();
+            List<ClientMediaList> toPersist = lists
+                .stream()
+                .map(list -> new ClientMediaList(uuid, list.id, list.name, list.medium, new int[0]))
+                .collect(Collectors.toList());
+
+            this.persistMediaLists(toPersist);
+            return this;
+        }
+
+        @Override
+        public ClientModelPersister persistSimpleMedia(List<ClientSimpleMedium> media) {
+            
+            List<ClientMedium> toPersist = media
+                .stream()
+                .map(medium -> new ClientMedium(
+                    new int[0], new int[0], 0, new int[0], medium.id,
+                    medium.countryOfOrigin, medium.languageOfOrigin, medium.author,
+                    medium.title, medium.medium, medium.artist, medium.lang, medium.stateOrigin,
+                        medium.stateTL, medium.series, medium.universe
+                ))
+                .collect(Collectors.toList());
+
+            this.persistMedia(toPersist);
+            return this;
+        }
+
+        @Override
+        public ClientModelPersister persistFullTocs(List<ClientFullMediumToc> tocs) {
+            
+            List<Toc> toPersist = tocs
+                .stream()
+                .map(medium -> new SimpleToc(medium.id, medium.link))
+                .collect(Collectors.toList());
+
+            this.persistTocs(toPersist);
+            return this;
+        }
+    }
 }

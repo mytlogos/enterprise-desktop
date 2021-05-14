@@ -2,6 +2,10 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 
 import java.util.Arrays;
 
+/**
+ * API Model for DownloadContent.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientDownloadedEpisode {
     private final String[] content;
     private final String title;

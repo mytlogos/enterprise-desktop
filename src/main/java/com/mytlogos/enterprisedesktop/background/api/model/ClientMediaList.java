@@ -4,6 +4,10 @@ import com.mytlogos.enterprisedesktop.model.MediaList;
 
 import java.util.Arrays;
 
+/**
+ * API Model for List.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientMediaList implements MediaList {
     private final String userUuid;
     private final int id;

@@ -258,13 +258,7 @@ class RepositoryImpl implements Repository {
 
     @Override
     public List<ClientNews> loadNewsSync(Collection<Integer> newsIds) {
-        try {
-            System.out.println("loading News: " + newsIds + " on " + Thread.currentThread());
-            return this.client.getNews(newsIds).body();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -284,11 +278,7 @@ class RepositoryImpl implements Repository {
 
     @Override
     public void refreshNews(LocalDateTime latest) throws IOException {
-        List<ClientNews> news = this.client.getNews(latest, null).body();
-
-        if (news != null) {
-            this.persister.persistNews(news);
-        }
+        // TODO: implement refreshNews
     }
 
     @Override
@@ -896,9 +886,9 @@ class RepositoryImpl implements Repository {
     }
 
     @Override
-    public List<SearchResponse> requestSearch(SearchRequest searchRequest) {
+    public List<ClientSearchResult> requestSearch(SearchRequest searchRequest) {
         try {
-            final Response<List<SearchResponse>> response = this.client.searchRequest(searchRequest);
+            final Response<List<ClientSearchResult>> response = this.client.searchRequest(searchRequest);
             if (response.isSuccessful()) {
                 return response.body();
             } else {
@@ -989,7 +979,7 @@ class RepositoryImpl implements Repository {
             final Boolean body = Utils.checkAndGetBody(response);
 
             if (Boolean.TRUE.equals(body)) {
-                this.persister.persistTocs(Collections.singleton(new SimpleToc(mediumId, link)));
+                this.persister.persistTocs(Collections.singletonList(new SimpleToc(mediumId, link)));
                 return true;
             }
         } catch (IOException e) {

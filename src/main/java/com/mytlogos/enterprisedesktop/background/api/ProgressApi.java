@@ -19,9 +19,9 @@ interface ProgressApi {
     @POST
     Call<Boolean> addProgress(@Url String url, @Body Map<String, Object> body);
 
-    @DELETE
-    Call<Boolean> deleteProgress(@Url String url, @Body Map<String, Object> body);
-
     @PUT
     Call<Boolean> updateProgress(@Url String url, @Body Map<String, Object> body);
+
+    @DELETE
+    Call<Boolean> deleteProgress(@Url String url, @Body Map<String, Object> body);
 }

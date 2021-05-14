@@ -6,34 +6,22 @@ import com.mytlogos.enterprisedesktop.model.News;
 import java.time.LocalDateTime;
 
 /**
- * API Model for News.
+ * API Model for PureNews.
  * Enterprise Web API 1.0.2.
  */
-public class ClientNews implements News {
+public class ClientPureNews implements News {
     private final String title;
     private final String link;
     private final LocalDateTime date;
     private final int id;
     private final boolean read;
-    private final int mediumId;
-    private final String mediumTitle;
 
-    public ClientNews(String title, String link, LocalDateTime date, int id, boolean read, int mediumId, String mediumTitle) {
+    public ClientPureNews(String title, String link, LocalDateTime date, int id, boolean read) {
         this.title = title;
         this.link = link;
         this.date = date;
         this.id = id;
         this.read = read;
-        this.mediumId = mediumId;
-        this.mediumTitle = mediumTitle;
-    }
-
-    public String getMediumTitle() {
-        return mediumTitle;
-    }
-
-    public int getMediumId() {
-        return mediumId;
     }
 
     @Override
@@ -53,14 +41,12 @@ public class ClientNews implements News {
 
     @Override
     public String toString() {
-        return "ClientNews{" +
+        return "ClientPureNews{" +
                 "title='" + title + '\'' +
                 ", link='" + link + '\'' +
                 ", date=" + date +
                 ", id=" + id +
                 ", read=" + read +
-                ", mediumId=" + mediumId +
-                ", mediumTitle=" + mediumTitle +
                 '}';
     }
 

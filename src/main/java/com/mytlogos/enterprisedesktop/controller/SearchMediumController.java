@@ -1,6 +1,7 @@
 package com.mytlogos.enterprisedesktop.controller;
 
 import com.mytlogos.enterprisedesktop.ApplicationConfig;
+import com.mytlogos.enterprisedesktop.background.api.model.ClientSearchResult;
 import com.mytlogos.enterprisedesktop.model.*;
 import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.Utils;
@@ -33,7 +34,7 @@ public class SearchMediumController implements Attachable {
     @FXML
     private TextField searchField;
     @FXML
-    private ListView<SearchResponse> resultsView;
+    private ListView<ClientSearchResult> resultsView;
     @FXML
     private ChoiceBox<Integer> mediumChoiceBox;
     private Disposable debouncedRequest;
@@ -45,7 +46,7 @@ public class SearchMediumController implements Attachable {
         final ContextMenu value = new ContextMenu();
         final MenuItem openItem = new MenuItem("Open Selected");
         openItem.setOnAction(event -> {
-            for (SearchResponse item : this.resultsView.getSelectionModel().getSelectedItems()) {
+            for (ClientSearchResult item : this.resultsView.getSelectionModel().getSelectedItems()) {
                 ControllerUtils.openUrl(item.link);
             }
         });
@@ -65,7 +66,7 @@ public class SearchMediumController implements Attachable {
                         return CompletableFuture.completedFuture(Collections.emptyList());
                     }
                     List<CompletableFuture<Boolean>> futures = new ArrayList<>();
-                    for (SearchResponse item : this.resultsView.getSelectionModel().getSelectedItems()) {
+                    for (ClientSearchResult item : this.resultsView.getSelectionModel().getSelectedItems()) {
                         final MediumInWaitImpl mediumInWait = new MediumInWaitImpl(item.title, this.mediumChoiceBox.getValue(), item.link);
                         futures.add(ApplicationConfig.getRepository().createMedium(mediumInWait, Collections.emptyList(), list));
                     }
@@ -126,7 +127,7 @@ public class SearchMediumController implements Attachable {
                 .observeOn(Schedulers.io())
                 .map(searchRequest -> {
                     if (searchRequest.title.isEmpty()) {
-                        return Collections.<SearchResponse>emptyList();
+                        return Collections.<ClientSearchResult>emptyList();
                     } else {
                         final Thread thread = Thread.currentThread();
                         Log.info(String.format(
@@ -156,7 +157,7 @@ public class SearchMediumController implements Attachable {
         this.debouncedRequest.dispose();
     }
 
-    private static class ResultCell extends ListCell<SearchResponse> {
+    private static class ResultCell extends ListCell<ClientSearchResult> {
         private final HBox root = new HBox();
         private final ImageView cover = new ImageView();
         private final Text text = new Text();
@@ -164,7 +165,7 @@ public class SearchMediumController implements Attachable {
         private boolean init = false;
 
         @Override
-        protected void updateItem(SearchResponse item, boolean empty) {
+        protected void updateItem(ClientSearchResult item, boolean empty) {
             super.updateItem(item, empty);
 
             if (!this.init) {

@@ -3,21 +3,22 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 import java.util.List;
 
 /**
- *
+ * API Model for NewData.
+ * Enterprise Web API 1.0.2.
  */
 public class ClientChangedEntities {
-    public final List<ClientMedium> media;
-    public final List<ClientRelease> releases;
+    public final List<ClientSimpleMedium> media;
+    public final List<ClientPureDisplayRelease> releases;
     public final List<ClientEpisode> episodes;
     public final List<ClientPart> parts;
-    public final List<ClientMediaList> lists;
+    public final List<ClientUserList> lists;
     public final List<ClientExternalMediaList> extLists;
     public final List<ClientExternalUser> extUser;
     public final List<ClientMediumInWait> mediaInWait;
-    public final List<ClientNews> news;
-    public final List<ClientToc> tocs;
+    public final List<ClientPureNews> news;
+    public final List<ClientFullMediumToc> tocs;
 
-    public ClientChangedEntities(List<ClientMedium> media, List<ClientRelease> releases, List<ClientEpisode> episodes, List<ClientPart> parts, List<ClientMediaList> lists, List<ClientExternalMediaList> extLists, List<ClientExternalUser> extUser, List<ClientMediumInWait> mediaInWait, List<ClientNews> news, List<ClientToc> tocs) {
+    public ClientChangedEntities(List<ClientSimpleMedium> media, List<ClientPureDisplayRelease> releases, List<ClientEpisode> episodes, List<ClientPart> parts, List<ClientUserList> lists, List<ClientExternalMediaList> extLists, List<ClientExternalUser> extUser, List<ClientMediumInWait> mediaInWait, List<ClientPureNews> news, List<ClientFullMediumToc> tocs) {
         this.media = media;
         this.releases = releases;
         this.episodes = episodes;

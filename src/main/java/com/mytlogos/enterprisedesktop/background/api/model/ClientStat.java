@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * API Model for DataStats.
+ * Enterprise Web API 1.0.2.
  */
 public class ClientStat {
     private final Map<String, Map<String, Partstat>> media;

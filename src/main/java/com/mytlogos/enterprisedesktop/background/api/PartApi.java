@@ -14,6 +14,15 @@ interface PartApi {
     @GET
     Call<List<ClientPart>> getPart(@Url String url, @QueryMap Map<String, Object> body);
 
+    @POST
+    Call<ClientPart> addPart(@Url String url, @Body Map<String, Object> body);
+
+    @PUT
+    Call<Boolean> updatePart(@Url String url, @Body Map<String, Object> body);
+
+    @DELETE
+    Call<Boolean> deletePart(@Url String url, @Body Map<String, Object> body);
+
     @GET("{start}/all")
     Call<List<ClientPart>> getAll(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);
 
@@ -22,13 +31,4 @@ interface PartApi {
 
     @GET("{start}/releases")
     Call<Map<String, List<ClientSimpleRelease>>> getPartReleases(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
-
-    @POST
-    Call<ClientPart> addPart(@Url String url, @Body Map<String, Object> body);
-
-    @DELETE
-    Call<Boolean> deletePart(@Url String url, @Body Map<String, Object> body);
-
-    @PUT
-    Call<Boolean> updatePart(@Url String url, @Body Map<String, Object> body);
 }

@@ -4,6 +4,10 @@ import com.mytlogos.enterprisedesktop.model.Medium;
 
 import java.util.Arrays;
 
+/**
+ * API Model for Medium.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientMedium implements Medium {
     private int[] parts;
     private int[] latestReleased;

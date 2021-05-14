@@ -17,7 +17,7 @@ import retrofit2.http.Url;
 interface ExternalUserApi {
 
     @GET("{start}/refresh")
-    Call<ClientExternalUser> refreshExternalUser(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
+    Call<Boolean> refreshExternalUser(@Path(value = "start", encoded = true) String url, @QueryMap Map<String, Object> body);
 
     @GET("{start}/all")
     Call<List<ClientExternalUser>> getAll(@Path(encoded = true, value = "start") String url, @QueryMap Map<String, Object> body);

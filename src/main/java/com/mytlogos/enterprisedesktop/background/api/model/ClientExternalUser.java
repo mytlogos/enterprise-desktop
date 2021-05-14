@@ -4,6 +4,10 @@ import com.mytlogos.enterprisedesktop.model.ExternalUser;
 
 import java.util.Arrays;
 
+/**
+ * API Model for PureExternalUser (lists == null) and DisplayExternalUser.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientExternalUser implements ExternalUser {
     private final String localUuid;
     private final String uuid;

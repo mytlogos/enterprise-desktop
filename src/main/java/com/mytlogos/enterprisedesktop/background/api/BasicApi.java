@@ -4,6 +4,7 @@ package com.mytlogos.enterprisedesktop.background.api;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientSimpleUser;
 import com.mytlogos.enterprisedesktop.background.api.model.ClientUser;
 
+import java.util.List;
 import java.util.Map;
 
 import retrofit2.Call;
@@ -17,6 +18,9 @@ interface BasicApi {
 
     @GET
     Call<ClientSimpleUser> checkLogin(@Url String url);
+
+    @GET("{start}/tunnel")
+    Call<List<String>> getTunnels(@Path(value = "start", encoded = true) String url, @Body Map<String, Object> body);
 
     @GET("{start}/dev")
     Call<Boolean> checkDev(@Path(value = "start", encoded = true) String url);

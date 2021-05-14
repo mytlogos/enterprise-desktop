@@ -4,8 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.mytlogos.enterprisedesktop.background.api.model.*;
 import com.mytlogos.enterprisedesktop.model.SearchRequest;
-import com.mytlogos.enterprisedesktop.model.SearchResponse;
-import com.mytlogos.enterprisedesktop.model.SimpleMedium;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -17,6 +15,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Client for Enterprise Web API 1.0.2.
+ */
 public class Client {
     private static final Map<Class<?>, Retrofit> retrofitMap = new HashMap<>();
     private static final Map<Class<?>, String> fullClassPathMap = new HashMap<>();
@@ -137,18 +138,11 @@ public class Client {
 
         if (retrofit == null) {
             Gson gson = new GsonBuilder()
-                    .registerTypeHierarchyAdapter(LocalDateTime.class, new GsonAdapter.LocalDateTimeAdapter())
-                    .create();
-            OkHttpClient client = new OkHttpClient
-                    .Builder()
-                    .readTimeout(60, TimeUnit.SECONDS)
-                    .build();
+                    .registerTypeHierarchyAdapter(LocalDateTime.class, new GsonAdapter.LocalDateTimeAdapter()).create();
+            OkHttpClient client = new OkHttpClient.Builder().readTimeout(60, TimeUnit.SECONDS).build();
 
-            retrofit = new Retrofit.Builder()
-                    .baseUrl(this.server.getAddress())
-                    .client(client)
-                    .addConverterFactory(GsonConverterFactory.create(gson))
-                    .build();
+            retrofit = new Retrofit.Builder().baseUrl(this.server.getAddress()).client(client)
+                    .addConverterFactory(GsonConverterFactory.create(gson)).build();
             Client.retrofitMap.put(api, retrofit);
         }
 
@@ -216,7 +210,8 @@ public class Client {
         return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPartItems(url, body));
     }
 
-    public Response<Map<String, List<ClientSimpleRelease>>> getPartReleases(Collection<Integer> partIds) throws IOException {
+    public Response<Map<String, List<ClientSimpleRelease>>> getPartReleases(Collection<Integer> partIds)
+            throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("part", partIds);
         return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPartReleases(url, body));
@@ -236,7 +231,7 @@ public class Client {
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.addToc(url, body));
     }
 
-    public Response<List<ClientToc>> getMediumTocs(Collection<Integer> mediumIds) throws IOException {
+    public Response<List<ClientFullMediumToc>> getMediumTocs(Collection<Integer> mediumIds) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("mediumId", mediumIds);
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getToc(url, body));
@@ -248,7 +243,7 @@ public class Client {
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getNew(url, body));
     }
 
-    public Response<List<ClientMedium>> getAllMediaFull() throws IOException {
+    public Response<List<ClientSimpleMedium>> getAllMediaFull() throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
     }
@@ -263,7 +258,7 @@ public class Client {
         return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.getAll(url, body));
     }
 
-    public Response<List<ClientRelease>> getAllReleases() throws IOException {
+    public Response<List<ClientEpisodeRelease>> getAllReleases() throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.getAllReleases(url, body));
     }
@@ -283,7 +278,7 @@ public class Client {
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getUser(url, body));
     }
 
-    public Response<List<SearchResponse>> searchRequest(SearchRequest searchRequest) throws IOException {
+    public Response<List<ClientSearchResult>> searchRequest(SearchRequest searchRequest) throws IOException {
         final Map<String, Object> map = this.userAuthenticationMap();
         map.put("text", searchRequest.title);
         map.put("medium", searchRequest.mediumType);
@@ -291,11 +286,8 @@ public class Client {
     }
 
     public Response<ClientUser> login(String mailName, String password) throws IOException {
-        return this.query(BasicApi.class, (apiImpl, url) ->
-                apiImpl.login(
-                        url,
-                        this.userVerificationMap(mailName, password)
-                ));
+        return this.query(BasicApi.class,
+                (apiImpl, url) -> apiImpl.login(url, this.userVerificationMap(mailName, password)));
     }
 
     private Map<String, Object> userVerificationMap(String mailName, String password) {
@@ -307,11 +299,8 @@ public class Client {
     }
 
     public Response<ClientUser> register(String mailName, String password) throws IOException {
-        return this.query(BasicApi.class, (apiImpl, url) ->
-                apiImpl.register(
-                        url,
-                        this.userVerificationMap(mailName, password)
-                ));
+        return this.query(BasicApi.class,
+                (apiImpl, url) -> apiImpl.register(url, this.userVerificationMap(mailName, password)));
     }
 
     public Response<Boolean> logout() throws IOException {
@@ -325,33 +314,9 @@ public class Client {
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.updateUser(url, body));
     }
 
-    public Response<List<ClientNews>> getNews(LocalDateTime from, LocalDateTime to) throws IOException {
-        Map<String, Object> body = this.userAuthenticationMap();
-        if (from != null) {
-            body.put("from", from);
-        }
-        if (to != null) {
-            body.put("to", to);
-        }
-        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getNews(url, body));
-    }
-
-    public Response<List<ClientNews>> getNews(Collection<Integer> newsIds) throws IOException {
-        Map<String, Object> body = this.userAuthenticationMap();
-        if (newsIds != null) {
-            body.put("newsId", newsIds);
-        }
-        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getNews(url, body));
-    }
-
     public Response<List<ClientMediaList>> getLists() throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getLists(url, body));
-    }
-
-    public Response<List<InvalidatedData>> getInvalidated() throws IOException {
-        Map<String, Object> body = this.userAuthenticationMap();
-        return this.query(UserApi.class, (apiImpl, url) -> apiImpl.getInvalidated(url, body));
     }
 
     public Response<List<ClientDownloadedEpisode>> downloadEpisodes(Collection<Integer> episodeIds) throws IOException {
@@ -414,7 +379,7 @@ public class Client {
         return this.query(ListApi.class, (apiImpl, url) -> apiImpl.updateList(url, body));
     }
 
-    public Response<List<ClientMedium>> getListMedia(Collection<Integer> loadedMedia, int listId) throws IOException {
+    public Response<ClientListQuery> getListMedia(Collection<Integer> loadedMedia, int listId) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("media", loadedMedia);
         body.put("listId", listId);
@@ -424,7 +389,7 @@ public class Client {
     public Response<Boolean> addListMedia(int listId, int mediumId) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("listId", listId);
-        body.put("mediumId", mediumId);
+        body.put("mediumId", List.of(mediumId));
         return this.query(ListMediaApi.class, (apiImpl, url) -> apiImpl.addListMedia(url, body));
     }
 
@@ -476,10 +441,15 @@ public class Client {
 
     public Response<List<ClientMediumInWait>> getMediumInWait() throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
+        // body.put("limit", 1);
+        // body.put("medium", 1);
+        // body.put("title", "");
+        // body.put("link", "");
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.getMediumInWait(url, body));
     }
 
-    public Response<ClientMedium> createFromMediumInWait(ClientMediumInWait main, Collection<ClientMediumInWait> others, Integer listId) throws IOException {
+    public Response<ClientMedium> createFromMediumInWait(ClientMediumInWait main, Collection<ClientMediumInWait> others,
+            Integer listId) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("createMedium", main);
         body.put("tocsMedia", others);
@@ -487,19 +457,20 @@ public class Client {
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.createFromMediumInWait(url, body));
     }
 
-    public Response<Boolean> consumeMediumInWait(int mediumId, Collection<ClientMediumInWait> others) throws IOException {
+    public Response<Boolean> consumeMediumInWait(int mediumId, Collection<ClientMediumInWait> others)
+            throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("mediumId", mediumId);
         body.put("tocsMedia", others);
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.consumeMediumInWait(url, body));
     }
 
-    public Response<Boolean> splitMedium(int sourceId, SimpleMedium destination, String toc) throws IOException {
+    public Response<Integer> splitMedium(int sourceId, ClientSimpleMedium destination, String toc) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("sourceId", sourceId);
         body.put("destinationMedium", destination);
         body.put("toc", toc);
-        return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.transferToc(url, body));
+        return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.splitMedium(url, body));
     }
 
     public Response<Boolean> mergeMedia(int sourceId, int destinationId) throws IOException {
@@ -517,13 +488,13 @@ public class Client {
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.transferToc(url, body));
     }
 
-    public Response<ClientMedium> addMedia(ClientMedium clientMedium) throws IOException {
+    public Response<ClientSimpleMedium> addMedia(ClientMedium clientMedium) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("medium", clientMedium);
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.addMedia(url, body));
     }
 
-    public Response<Boolean> updateMedia(ClientMedium medium) throws IOException {
+    public Response<Boolean> updateMedia(ClientUpdateMedium medium) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("medium", medium);
         return this.query(MediumApi.class, (apiImpl, url) -> apiImpl.updateMedia(url, body));
@@ -541,7 +512,7 @@ public class Client {
         return this.query(PartApi.class, (apiImpl, url) -> apiImpl.getPart(url, body));
     }
 
-    public Response<ClientPart> addPart(ClientPart part) throws IOException {
+    public Response<ClientPart> addPart(ClientAddPart part) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("part", part);
         body.put("mediumId", part.getMediumId());
@@ -572,22 +543,22 @@ public class Client {
         return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.getEpisodes(url, body));
     }
 
-    public Response<ClientEpisode> addEpisode(int partId, ClientEpisode episode) throws IOException {
+    public Response<ClientEpisode> addEpisode(int partId, ClientSimpleEpisode episode) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
         body.put("partId", partId);
-        body.put("episode", episode);
+        body.put("episode", List.of(episode));
         return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.addEpisode(url, body));
     }
 
     public Response<Boolean> deleteEpisode(int episodeId) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
-        body.put("episodeId", episodeId);
+        body.put("episodeId", List.of(episodeId));
         return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.deleteEpisode(url, body));
     }
 
     public Response<Boolean> updateEpisode(ClientEpisode episode) throws IOException {
         Map<String, Object> body = this.userAuthenticationMap();
-        body.put("episode", episode);
+        body.put("episode", List.of(episode));
         return this.query(EpisodeApi.class, (apiImpl, url) -> apiImpl.updateEpisode(url, body));
     }
 

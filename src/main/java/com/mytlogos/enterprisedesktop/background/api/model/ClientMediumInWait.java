@@ -2,6 +2,10 @@ package com.mytlogos.enterprisedesktop.background.api.model;
 
 import com.mytlogos.enterprisedesktop.model.MediumInWait;
 
+/**
+ * API Model for MediumInWait.
+ * Enterprise Web API 1.0.2.
+ */
 public class ClientMediumInWait implements MediumInWait {
     private final String title;
     private final int medium;

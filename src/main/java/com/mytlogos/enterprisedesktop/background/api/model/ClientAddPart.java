@@ -7,18 +7,18 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * API Model for MinPart (episode == null) und Part.
+ * API Model for AddPart.
  * Enterprise Web API 1.0.2.
  */
-public class ClientPart implements Part {
+public class ClientAddPart implements Part {
     private final int mediumId;
     private final int id;
     private final String title;
     private final int totalIndex;
     private final int partialIndex;
-    private final ClientEpisode[] episodes;
+    private final ClientSimpleEpisode[] episodes;
 
-    public ClientPart(int mediumId, int id, String title, int totalIndex, int partialIndex, ClientEpisode[] episodes) {
+    public ClientAddPart(int mediumId, int id, String title, int totalIndex, int partialIndex, ClientSimpleEpisode[] episodes) {
         this.mediumId = mediumId;
         this.id = id;
         this.title = title;
@@ -84,14 +84,14 @@ public class ClientPart implements Part {
         return Double.parseDouble(this.getTotalIndex() + "." + this.getPartialIndex());
     }
 
-    public ClientEpisode[] getClientEpisodes() {
+    public ClientSimpleEpisode[] getClientEpisodes() {
         return episodes;
     }
 
     public List<Integer> getEpisodes() {
         final List<Integer> ids = new ArrayList<>(this.episodes.length);
 
-        for (ClientEpisode episode : this.episodes) {
+        for (ClientSimpleEpisode episode : this.episodes) {
             ids.add(episode.getId());
         }
         return ids;
