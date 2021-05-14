@@ -253,7 +253,7 @@ public class ControllerUtils {
         audio.setSelected(MediumType.is(medium, MediumType.AUDIO));
     }
 
-    public static TextFormatter<Integer> integerTextFormatter() {
+    public static TextFormatter<Integer> integerTextFormatter(int maxDecimals) {
         StringConverter<Integer> stringConverter = new StringConverter<Integer>() {
             @Override
             public String toString(Integer object) {
@@ -270,7 +270,7 @@ public class ControllerUtils {
             }
         };
         UnaryOperator<TextFormatter.Change> changeUnaryOperator = change -> {
-            if (!change.getControlNewText().matches("^\\d+$")) {
+            if (!change.getControlNewText().matches("^\\d{," + maxDecimals + "}$")) {
                 change.setText("");
             }
             return change;
