@@ -3,11 +3,14 @@ package com.mytlogos.enterprisedesktop.background.sqlite;
 import com.mytlogos.enterprisedesktop.background.sqlite.internal.ConnectionImpl;
 import com.mytlogos.enterprisedesktop.background.sqlite.internal.PreparedStatementImpl;
 import com.mytlogos.enterprisedesktop.background.sqlite.life.LiveData;
+import com.mytlogos.enterprisedesktop.tools.Log;
 import com.mytlogos.enterprisedesktop.tools.Utils;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
@@ -26,6 +29,7 @@ class QueryBuilder<R> {
     private final Set<Class<? extends AbstractTable>> tables = Collections.newSetFromMap(new WeakHashMap<>());
     private final boolean isRead;
     private final ConnectionManager manager;
+    private final List<OrderBy> columnOrder = new ArrayList<>();
     private SqlConsumer<PreparedStatement> singleQuerySetter;
     private Collection<Object> values;
     private SqlBiConsumer<PreparedStatement, Object> multiQuerySetter;
@@ -54,6 +58,7 @@ class QueryBuilder<R> {
         this.queryInValues = builder.queryInValues == null ? null : new ArrayList<>(builder.queryInValues);
         this.doEmpty = builder.doEmpty;
         this.manager = builder.manager;
+        this.columnOrder.addAll(builder.columnOrder);
     }
 
     <T> QueryBuilder<R> setValue(Collection<T> value, SqlBiConsumer<PreparedStatement, T> multiQuerySetter) {
@@ -103,6 +108,12 @@ class QueryBuilder<R> {
         return new QueryBuilder<>(this);
     }
 
+    QueryBuilder<R> orderBy(OrderBy... orderBy) {
+        this.columnOrder.clear();
+        this.columnOrder.addAll(Arrays.asList(orderBy));
+        return new QueryBuilder<>(this);
+    }
+
     List<R> queryListIgnoreError() {
         this.expectRead();
         try {
@@ -125,11 +136,26 @@ class QueryBuilder<R> {
         }
     }
 
+    private String getQuery() {
+        String query = this.query;
+
+        if (this.columnOrder.isEmpty()) {
+            return query;
+        }
+
+        List<String> orders = new ArrayList<>();
+
+        for (OrderBy orderBy : columnOrder) {
+            orders.add(orderBy.column + " " + (orderBy.order == SqlOrder.ASC ? SqlOrder.ASC : SqlOrder.DESC));
+        }
+        return String.format("%s ORDER BY %s", query, String.join(", ", orders));
+    }
+
     List<R> queryList() throws SQLException {
         this.expectRead();
         this.checkConverter();
         try (ConnectionImpl connection = this.manager.getConnection()) {
-            try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.query, this.name)) {
+            try (PreparedStatementImpl preparedStatement = connection.prepareStatement(this.getQuery(), this.name)) {
                 return selectResultList(preparedStatement);
             }
         }
@@ -140,12 +166,15 @@ class QueryBuilder<R> {
 
         List<R> values = new ArrayList<>();
         this.lock();
+        var start = Instant.now();
         try (ResultSet set = preparedStatement.executeQuery()) {
             while (set.next()) {
                 R value = this.converter.apply(set);
                 values.add(value);
             }
         } finally {
+            var end = Instant.now();
+            Log.info(String.format("%s, Total Duration: %s", this.name, Duration.between(start, end)));
             this.unlock();
         }
         return values;
@@ -197,7 +226,7 @@ class QueryBuilder<R> {
     }
 
     private R selectResult(ConnectionImpl connection) throws SQLException {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(this.getQuery(), this.name)) {
             this.prepareStatement(preparedStatement);
 
             this.lock();
@@ -237,7 +266,7 @@ class QueryBuilder<R> {
         this.checkConverter();
         return this.createLiveData(() -> {
             try (ConnectionImpl connection = manager.getConnection()) {
-                try (PreparedStatement preparedStatement = connection.prepareStatement(this.query, this.name)) {
+                try (PreparedStatement preparedStatement = connection.prepareStatement(this.getQuery(), this.name)) {
                     return selectResultList(preparedStatement);
                 }
             }
@@ -265,7 +294,7 @@ class QueryBuilder<R> {
     boolean executeThrow(ConnectionImpl con) throws SQLException {
         this.expectWrite();
         try (ConnectionImpl connection = con) {
-            try (PreparedStatement statement = connection.prepareStatement(this.query, this.name)) {
+            try (PreparedStatement statement = connection.prepareStatement(this.getQuery(), this.name)) {
                 this.prepareStatement(statement);
 
                 if (this.values != null) {
@@ -317,14 +346,16 @@ class QueryBuilder<R> {
 
     <T> T executeIn(SqlFunction<PreparedStatement, T> biFunction, BiFunction<T, T, T> mergeFunction) throws SQLException {
         final String inPlaceholder = "$?";
-        int index = this.query.indexOf(inPlaceholder);
+        String query = this.getQuery();
+
+        int index = query.indexOf(inPlaceholder);
         if (index < 0 && !this.queryInValues.isEmpty()) {
             throw new IllegalStateException("expected a '$?' placeholder in query");
         }
         List<?> inValues = this.queryInValues;
 
-        final String before = this.query.substring(0, index);
-        final String after = this.query.substring(index + inPlaceholder.length());
+        final String before = query.substring(0, index);
+        final String after = query.substring(index + inPlaceholder.length());
 
         int placeHolderCountBefore = Utils.countChar(before, '?');
         int placeHolderCountAfter = Utils.countChar(after, '?');
@@ -339,9 +370,9 @@ class QueryBuilder<R> {
                 Utils.doPartitioned(remainingCount, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];
                     Arrays.fill(placeholderArray, "?");
-                    final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
+                    final String concatQuery = queryPart + String.join(",", placeholderArray) + ")" + after;
 
-                    try (PreparedStatementImpl statement = connection.prepareStatement(query, this.name)) {
+                    try (PreparedStatementImpl statement = connection.prepareStatement(concatQuery, this.name)) {
                         final int from = placeHolderCountBefore + 1;
                         final int to = placeHolderCountBefore + objects.size();
 
@@ -419,14 +450,17 @@ class QueryBuilder<R> {
     List<R> selectInList(SqlFunction<ResultSet, R> biFunction) throws SQLException {
         this.expectRead();
         final String inPlaceholder = "$?";
-        int index = this.query.indexOf(inPlaceholder);
+
+        String query = this.getQuery();
+
+        int index = query.indexOf(inPlaceholder);
         if (index < 0 && !this.queryInValues.isEmpty()) {
             throw new IllegalStateException("expected a '$?' placeholder in query");
         }
         List<?> inValues = this.queryInValues;
 
-        final String before = this.query.substring(0, index);
-        final String after = this.query.substring(index + inPlaceholder.length());
+        final String before = query.substring(0, index);
+        final String after = query.substring(index + inPlaceholder.length());
 
         int placeHolderCountBefore = Utils.countChar(before, '?');
         int placeHolderCountAfter = Utils.countChar(after, '?');
@@ -441,9 +475,9 @@ class QueryBuilder<R> {
                 Utils.doPartitioned(remainingCount, this.doEmpty, inValues, objects -> {
                     String[] placeholderArray = new String[objects.size()];
                     Arrays.fill(placeholderArray, "?");
-                    final String query = queryPart + String.join(",", placeholderArray) + ")" + after;
+                    final String concatQuery = queryPart + String.join(",", placeholderArray) + ")" + after;
 
-                    try (PreparedStatementImpl statement = connection.prepareStatement(query, this.name)) {
+                    try (PreparedStatementImpl statement = connection.prepareStatement(concatQuery, this.name)) {
                         final int from = placeHolderCountBefore + 1;
                         final int to = placeHolderCountBefore + objects.size();
 
@@ -514,6 +548,25 @@ class QueryBuilder<R> {
             e.printStackTrace();
             return new ArrayList<>();
         }
+    }
+
+    public static class OrderBy {
+        public final String column;
+        public final SqlOrder order;
+
+        /**
+         * @param column
+         * @param order
+         */
+        public OrderBy(String column, SqlOrder order) {
+            this.column = column;
+            this.order = order;
+        }
+    }
+
+    public static enum SqlOrder {
+        ASC,
+        DESC;
     }
 
     enum Type {

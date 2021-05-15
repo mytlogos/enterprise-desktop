@@ -22,7 +22,7 @@ public enum AllSortings implements Sorting {
     NUMBER_EPISODE_UNREAD_ASC(10),
     NUMBER_EPISODE_UNREAD_DESC(-10);
 
-    private final int sortValue;
+    public final int sortValue;
 
     AllSortings(int sortValue) {
         this.sortValue = sortValue;
