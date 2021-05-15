@@ -119,47 +119,52 @@ class MediumTable extends AbstractTable {
     ));
     private final QueryBuilder<MediumItem> getAllMediumAscQuery = new QueryBuilder<MediumItem>(
             "Select AllMedia",
-            "SELECT * FROM \n" +
-                    "(SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, \n" +
-                    "countryOfOrigin, languageOfOrigin, lang, series, universe, \n" +
-                    "(\n" +
-                    "   SELECT episodeId FROM episode \n" +
-                    "   INNER JOIN part ON part.partId= episode.partId \n" +
-                    "   WHERE mediumId=medium.mediumId \n" +
-                    "   ORDER BY episode.combiIndex DESC \n" +
-                    "   LIMIT 1\n" +
-                    ") as currentRead,\n" +
-                    "(\n" +
-                    "    SELECT episode.combiIndex \n" +
-                    "    FROM episode\n" +
-                    "    INNER JOIN part ON part.partId=episode.partId\n" +
-                    "    WHERE part.mediumId=medium.mediumId AND episode.progress=1\n" +
-                    "    ORDER BY episode.combiIndex DESC\n" +
-                    "    LIMIT 1\n" +
-                    ") as currentReadEpisode,\n" +
-                    "(\n" +
-                    "   SELECT MAX(episode.combiIndex) FROM episode \n" +
-                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
-                    "   WHERE part.mediumId=medium.mediumId\n" +
-                    ") as lastEpisode , \n" +
-                    "(\n" +
-                    "   SELECT MAX(episode_release.releaseDate) FROM episode \n" +
-                    "   INNER JOIN episode_release ON episode.episodeId=episode_release.episodeId \n" +
-                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
-                    "   WHERE part.mediumId=medium.mediumId\n" +
-                    ") as lastUpdated \n" +
-                    "FROM medium\n" +
-                    ") as medium \n" +
-                    "ORDER BY \n" +
-                    "CASE ? \n" +
-                    "WHEN 2 THEN medium \n" +
-                    "WHEN 3 THEN title \n" +
-                    "WHEN 5 THEN author \n" +
-                    "WHEN 7 THEN lastEpisode \n" +
-                    "WHEN 8 THEN currentReadEpisode \n" +
-                    "WHEN 9 THEN lastUpdated \n" +
-                    "ELSE title \n" +
-                    "END ASC", getManager()
+            """
+            SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, 
+            countryOfOrigin, languageOfOrigin, lang, series, universe, currentRead,
+            currentReadEpisode, lastEpisode, lastUpdated
+            FROM 
+            (
+                SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, 
+                countryOfOrigin, languageOfOrigin, lang, series, universe, cr.currentRead,
+                currentReadEpisode, lastEpisode, lastUpdated
+                FROM medium
+                LEFT JOIN
+                (
+                    SELECT MAX(episode.combiIndex) as currentReadEpisode, episodeId as currentRead, mediumId
+                    FROM episode
+                    INNER JOIN part ON part.partId=episode.partId
+                    WHERE episode.progress=1
+                    GROUP BY mediumId
+                ) as cr
+                ON medium.mediumId=cr.mediumId
+                LEFT JOIN
+                (
+                    SELECT MAX(episode.combiIndex) as lastEpisode, mediumId FROM episode 
+                    INNER JOIN part ON part.partId=episode.partId
+                    GROUP BY mediumId
+                ) as le
+                ON medium.mediumId=le.mediumId
+                LEFT JOIN
+                (
+                    SELECT MAX(episode_release.releaseDate) as lastUpdated, mediumId FROM episode 
+                    INNER JOIN episode_release ON episode.episodeId=episode_release.episodeId 
+                    INNER JOIN part ON part.partId=episode.partId  
+                    GROUP BY mediumId
+                ) as lu
+                ON medium.mediumId=lu.mediumId
+            ) as medium 
+            ORDER BY 
+            CASE ? 
+            WHEN 2 THEN medium 
+            WHEN 3 THEN title 
+            WHEN 5 THEN author 
+            WHEN 7 THEN lastEpisode 
+            WHEN 8 THEN currentReadEpisode 
+            WHEN 9 THEN lastUpdated 
+            ELSE title 
+            END ASC
+            """, getManager()
     )
             .setDependencies(MediumTable.class)
             .setConverter(value -> {
@@ -184,47 +189,52 @@ class MediumTable extends AbstractTable {
 
     private final QueryBuilder<MediumItem> getAllMediumDescQuery = new QueryBuilder<MediumItem>(
             "Select AllMedia",
-            "SELECT * FROM \n" +
-                    "(SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, \n" +
-                    "countryOfOrigin, languageOfOrigin, lang, series, universe, \n" +
-                    "(\n" +
-                    "   SELECT episodeId FROM episode \n" +
-                    "   INNER JOIN part ON part.partId= episode.partId \n" +
-                    "   WHERE mediumId=medium.mediumId \n" +
-                    "   ORDER BY episode.combiIndex DESC \n" +
-                    "   LIMIT 1\n" +
-                    ") as currentRead,\n" +
-                    "(\n" +
-                    "    SELECT episode.combiIndex \n" +
-                    "    FROM episode\n" +
-                    "    INNER JOIN part ON part.partId=episode.partId\n" +
-                    "    WHERE part.mediumId=medium.mediumId AND episode.progress=1\n" +
-                    "    ORDER BY episode.combiIndex DESC\n" +
-                    "    LIMIT 1\n" +
-                    ") as currentReadEpisode,\n" +
-                    "(\n" +
-                    "   SELECT MAX(episode.combiIndex) FROM episode \n" +
-                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
-                    "   WHERE part.mediumId=medium.mediumId\n" +
-                    ") as lastEpisode , \n" +
-                    "(\n" +
-                    "   SELECT MAX(episode_release.releaseDate) FROM episode \n" +
-                    "   INNER JOIN episode_release ON episode.episodeId=episode_release.episodeId \n" +
-                    "   INNER JOIN part ON part.partId=episode.partId  \n" +
-                    "   WHERE part.mediumId=medium.mediumId\n" +
-                    ") as lastUpdated \n" +
-                    "FROM medium\n" +
-                    ") as medium \n" +
-                    "ORDER BY \n" +
-                    "CASE ? \n" +
-                    "WHEN 2 THEN medium \n" +
-                    "WHEN 3 THEN title \n" +
-                    "WHEN 5 THEN author \n" +
-                    "WHEN 7 THEN lastEpisode \n" +
-                    "WHEN 8 THEN currentReadEpisode \n" +
-                    "WHEN 9 THEN lastUpdated \n" +
-                    "ELSE title \n" +
-                    "END DESC", getManager()
+            """
+            SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, 
+            countryOfOrigin, languageOfOrigin, lang, series, universe, currentRead,
+            currentReadEpisode, lastEpisode, lastUpdated
+            FROM 
+            (
+                SELECT title, medium.mediumId, author, artist, medium, stateTL, stateOrigin, 
+                countryOfOrigin, languageOfOrigin, lang, series, universe, cr.currentRead,
+                currentReadEpisode, lastEpisode, lastUpdated
+                FROM medium
+                LEFT JOIN
+                (
+                    SELECT MAX(episode.combiIndex) as currentReadEpisode, episodeId as currentRead, mediumId
+                    FROM episode
+                    INNER JOIN part ON part.partId=episode.partId
+                    WHERE episode.progress=1
+                    GROUP BY mediumId
+                ) as cr
+                ON medium.mediumId=cr.mediumId
+                LEFT JOIN
+                (
+                    SELECT MAX(episode.combiIndex) as lastEpisode, mediumId FROM episode 
+                    INNER JOIN part ON part.partId=episode.partId
+                    GROUP BY mediumId
+                ) as le
+                ON medium.mediumId=le.mediumId
+                LEFT JOIN
+                (
+                    SELECT MAX(episode_release.releaseDate) as lastUpdated, mediumId FROM episode 
+                    INNER JOIN episode_release ON episode.episodeId=episode_release.episodeId 
+                    INNER JOIN part ON part.partId=episode.partId  
+                    GROUP BY mediumId
+                ) as lu
+                ON medium.mediumId=lu.mediumId
+            ) as medium 
+            ORDER BY 
+            CASE ? 
+            WHEN 2 THEN medium 
+            WHEN 3 THEN title 
+            WHEN 5 THEN author 
+            WHEN 7 THEN lastEpisode 
+            WHEN 8 THEN currentReadEpisode 
+            WHEN 9 THEN lastUpdated 
+            ELSE title 
+            END DESC
+            """, getManager()
     ).setConverter(value -> {
         final String title = value.getString(1);
         final int mediumId = value.getInt(2);
