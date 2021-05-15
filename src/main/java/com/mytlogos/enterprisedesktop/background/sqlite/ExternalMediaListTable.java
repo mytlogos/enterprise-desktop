@@ -122,7 +122,7 @@ class ExternalMediaListTable extends AbstractTable {
         final String series = value.getString(11);
         final String universe = value.getString(12);
         final int currentRead = value.getInt(13);
-        final int currentReadEpisode = value.getInt(14);
+        final double currentReadEpisode = value.getInt(14);
         final int lastEpisode = value.getInt(15);
         final LocalDateTime lastUpdated = Formatter.parseLocalDateTime(value.getString(16));
         return new MediumItem(title, mediumId, author, artist, medium, stateTl, stateOrigin, countryOfOrigin, languageOfOrigin, language, series, universe, currentRead, currentReadEpisode, lastEpisode, lastUpdated);

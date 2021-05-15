@@ -18,11 +18,11 @@ public class MediumItem implements Medium {
     private final String series;
     private final String universe;
     private final Integer currentRead;
-    private final Integer currentReadEpisode;
+    private final Double currentReadEpisode;
     private final Integer lastEpisode;
     private final LocalDateTime lastUpdated;
 
-    public MediumItem(String title, int mediumId, String author, String artist, int medium, int stateTL, int stateOrigin, String countryOfOrigin, String languageOfOrigin, String lang, String series, String universe, Integer currentRead, Integer currentReadEpisode, Integer lastEpisode, LocalDateTime lastUpdated) {
+    public MediumItem(String title, int mediumId, String author, String artist, int medium, int stateTL, int stateOrigin, String countryOfOrigin, String languageOfOrigin, String lang, String series, String universe, Integer currentRead, Double currentReadEpisode, Integer lastEpisode, LocalDateTime lastUpdated) {
         this.title = title;
         this.mediumId = mediumId;
         this.author = author;
@@ -35,13 +35,15 @@ public class MediumItem implements Medium {
         this.lang = lang;
         this.series = series;
         this.universe = universe;
+        // episodeId
         this.currentRead = currentRead;
+        // episode combiIndex
         this.currentReadEpisode = currentReadEpisode;
         this.lastEpisode = lastEpisode;
         this.lastUpdated = lastUpdated;
     }
 
-    public Integer getCurrentReadEpisode() {
+    public Double getCurrentReadEpisode() {
         return currentReadEpisode;
     }
 

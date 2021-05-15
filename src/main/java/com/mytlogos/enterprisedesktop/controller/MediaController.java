@@ -131,12 +131,14 @@ public class MediaController implements Attachable {
         this.mediumFilter = Bindings.createObjectBinding(() -> new MediumFilter(
                         this.nameFilter.getText(),
                         this.showMediumController.getMedium(),
-                        -1,
-                        -1,
+                        this.minEpisodeIndex.getValue(),
+                        this.maxEpisodeIndex.getValue(),
                         this.releaseState.getValue()
                 ),
                 this.nameFilter.textProperty(),
                 this.showMediumController.mediumProperty(),
+                this.minEpisodeIndex.valueProperty(),
+                this.maxEpisodeIndex.valueProperty(),
                 this.releaseState.valueProperty()
         );
 
@@ -165,6 +167,12 @@ public class MediaController implements Attachable {
                                 return false;
                             }
                             if (mediumFilter.state != ReleaseState.ANY && mediumFilter.state.getValue() != mediumItem.getStateTL()) {
+                                return false;
+                            }
+                            if (mediumFilter.minEpisodeIndex > 0 && mediumFilter.minEpisodeIndex > mediumItem.getCurrentReadEpisode()) {
+                                return false;
+                            }
+                            if (mediumFilter.maxEpisodeIndex > 0 && mediumFilter.maxEpisodeIndex < mediumItem.getCurrentReadEpisode()) {
                                 return false;
                             }
                         }
@@ -457,11 +465,11 @@ public class MediaController implements Attachable {
         private final int maxEpisodeIndex;
         private final ReleaseState state;
 
-        public MediumFilter(String title, int medium, int minEpisodeIndex, int maxEpisodeIndex, ReleaseState state) {
+        public MediumFilter(String title, Integer medium, Integer minEpisodeIndex, Integer maxEpisodeIndex, ReleaseState state) {
             this.title = title;
-            this.medium = medium;
-            this.minEpisodeIndex = minEpisodeIndex;
-            this.maxEpisodeIndex = maxEpisodeIndex;
+            this.medium = medium == null ? -1 : medium;
+            this.minEpisodeIndex = minEpisodeIndex == null ? -1 : minEpisodeIndex;
+            this.maxEpisodeIndex = maxEpisodeIndex == null ? -1 : maxEpisodeIndex;
             this.state = state;
         }
     }
