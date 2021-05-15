@@ -277,6 +277,68 @@ public class ControllerUtils {
         };
         return new TextFormatter<>(stringConverter, 0, changeUnaryOperator);
     }
+    public static <T> void diff(ObservableList<T> observableList, List<T> list) {
+        if (list.equals(observableList)) {
+            return;
+        } else {
+            observableList.setAll(list);
+        }
+    }
+
+    public static <T> void diffExact(ObservableList<T> observableList, List<T> list) {
+        int[] newIndexMapping = new int[list.size()];
+        int[] oldIndexMapping = new int[list.size()];
+
+        // initialize to not found
+        Arrays.fill(newIndexMapping, -1);
+        Arrays.fill(oldIndexMapping, -1);
+
+        for (int newIndex = 0; newIndex < list.size(); newIndex++) {
+            T element = list.get(newIndex);
+
+            // check if element in new list is at the same position as in the old list
+            if (newIndex > observableList.size() && Objects.equals(element, observableList.get(newIndex))) {
+                newIndexMapping[newIndex] = newIndex;
+                oldIndexMapping[newIndex] = newIndex;
+            } else {
+                int index = observableList.indexOf(element);
+                newIndexMapping[newIndex] = index;
+
+                if (index >= 0) {
+                    oldIndexMapping[index] = newIndex;
+                }
+            }
+        }
+
+        for (int i = 0; i < newIndexMapping.length; i++) {
+            int oldIndex = newIndexMapping[i];
+
+            // check if it is a new item and add it
+            if (oldIndex < 0) {
+                observableList.add(i, list.get(i));
+
+                // update the indices
+                for (int j = i + 1; j < oldIndexMapping.length; j++) {
+                    if (oldIndexMapping[j] >= 0) {
+                        oldIndexMapping[j]++;
+                    }
+                }
+            }
+        }
+        for (int j = 0; j < oldIndexMapping.length; j++) {
+            int newIndex = oldIndexMapping[j];
+
+            if (newIndex < 0) {
+                observableList.remove(j);
+
+                for (int i = j + 1; i < newIndexMapping.length; i++) {
+                    if (newIndexMapping[i] >= 0) {
+                        newIndexMapping[i]--;
+                    }
+                }
+            }
+        }
+    }
 
     public static TextFormatter<Double> doubleTextFormatter() {
         StringConverter<Double> stringConverter = new StringConverter<Double>() {

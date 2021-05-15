@@ -72,7 +72,7 @@ public class MediaController implements Attachable {
     private ListView<TocEpisode> mediumContentView;
     private final Observer<PagedList<TocEpisode>> episodesObserver = episodes -> {
         if (episodes != null) {
-            this.mediumContentView.getItems().setAll(episodes);
+            ControllerUtils.diff(this.mediumContentView.getItems(), episodes);
         }
     };
     @FXML
