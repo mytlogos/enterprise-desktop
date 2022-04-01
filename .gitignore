@@ -10,6 +10,9 @@ target/
 # data directory
 medium/
 
+# ignore automatically downloaded dependency
+src/main/resources/pdfjs/
+
 # data files
 *.db
 *.log.*
