@@ -82,6 +82,28 @@
                     </archive>
                 </configuration>
             </plugin>
+            <!-- download mozilla reader -->
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.6.8</version>
+                <executions>
+                    <execution>
+                        <id>install-pdfjs</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <url>https://github.com/mozilla/pdf.js/releases/download/v2.13.216/pdfjs-2.13.216-dist.zip</url>
+                    <unpack>true</unpack>
+                    <outputDirectory>${project.basedir}/src/main/resources/pdfjs</outputDirectory>
+                    <md5>172e0f11a156d3f3859d3aad37e3ff38</md5>
+                    <alwaysVerifyChecksum>true</alwaysVerifyChecksum>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     <repositories>
